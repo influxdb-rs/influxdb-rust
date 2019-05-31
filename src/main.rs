@@ -1,12 +1,15 @@
 #![allow(dead_code)]
 
+extern crate itertools;
+
 extern crate futures;
 extern crate reqwest;
 extern crate tokio;
 
 use futures::Future;
-use reqwest::r#async::Client;
 
+use itertools::Itertools;
+use reqwest::r#async::Client;
 trait InfluxDbQuery {
     fn build<'a>(self) -> String;
 }
@@ -55,13 +58,11 @@ impl InfluxDbQuery for InfluxDbWrite {
             .tags
             .into_iter()
             .map(|(tag, value)| format!("{tag}={value}", tag = tag, value = value))
-            .collect::<Vec<String>>()
             .join(",");
         let fields = self
             .fields
             .into_iter()
             .map(|(field, value)| format!("{field}={value}", field = field, value = value))
-            .collect::<Vec<String>>()
             .join(",");
 
         format!(
@@ -136,9 +137,8 @@ mod tests {
 
     #[test]
     fn test_write_builder_single_field() {
-        let query = InfluxDbQuery::write()
-            .add_field("water_level", "2");
-            
+        let query = InfluxDbQuery::write().add_field("water_level", "2");
+
         assert_eq!(query.build(), "measurement, water_level=2 time");
     }
 
@@ -159,8 +159,7 @@ mod tests {
     // fixme: quoting / escaping of long strings
     #[test]
     fn test_write_builder_single_tag() {
-        let query = InfluxDbQuery::write()
-            .add_tag("marina_manager", "Smith");
+        let query = InfluxDbQuery::write().add_tag("marina_manager", "Smith");
 
         assert_eq!(query.build(), "measurement,marina_manager=Smith  time");
     }
@@ -194,6 +193,9 @@ mod tests {
 
     #[test]
     fn test_test() {
-        InfluxDbQuery::write().add_field("test", "1").add_tag("my_tag", "0.85").build();
+        InfluxDbQuery::write()
+            .add_field("test", "1")
+            .add_tag("my_tag", "0.85")
+            .build();
     }
 }
