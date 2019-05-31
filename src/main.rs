@@ -1,15 +1,9 @@
 #![allow(dead_code)]
 
-extern crate itertools;
-
-extern crate futures;
-extern crate reqwest;
-extern crate tokio;
-
 use futures::Future;
-
 use itertools::Itertools;
 use reqwest::r#async::Client;
+
 trait InfluxDbQuery {
     fn build<'a>(self) -> String;
 }
