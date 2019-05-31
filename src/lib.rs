@@ -8,18 +8,16 @@ use itertools::Itertools;
 use reqwest::r#async::Client;
 
 #[derive(Debug, Fail)]
-enum InfluxDbError {
+/// Errors that might happen in the crate
+pub enum InfluxDbError {
     #[fail(display = "query must contain at least one field")]
+    /// Error happens when query has zero fields
     InvalidQueryError,
 }
 
 #[derive(Debug)]
-struct ValidQuery(String);
-impl From<String> for ValidQuery {
-    fn from(s: String) -> ValidQuery {
-        ValidQuery(s)
-    }
-}
+#[doc(hidden)]
+pub struct ValidQuery(String);
 impl PartialEq<String> for ValidQuery {
     fn eq(&self, other: &String) -> bool {
         &self.0 == other
@@ -31,16 +29,56 @@ impl PartialEq<&str> for ValidQuery {
     }
 }
 
-trait InfluxDbQuery {
+/// Used to create read or [`InfluxDbWriteQuery`] queries to InfluxDB
+///
+/// # Examples
+///
+/// ```rust
+/// use influxdb::InfluxDbQuery;
+///
+/// let write_query = InfluxDbQuery::write_query("measurement")
+///     .add_field("field1", "5")
+///     .add_tag("tag1", "Gero")
+///     .build();
+///
+/// assert!(query.is_ok());
+///
+/// //todo: document read query once it's implemented.
+/// ```
+pub trait InfluxDbQuery {
+    /// Builds valid InfluxSQL which can be run against the Database.
+    /// In case no fields have been specified, it will return an error,
+    /// as that is invalid InfluxSQL syntax.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use influxdb::InfluxDbQuery;
+    ///
+    /// let invalid_query = InfluxDbQuery::write_query("measurement").build();
+    /// assert!(query.is_err());
+    ///
+    /// let valid_query = InfluxDbQuery::write_query("measurement").add_field("myfield1", "11").build();
+    /// assert!(query.is_ok());
+    /// ```
     fn build<'a>(self) -> Result<ValidQuery, InfluxDbError>;
 }
 
 impl InfluxDbQuery {
-    pub fn write<S>(measurement: S) -> InfluxDbWrite
+    /// Returns a [`InfluxDbWriteQuery`] builder.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use influxdb::InfluxDbQuery;
+    ///
+    /// InfluxDbQuery::write_query("measurement"); // Is of type [`InfluxDbWriteQuery`]
+    /// ```
+    pub fn write_query<S>(measurement: S) -> InfluxDbWriteQuery
     where
         S: Into<String>,
     {
-        InfluxDbWrite {
+        InfluxDbWriteQuery {
             measurement: measurement.into(),
             fields: Vec::new(),
             tags: Vec::new(),
@@ -50,15 +88,27 @@ impl InfluxDbQuery {
     // pub fn read() {}
 }
 
-pub struct InfluxDbWrite {
+/// Write Query Builder returned by [InfluxDbQuery::write_query]()
+///
+/// Can only be instantiated by using [InfluxDbQuery::write_query]()
+pub struct InfluxDbWriteQuery {
     fields: Vec<(String, String)>,
     tags: Vec<(String, String)>,
     measurement: String,
     // precision: Precision
 }
 
-impl InfluxDbWrite {
-    fn add_field<'a, S>(mut self, point: S, value: S) -> Self
+impl InfluxDbWriteQuery {
+    /// Adds a field to the [`InfluxDbWriteQuery`]
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use influxdb::InfluxDbQuery;
+    ///
+    /// InfluxDbQuery::write_query("measurement").add_field("field1", "5").build();
+    /// ```
+    pub fn add_field<'a, S>(mut self, point: S, value: S) -> Self
     where
         S: Into<String>,
     {
@@ -66,7 +116,20 @@ impl InfluxDbWrite {
         self
     }
 
-    fn add_tag<'a, S>(mut self, tag: S, value: S) -> Self
+    /// Adds a tag to the [`InfluxDbWriteQuery`]
+    ///
+    /// Please note that a [`InfluxDbWriteQuery`] requires at least one field. Composing a query with
+    /// only tags will result in a failure building the query.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use influxdb::InfluxDbQuery;
+    ///
+    /// InfluxDbQuery::write_query("measurement")
+    ///     .add_tag("field1", "5"); // calling `.build()` now would result in a `Err(InfluxDbError::InvalidQueryError)`
+    /// ```
+    pub fn add_tag<'a, S>(mut self, tag: S, value: S) -> Self
     where
         S: Into<String>,
     {
@@ -76,8 +139,8 @@ impl InfluxDbWrite {
 }
 
 // todo: fuse_with(other: ValidQuery), so multiple queries can be run at the same time
-impl InfluxDbQuery for InfluxDbWrite {
-    // fixme: time (with precision) and measurement
+impl InfluxDbQuery for InfluxDbWriteQuery {
+    // todo: time (with precision)
     fn build<'a>(self) -> Result<ValidQuery, InfluxDbError> {
         if self.fields.is_empty() {
             return Err(InfluxDbError::InvalidQueryError);
@@ -96,7 +159,7 @@ impl InfluxDbQuery for InfluxDbWrite {
             .join(",")
             + " ";
 
-        Ok(ValidQuery::from(format!(
+        Ok(ValidQuery(format!(
             "{measurement},{tags}{fields}time",
             measurement = self.measurement,
             tags = tags,
@@ -105,15 +168,61 @@ impl InfluxDbQuery for InfluxDbWrite {
     }
 }
 
+/// Client which can read and write data from InfluxDB.
+///
+/// # Arguments
+///
+///  * `url`: The URL where InfluxDB is running (ex. `http://localhost:8086`).
+///  * `database`: The Database against which queries and writes will be run.
+///
+/// # Examples
+///
+/// ```rust
+/// use influxdb::InfluxDbClient;
+///
+/// let client = InfluxDbClient::new("http://localhost:8086", "test");
+///
+/// assert_eq!(client.get_database_name(), "test");
+/// ```
 pub struct InfluxDbClient {
     url: String,
     database: String,
     // auth: Option<InfluxDbAuthentication>
 }
 
-pub fn main() {}
-
 impl InfluxDbClient {
+    /// Instantiates a new [`InfluxDbClient`]
+    ///
+    /// # Arguments
+    ///
+    ///  * `url`: The URL where InfluxDB is running (ex. `http://localhost:8086`).
+    ///  * `database`: The Database against which queries and writes will be run.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use influxdb::InfluxDbClient;
+    ///
+    /// let _client = InfluxDbClient::new("http://localhost:8086", "test");
+    /// ```
+    pub fn new<S>(url: S, database: S) -> Self
+    where
+        S: Into<String>,
+    {
+        InfluxDbClient {
+            url: url.into(),
+            database: database.into(),
+        }
+    }
+
+    pub fn get_database_name(self) -> String {
+        self.database
+    }
+
+    pub fn get_database_url(self) -> String {
+        self.url
+    }
+
     pub fn ping(&self) -> impl Future<Item = (String, String), Error = ()> {
         Client::new()
             .get(format!("{}/ping", self.url).as_str())
@@ -138,6 +247,8 @@ impl InfluxDbClient {
     }
 }
 
+pub fn main() {}
+
 #[cfg(test)]
 mod tests {
     use super::{InfluxDbClient, InfluxDbQuery};
@@ -148,10 +259,7 @@ mod tests {
     }
 
     fn create_client() -> InfluxDbClient {
-        InfluxDbClient {
-            url: String::from("http://localhost:8086"),
-            database: String::from("test"),
-        }
+        InfluxDbClient::new("http://localhost:8086", "test")
     }
 
     #[test]
@@ -169,14 +277,14 @@ mod tests {
 
     #[test]
     fn test_write_builder_empty_query() {
-        let query = InfluxDbQuery::write("marina_3").build();
+        let query = InfluxDbQuery::write_query("marina_3").build();
 
         assert!(query.is_err(), "Query was not empty");
     }
 
     #[test]
     fn test_write_builder_single_field() {
-        let query = InfluxDbQuery::write("marina_3")
+        let query = InfluxDbQuery::write_query("marina_3")
             .add_field("water_level", "2")
             .build();
 
@@ -186,7 +294,7 @@ mod tests {
 
     #[test]
     fn test_write_builder_multiple_fields() {
-        let query = InfluxDbQuery::write("marina_3")
+        let query = InfluxDbQuery::write_query("marina_3")
             .add_field("water_level", "2")
             .add_field("boat_count", "31")
             .add_field("algae_content", "0.85")
@@ -202,7 +310,7 @@ mod tests {
     // fixme: quoting / escaping of long strings
     #[test]
     fn test_write_builder_only_tags() {
-        let query = InfluxDbQuery::write("marina_3")
+        let query = InfluxDbQuery::write_query("marina_3")
             .add_tag("marina_manager", "Smith")
             .build();
 
@@ -211,7 +319,7 @@ mod tests {
 
     #[test]
     fn test_write_builder_full_query() {
-        let query = InfluxDbQuery::write("marina_3")
+        let query = InfluxDbQuery::write_query("marina_3")
             .add_field("water_level", "2")
             .add_field("boat_count", "31")
             .add_field("algae_content", "0.85")
