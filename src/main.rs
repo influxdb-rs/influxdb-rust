@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 extern crate futures;
 extern crate reqwest;
 extern crate tokio;
@@ -12,9 +14,9 @@ trait InfluxDbQuery {
 impl InfluxDbQuery {
     pub fn write() -> InfluxDbWrite {
         InfluxDbWrite {
-            _measurement: String::from("marina_3"),
-            _fields: Vec::new(),
-            _tags: Vec::new(),
+            measurement: String::from("marina_3"),
+            fields: Vec::new(),
+            tags: Vec::new(),
         }
     }
 
@@ -22,26 +24,26 @@ impl InfluxDbQuery {
 }
 
 pub struct InfluxDbWrite {
-    _fields: Vec<(String, String)>,
-    _tags: Vec<(String, String)>,
-    _measurement: String,
+    fields: Vec<(String, String)>,
+    tags: Vec<(String, String)>,
+    measurement: String,
     // precision: Precision
 }
 
 impl InfluxDbWrite {
-    fn add_field<'a, S>(&'a mut self, point: S, value: S) -> &'a mut Self
+    fn add_field<'a, S>(mut self, point: S, value: S) -> Self
     where
         S: Into<String>,
     {
-        self._fields.push((point.into(), value.into()));
+        self.fields.push((point.into(), value.into()));
         self
     }
 
-    fn add_tag<'a, S>(&'a mut self, tag: S, value: S) -> &'a mut Self
+    fn add_tag<'a, S>(mut self, tag: S, value: S) -> Self
     where
         S: Into<String>,
     {
-        self._tags.push((tag.into(), value.into()));
+        self.tags.push((tag.into(), value.into()));
         self
     }
 }
@@ -50,13 +52,13 @@ impl InfluxDbQuery for InfluxDbWrite {
     // fixme: time (with precision) and measurement
     fn build<'a>(self) -> String {
         let tags = self
-            ._tags
+            .tags
             .into_iter()
             .map(|(tag, value)| format!("{tag}={value}", tag = tag, value = value))
             .collect::<Vec<String>>()
             .join(",");
         let fields = self
-            ._fields
+            .fields
             .into_iter()
             .map(|(field, value)| format!("{field}={value}", field = field, value = value))
             .collect::<Vec<String>>()
@@ -71,8 +73,8 @@ impl InfluxDbQuery for InfluxDbWrite {
 }
 
 pub struct InfluxDbClient {
-    _url: String,
-    _database: String,
+    url: String,
+    database: String,
     // _auth: InfluxDbAuthentication | NoAuthentication
 }
 
@@ -81,7 +83,7 @@ pub fn main() {}
 impl InfluxDbClient {
     pub fn ping(&self) -> impl Future<Item = (String, String), Error = ()> {
         Client::new()
-            .get(format!("{}/ping", self._url).as_str())
+            .get(format!("{}/ping", self.url).as_str())
             .send()
             .map(|res| {
                 let build = res
@@ -114,8 +116,8 @@ mod tests {
 
     fn create_client() -> InfluxDbClient {
         InfluxDbClient {
-            _url: String::from("http://localhost:8086"),
-            _database: String::from("test"),
+            url: String::from("http://localhost:8086"),
+            database: String::from("test"),
         }
     }
 
@@ -123,7 +125,7 @@ mod tests {
     fn test_ping() {
         let client = create_client();
         let result = get_runtime().block_on(client.ping());
-        assert!(!result.is_err(), "Should be no error");
+        assert!(result.is_ok(), "Should be no error");
 
         let (build, version) = result.unwrap();
         assert!(!build.is_empty(), "Build should not be empty");
@@ -134,19 +136,19 @@ mod tests {
 
     #[test]
     fn test_write_builder_single_field() {
-        let mut query = InfluxDbQuery::write();
-
-        query.add_field("water_level", "2");
+        let query = InfluxDbQuery::write()
+            .add_field("water_level", "2");
+            
         assert_eq!(query.build(), "measurement, water_level=2 time");
     }
 
     #[test]
     fn test_write_builder_multiple_fields() {
-        let mut query = InfluxDbQuery::write();
+        let query = InfluxDbQuery::write()
+            .add_field("water_level", "2")
+            .add_field("boat_count", "31")
+            .add_field("algae_content", "0.85");
 
-        query.add_field("water_level", "2");
-        query.add_field("boat_count", "31");
-        query.add_field("algae_content", "0.85");
         assert_eq!(
             query.build(),
             "measurement, water_level=2,boat_count=31,algae_content=0.85 time"
@@ -157,18 +159,18 @@ mod tests {
     // fixme: quoting / escaping of long strings
     #[test]
     fn test_write_builder_single_tag() {
-        let mut query = InfluxDbQuery::write();
+        let query = InfluxDbQuery::write()
+            .add_tag("marina_manager", "Smith");
 
-        query.add_tag("marina_manager", "Smith");
         assert_eq!(query.build(), "measurement,marina_manager=Smith  time");
     }
 
     #[test]
     fn test_write_builder_multiple_tags() {
-        let mut query = InfluxDbQuery::write();
+        let query = InfluxDbQuery::write()
+            .add_tag("marina_manager", "Smith")
+            .add_tag("manager_to_the_marina_manager", "Jonson");
 
-        query.add_tag("marina_manager", "Smith");
-        query.add_tag("manager_to_the_marina_manager", "Jonson");
         assert_eq!(
             query.build(),
             "measurement,marina_manager=Smith,manager_to_the_marina_manager=Jonson  time"
@@ -177,16 +179,21 @@ mod tests {
 
     #[test]
     fn test_write_builder_full_query() {
-        let mut query = InfluxDbQuery::write();
+        let query = InfluxDbQuery::write()
+            .add_field("water_level", "2")
+            .add_field("boat_count", "31")
+            .add_field("algae_content", "0.85")
+            .add_tag("marina_manager", "Smith")
+            .add_tag("manager_to_the_marina_manager", "Jonson");
 
-        query.add_field("water_level", "2");
-        query.add_field("boat_count", "31");
-        query.add_field("algae_content", "0.85");
-        query.add_tag("marina_manager", "Smith");
-        query.add_tag("manager_to_the_marina_manager", "Jonson");
         assert_eq!(
             query.build(),
             "measurement,marina_manager=Smith,manager_to_the_marina_manager=Jonson water_level=2,boat_count=31,algae_content=0.85 time"
         );
+    }
+
+    #[test]
+    fn test_test() {
+        InfluxDbQuery::write().add_field("test", "1").add_tag("my_tag", "0.85").build();
     }
 }
