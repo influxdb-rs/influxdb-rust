@@ -1,8 +1,9 @@
 extern crate influxdb;
 
-
-use influxdb::{InfluxDbClient, InfluxDbQuery};
+use influxdb::client::InfluxDbClient;
+use influxdb::query::InfluxDbQuery;
 use tokio::runtime::current_thread::Runtime;
+
 fn get_runtime() -> Runtime {
     Runtime::new().expect("Unable to create a runtime")
 }
