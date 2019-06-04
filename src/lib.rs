@@ -8,8 +8,9 @@ pub mod client;
 pub mod error;
 pub mod query;
 
+#[cfg(feature = "use-serde")]
 pub mod integrations {
-    #[cfg(feature = "serde-orm")]
+    #[cfg(feature = "use-serde")]
     pub mod serde_integration;
 }
 

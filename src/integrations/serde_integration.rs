@@ -18,14 +18,27 @@ struct _DatabaseError {
     error: String,
 }
 
-pub trait InfluxDbSerdeORM {
-    fn json_query<T: 'static, Q>(self, q: Q) -> Box<dyn Future<Item = T, Error = InfluxDbError>> where
-        Q: InfluxDbQuery,
-        T: DeserializeOwned;
+#[derive(Deserialize, Debug)]
+#[doc(hidden)]
+pub struct DatabaseQueryResult<T> {
+    pub results: Vec<InfluxDbReturn<T>>,
 }
 
-impl InfluxDbSerdeORM for InfluxDbClient {
-    fn json_query<T: 'static, Q>(self, q: Q) -> Box<dyn Future<Item = T, Error = InfluxDbError>>
+#[derive(Deserialize, Debug)]
+#[doc(hidden)]
+pub struct InfluxDbReturn<T> {
+    pub series: Option<Vec<InfluxDbSeries<T>>>,
+}
+
+#[derive(Deserialize, Debug)]
+#[doc(hidden)]
+pub struct InfluxDbSeries<T> {
+    pub name: String,
+    pub values: Vec<T>,
+}
+
+impl InfluxDbClient {
+    pub fn json_query<T: 'static, Q>(self, q: Q) -> Box<dyn Future<Item = Option<Vec<T>>, Error = InfluxDbError>>
     where
         Q: InfluxDbQuery,
         T: DeserializeOwned,
@@ -43,7 +56,7 @@ impl InfluxDbSerdeORM for InfluxDbClient {
                 let error = InfluxDbError::UnspecifiedError {
                     error: format!("{}", err),
                 };
-                return Box::new(future::err::<T, InfluxDbError>(error));
+                return Box::new(future::err::<Option<Vec<T>>, InfluxDbError>(error));
             }
             Ok(query) => query,
         };
@@ -89,18 +102,28 @@ impl InfluxDbSerdeORM for InfluxDbClient {
                     error: format!("{}", err)
                 })
                 .and_then(|body| {
+                    println!("{:?}", &body);
                     // Try parsing InfluxDBs { "error": "error message here" }
                     if let Ok(error) = serde_json::from_slice::<_DatabaseError>(&body) {
                         return futures::future::err(InfluxDbError::DatabaseError {
                             error: error.error.to_string()
                         })
-                    } else if let Ok(t_result) = serde_json::from_slice::<T>(&body) {
-                        // Json has another structure, let's try actually parsing it to the type we're deserializing to
-                        return futures::future::result(Ok(t_result));
                     } else {
-                        return futures::future::err(InfluxDbError::UnspecifiedError {
-                            error: "something wen't wrong during deserializsation of the database response. this might be a bug!".to_string()
-                        })
+                        let from_slice = serde_json::from_slice::<DatabaseQueryResult<T>>(&body);
+
+                        let mut deserialized = match from_slice {
+                            Ok(deserialized) => deserialized,
+                            Err(err) => return futures::future::err(InfluxDbError::UnspecifiedError {
+                                error: format!("serde error: {}", err)
+                            })
+                        };
+
+                        // Json has another structure, let's try actually parsing it to the type we're deserializing to
+                        let t_result = match deserialized.results.remove(0).series {
+                            Some(series) => Ok(Some(series.into_iter().flat_map(|x| { x.values }).collect::<Vec<T>>())),
+                            None => Ok(None)
+                        };
+                        return futures::future::result(t_result);
                     }
                 })
         )

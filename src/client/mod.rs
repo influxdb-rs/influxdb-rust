@@ -86,7 +86,7 @@ impl InfluxDbClient {
             })
     }
 
-    pub fn query<Q>(self, q: Q) -> Box<dyn Future<Item = String, Error = InfluxDbError>>
+    pub fn query<Q>(&self, q: Q) -> Box<dyn Future<Item = String, Error = InfluxDbError>>
     where
         Q: InfluxDbQuery,
     {

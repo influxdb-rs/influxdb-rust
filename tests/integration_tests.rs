@@ -47,7 +47,26 @@ fn test_read() {
     let client = create_client();
     let query = InfluxDbQuery::raw_read_query("SELECT * FROM weather");
     let result = get_runtime().block_on(client.query(query));
-    println!("{:?}", result);
     assert!(result.is_ok(), "Should be no error");
-    println!("{}", result.unwrap());
+}
+
+#[test]
+#[cfg(feature = "use-serde")]
+/// INTEGRATION TEST
+///
+/// This test case tests whether the InfluxDB server can be connected to and gathers info about it
+fn test_json() {
+    use serde::Deserialize;
+
+    #[derive(Deserialize, Debug)]
+    struct Weather {
+        time: String,
+        temperature: i32,
+    }
+
+    let client = create_client();
+    let query = InfluxDbQuery::raw_read_query("SELECT * FROM weather");
+    let result = get_runtime().block_on(client.json_query::<Weather, _>(query));
+
+    assert!(result.is_ok(), "We could read from the DB");
 }
