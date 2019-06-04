@@ -1,11 +1,23 @@
 #![allow(dead_code)]
+#![feature(toowned_clone_into)]
 
 #[macro_use]
 extern crate failure;
 
-use futures::Future;
+// use itertools::Itertools;
+// use std::mem;
+// use std::io::{self, Cursor};
+// use futures::{Future, Stream};
+// use reqwest::r#async::{Client, Decoder};
+
+use futures::{Future, Stream};
 use itertools::Itertools;
-use reqwest::r#async::Client;
+use reqwest::r#async::{Client, Decoder};
+use serde::de::DeserializeOwned;
+
+use serde::{Deserialize, Serialize};
+use serde_json;
+use std::mem;
 
 #[derive(Debug, Fail)]
 /// Errors that might happen in the crate
@@ -13,11 +25,27 @@ pub enum InfluxDbError {
     #[fail(display = "query must contain at least one field")]
     /// Error happens when query has zero fields
     InvalidQueryError,
+
+    #[fail(
+        display = "an error happened: \"{}\". this case should be handled better, please file an issue.",
+        error
+    )]
+    /// todo: Error which is a placeholder for more meaningful errors. This should be refactored away.
+    UnspecifiedError { error: String },
+
+    #[fail(display = "InfluxDB encountered the following error: {}", error)]
+    /// Error which has happened inside InfluxDB
+    DatabaseError { error: String },
 }
 
 #[derive(Debug)]
 #[doc(hidden)]
 pub struct ValidQuery(String);
+impl ValidQuery {
+    pub fn get(self) -> String {
+        self.0
+    }
+}
 impl PartialEq<String> for ValidQuery {
     fn eq(&self, other: &String) -> bool {
         &self.0 == other
@@ -27,6 +55,11 @@ impl PartialEq<&str> for ValidQuery {
     fn eq(&self, other: &&str) -> bool {
         &self.0 == other
     }
+}
+
+#[derive(Deserialize)]
+struct _DatabaseError {
+    error: String,
 }
 
 /// Used to create read or [`InfluxDbWriteQuery`] queries to InfluxDB
@@ -41,7 +74,7 @@ impl PartialEq<&str> for ValidQuery {
 ///     .add_tag("tag1", "Gero")
 ///     .build();
 ///
-/// assert!(query.is_ok());
+/// assert!(write_query.is_ok());
 ///
 /// //todo: document read query once it's implemented.
 /// ```
@@ -56,12 +89,14 @@ pub trait InfluxDbQuery {
     /// use influxdb::InfluxDbQuery;
     ///
     /// let invalid_query = InfluxDbQuery::write_query("measurement").build();
-    /// assert!(query.is_err());
+    /// assert!(invalid_query.is_err());
     ///
     /// let valid_query = InfluxDbQuery::write_query("measurement").add_field("myfield1", "11").build();
-    /// assert!(query.is_ok());
+    /// assert!(valid_query.is_ok());
     /// ```
     fn build<'a>(self) -> Result<ValidQuery, InfluxDbError>;
+
+    fn get_type(&self) -> QueryType;
 }
 
 impl InfluxDbQuery {
@@ -85,7 +120,34 @@ impl InfluxDbQuery {
         }
     }
 
-    // pub fn read() {}
+    pub fn raw_read_query<S>(read_query: S) -> InfluxDbReadQuery
+    where
+        S: Into<String>,
+    {
+        InfluxDbReadQuery {
+            query: read_query.into(),
+        }
+    }
+}
+
+pub enum QueryType {
+    ReadQuery,
+    WriteQuery,
+}
+
+// todo: orm for query
+pub struct InfluxDbReadQuery {
+    query: String,
+}
+
+impl InfluxDbQuery for InfluxDbReadQuery {
+    fn build<'a>(self) -> Result<ValidQuery, InfluxDbError> {
+        Ok(ValidQuery(self.query))
+    }
+
+    fn get_type(&self) -> QueryType {
+        QueryType::ReadQuery
+    }
 }
 
 /// Write Query Builder returned by [InfluxDbQuery::write_query]()
@@ -141,30 +203,44 @@ impl InfluxDbWriteQuery {
 // todo: fuse_with(other: ValidQuery), so multiple queries can be run at the same time
 impl InfluxDbQuery for InfluxDbWriteQuery {
     // todo: time (with precision)
+    // Influx Line Protocol
+    // weather,location=us-midwest temperature=82 1465839830100400200
+    // |    -------------------- --------------  |
+    // |             |             |             |
+    // |             |             |             |
+    // +-----------+--------+-+---------+-+---------+
+    // |measurement|,tag_set| |field_set| |timestamp|
+    // +-----------+--------+-+---------+-+---------+
     fn build<'a>(self) -> Result<ValidQuery, InfluxDbError> {
         if self.fields.is_empty() {
             return Err(InfluxDbError::InvalidQueryError);
         }
 
-        let tags = self
+        let mut tags = self
             .tags
             .into_iter()
             .map(|(tag, value)| format!("{tag}={value}", tag = tag, value = value))
-            .join(",")
-            + " ";
+            .join(",");
+        if !tags.is_empty() {
+            tags.insert_str(0, ",");
+        }
         let fields = self
             .fields
             .into_iter()
             .map(|(field, value)| format!("{field}={value}", field = field, value = value))
-            .join(",")
-            + " ";
+            .join(",");
 
         Ok(ValidQuery(format!(
-            "{measurement},{tags}{fields}time",
+            "{measurement}{tags} {fields}{time}",
             measurement = self.measurement,
             tags = tags,
-            fields = fields
+            fields = fields,
+            time = ""
         )))
+    }
+
+    fn get_type(&self) -> QueryType {
+        QueryType::WriteQuery
     }
 }
 
@@ -223,7 +299,7 @@ impl InfluxDbClient {
         self.url
     }
 
-    pub fn ping(&self) -> impl Future<Item = (String, String), Error = ()> {
+    pub fn ping(&self) -> impl Future<Item = (String, String), Error = InfluxDbError> {
         Client::new()
             .get(format!("{}/ping", self.url).as_str())
             .send()
@@ -243,37 +319,199 @@ impl InfluxDbClient {
 
                 (String::from(build), String::from(version))
             })
-            .map_err(|err| println!("request error: {}", err))
+            .map_err(|err| InfluxDbError::UnspecifiedError {
+                error: format!("{}", err),
+            })
+    }
+
+    pub fn json_query<T: 'static, Q>(self, q: Q) -> Box<dyn Future<Item = T, Error = InfluxDbError>>
+    where
+        Q: InfluxDbQuery,
+        T: DeserializeOwned,
+    {
+        use futures::future;
+
+        let query_type = q.get_type();
+        let endpoint = match query_type {
+            QueryType::ReadQuery => "query",
+            QueryType::WriteQuery => "write",
+        };
+
+        let query = match q.build() {
+            Err(err) => {
+                let error = InfluxDbError::UnspecifiedError {
+                    error: format!("{}", err),
+                };
+                return Box::new(future::err::<T, InfluxDbError>(error));
+            }
+            Ok(query) => query,
+        };
+
+        let query_str = query.get();
+        let url_params = match query_type {
+            QueryType::ReadQuery => format!("&q={}", query_str),
+            QueryType::WriteQuery => String::from(""),
+        };
+
+        println!(
+            "{url}/{endpoint}?db={db}{url_params}",
+            url = self.url,
+            endpoint = endpoint,
+            db = self.database,
+            url_params = url_params
+        );
+
+        let client = match query_type {
+            QueryType::ReadQuery => Client::new().get(
+                format!(
+                    "{url}/{endpoint}?db={db}{url_params}",
+                    url = self.url,
+                    endpoint = endpoint,
+                    db = self.database,
+                    url_params = url_params
+                )
+                .as_str(),
+            ),
+            QueryType::WriteQuery => Client::new()
+                .post(
+                    format!(
+                        "{url}/{endpoint}?db={db}",
+                        url = self.url,
+                        endpoint = endpoint,
+                        db = self.database,
+                    )
+                    .as_str(),
+                )
+                .body(query_str),
+        };
+
+        Box::new(
+            client
+                .send()
+                .and_then(|mut res| {
+                    println!("{}", res.status());
+
+                    let body = mem::replace(res.body_mut(), Decoder::empty());
+                    body.concat2()
+                })
+                .map_err(|err| InfluxDbError::UnspecifiedError {
+                    error: format!("{}", err)
+                })
+                .and_then(|body| {
+                    // Try parsing InfluxDBs { "error": "error message here" }
+                    if let Ok(error) = serde_json::from_slice::<_DatabaseError>(&body) {
+                        return futures::future::err(InfluxDbError::DatabaseError {
+                            error: format!("{}", error.error)
+                        })
+                    } else if let Ok(t_result) = serde_json::from_slice::<T>(&body) {
+                        // Json has another structure, let's try actually parsing it to the type we're deserializing to
+                        return futures::future::result(Ok(t_result));
+                    } else {
+                        return futures::future::err(InfluxDbError::UnspecifiedError {
+                            error: String::from("something wen't wrong during deserializsation of the database response. this might be a bug!")
+                        })
+                    }
+                })
+        )
+    }
+
+    pub fn query<Q>(self, q: Q) -> Box<dyn Future<Item = String, Error = InfluxDbError>>
+    where
+        Q: InfluxDbQuery,
+    {
+        use futures::future;
+
+        let query_type = q.get_type();
+        let endpoint = match query_type {
+            QueryType::ReadQuery => "query",
+            QueryType::WriteQuery => "write",
+        };
+
+        let query = match q.build() {
+            Err(err) => {
+                let error = InfluxDbError::UnspecifiedError {
+                    error: format!("{}", err),
+                };
+                return Box::new(future::err::<String, InfluxDbError>(error));
+            }
+            Ok(query) => query,
+        };
+
+        let query_str = query.get();
+        let url_params = match query_type {
+            QueryType::ReadQuery => format!("&q={}", query_str),
+            QueryType::WriteQuery => String::from(""),
+        };
+
+        println!(
+            "{url}/{endpoint}?db={db}{url_params}",
+            url = self.url,
+            endpoint = endpoint,
+            db = self.database,
+            url_params = url_params
+        );
+
+        let client = match query_type {
+            QueryType::ReadQuery => Client::new().get(
+                format!(
+                    "{url}/{endpoint}?db={db}{url_params}",
+                    url = self.url,
+                    endpoint = endpoint,
+                    db = self.database,
+                    url_params = url_params
+                )
+                .as_str(),
+            ),
+            QueryType::WriteQuery => Client::new()
+                .post(
+                    format!(
+                        "{url}/{endpoint}?db={db}",
+                        url = self.url,
+                        endpoint = endpoint,
+                        db = self.database,
+                    )
+                    .as_str(),
+                )
+                .body(query_str),
+        };
+
+        Box::new(
+            client
+                .send()
+                .and_then(|mut res| {
+                    println!("{}", res.status());
+
+                    let body = mem::replace(res.body_mut(), Decoder::empty());
+                    body.concat2()
+                })
+                .map_err(|err| InfluxDbError::UnspecifiedError {
+                    error: format!("{}", err),
+                })
+                .and_then(|body| {
+                    // Try parsing InfluxDBs { "error": "error message here" }
+                    if let Ok(error) = serde_json::from_slice::<_DatabaseError>(&body) {
+                        return futures::future::err(InfluxDbError::DatabaseError {
+                            error: format!("{}", error.error),
+                        });
+                    }
+
+                    if let Ok(utf8) = std::str::from_utf8(&body) {
+                        let mut s = String::new();
+                        utf8.clone_into(&mut s);
+                        return futures::future::ok(s);
+                    }
+
+                    return futures::future::err(InfluxDbError::UnspecifiedError {
+                        error: format!("{}", "some other error has happened here!"),
+                    });
+                }),
+        )
     }
 }
 
-pub fn main() {}
-
 #[cfg(test)]
 mod tests {
-    use super::{InfluxDbClient, InfluxDbQuery};
-    use tokio::runtime::current_thread::Runtime;
-
-    fn get_runtime() -> Runtime {
-        Runtime::new().expect("Unable to create a runtime")
-    }
-
-    fn create_client() -> InfluxDbClient {
-        InfluxDbClient::new("http://localhost:8086", "test")
-    }
-
-    #[test]
-    fn test_ping() {
-        let client = create_client();
-        let result = get_runtime().block_on(client.ping());
-        assert!(result.is_ok(), "Should be no error");
-
-        let (build, version) = result.unwrap();
-        assert!(!build.is_empty(), "Build should not be empty");
-        assert!(!version.is_empty(), "Build should not be empty");
-
-        println!("build: {} version: {}", build, version);
-    }
+    use super::InfluxDbQuery;
 
     #[test]
     fn test_write_builder_empty_query() {
@@ -284,34 +522,30 @@ mod tests {
 
     #[test]
     fn test_write_builder_single_field() {
-        let query = InfluxDbQuery::write_query("marina_3")
-            .add_field("water_level", "2")
+        let query = InfluxDbQuery::write_query("weather")
+            .add_field("temperature", "82")
             .build();
 
         assert!(query.is_ok(), "Query was empty");
-        assert_eq!(query.unwrap(), "marina_3, water_level=2 time");
+        assert_eq!(query.unwrap(), "weather temperature=82");
     }
 
     #[test]
     fn test_write_builder_multiple_fields() {
-        let query = InfluxDbQuery::write_query("marina_3")
-            .add_field("water_level", "2")
-            .add_field("boat_count", "31")
-            .add_field("algae_content", "0.85")
+        let query = InfluxDbQuery::write_query("weather")
+            .add_field("temperature", "82")
+            .add_field("wind_strength", "3.7")
             .build();
 
         assert!(query.is_ok(), "Query was empty");
-        assert_eq!(
-            query.unwrap(),
-            "marina_3, water_level=2,boat_count=31,algae_content=0.85 time"
-        );
+        assert_eq!(query.unwrap(), "weather temperature=82,wind_strength=3.7");
     }
 
     // fixme: quoting / escaping of long strings
     #[test]
     fn test_write_builder_only_tags() {
-        let query = InfluxDbQuery::write_query("marina_3")
-            .add_tag("marina_manager", "Smith")
+        let query = InfluxDbQuery::write_query("weather")
+            .add_tag("season", "summer")
             .build();
 
         assert!(query.is_err(), "Query missing one or more fields");
@@ -319,18 +553,16 @@ mod tests {
 
     #[test]
     fn test_write_builder_full_query() {
-        let query = InfluxDbQuery::write_query("marina_3")
-            .add_field("water_level", "2")
-            .add_field("boat_count", "31")
-            .add_field("algae_content", "0.85")
-            .add_tag("marina_manager", "Smith")
-            .add_tag("manager_to_the_marina_manager", "Jonson")
+        let query = InfluxDbQuery::write_query("weather")
+            .add_field("temperature", "82")
+            .add_tag("location", "us-midwest")
+            .add_tag("season", "summer")
             .build();
 
         assert!(query.is_ok(), "Query was empty");
         assert_eq!(
             query.unwrap(),
-            "marina_3,marina_manager=Smith,manager_to_the_marina_manager=Jonson water_level=2,boat_count=31,algae_content=0.85 time"
+            "weather,location=us-midwest,season=summer temperature=82"
         );
     }
 }
