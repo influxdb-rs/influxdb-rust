@@ -38,7 +38,7 @@ pub struct InfluxDbSeries<T> {
 }
 
 impl InfluxDbClient {
-    pub fn json_query<T: 'static, Q>(self, q: Q) -> Box<dyn Future<Item = Option<Vec<T>>, Error = InfluxDbError>>
+    pub fn json_query<T: 'static, Q>(&self, q: Q) -> Box<dyn Future<Item = Option<Vec<InfluxDbSeries<T>>>, Error = InfluxDbError>>
     where
         Q: InfluxDbQuery,
         T: DeserializeOwned,
@@ -56,7 +56,7 @@ impl InfluxDbClient {
                 let error = InfluxDbError::UnspecifiedError {
                     error: format!("{}", err),
                 };
-                return Box::new(future::err::<Option<Vec<T>>, InfluxDbError>(error));
+                return Box::new(future::err::<Option<Vec<InfluxDbSeries<T>>>, InfluxDbError>(error));
             }
             Ok(query) => query,
         };
@@ -102,13 +102,13 @@ impl InfluxDbClient {
                     error: format!("{}", err)
                 })
                 .and_then(|body| {
-                    println!("{:?}", &body);
                     // Try parsing InfluxDBs { "error": "error message here" }
                     if let Ok(error) = serde_json::from_slice::<_DatabaseError>(&body) {
                         return futures::future::err(InfluxDbError::DatabaseError {
                             error: error.error.to_string()
                         })
                     } else {
+                        // Json has another structure, let's try actually parsing it to the type we're deserializing 
                         let from_slice = serde_json::from_slice::<DatabaseQueryResult<T>>(&body);
 
                         let mut deserialized = match from_slice {
@@ -118,12 +118,7 @@ impl InfluxDbClient {
                             })
                         };
 
-                        // Json has another structure, let's try actually parsing it to the type we're deserializing to
-                        let t_result = match deserialized.results.remove(0).series {
-                            Some(series) => Ok(Some(series.into_iter().flat_map(|x| { x.values }).collect::<Vec<T>>())),
-                            None => Ok(None)
-                        };
-                        return futures::future::result(t_result);
+                        return futures::future::result(Ok(deserialized.results.remove(0).series));
                     }
                 })
         )

@@ -19,7 +19,10 @@ use crate::query::write_query::InfluxDbWriteQuery;
 ///
 /// assert!(write_query.is_ok());
 ///
-/// //todo: document read query once it's implemented.
+/// let read_query = InfluxDbQuery::raw_read_query("SELECT * FROM weather")
+///     .build();
+///
+/// assert!(read_query.is_ok());
 /// ```
 pub trait InfluxDbQuery {
     /// Builds valid InfluxSQL which can be run against the Database.
