@@ -1,5 +1,4 @@
 #![allow(dead_code)]
-#![feature(toowned_clone_into)]
 
 #[macro_use]
 extern crate failure;

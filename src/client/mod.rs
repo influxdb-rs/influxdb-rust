@@ -151,8 +151,7 @@ impl InfluxDbClient {
                 })
                 .and_then(|body| {
                     if let Ok(utf8) = std::str::from_utf8(&body) {
-                        let mut s = String::new();
-                        utf8.clone_into(&mut s);
+                        let s = utf8.to_owned();
 
                         // todo: improve error parsing without serde
                         if s.contains("\"error\"") {
