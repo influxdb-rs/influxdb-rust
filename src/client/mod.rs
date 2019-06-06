@@ -43,9 +43,10 @@ impl InfluxDbClient {
     ///
     /// let _client = InfluxDbClient::new("http://localhost:8086", "test");
     /// ```
-    pub fn new<S>(url: S, database: S) -> Self
+    pub fn new<S1, S2>(url: S1, database: S2) -> Self
     where
-        S: Into<String>,
+        S1: Into<String>,
+        S2: Into<String>,
     {
         InfluxDbClient {
             url: url.into(),
