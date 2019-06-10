@@ -23,7 +23,7 @@ matrix:
         - rust: nightly
 
 script:
-    - cd $TEST_DIR && cargo build && cargo test && cargo clippy
+    - cd $TEST_DIR && cargo build && cargo test
 
 addons:
     apt:
