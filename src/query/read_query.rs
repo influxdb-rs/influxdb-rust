@@ -1,18 +1,23 @@
+//! Read Query Builder returned by InfluxDbQuery::raw_read_query
+//!
+//! Can only be instantiated by using InfluxDbQuery::raw_read_query
 
 use crate::error::InfluxDbError;
 use crate::query::{InfluxDbQuery, QueryType, ValidQuery};
+
 // todo: orm for query
 pub struct InfluxDbReadQuery {
     query: String,
 }
 
 impl InfluxDbReadQuery {
+    /// Creates a new [`InfluxDbReadQuery`]
     pub fn new<S>(query: S) -> Self
     where
-        S: Into<String>,
+        S: ToString,
     {
         InfluxDbReadQuery {
-            query: query.into(),
+            query: query.to_string(),
         }
     }
 }

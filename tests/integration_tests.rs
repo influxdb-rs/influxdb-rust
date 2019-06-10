@@ -34,7 +34,7 @@ fn test_ping_influx_db() {
 /// This test case tests whether the InfluxDB server can be connected to and gathers info about it
 fn test_write_field() {
     let client = create_client();
-    let query = InfluxDbQuery::write_query("weather").add_field("temperature", "82");
+    let query = InfluxDbQuery::write_query("weather").add_field("temperature", 82);
     let result = get_runtime().block_on(client.query(query));
     assert!(result.is_ok(), "Should be no error");
 }
@@ -42,20 +42,24 @@ fn test_write_field() {
 #[test]
 /// INTEGRATION TEST
 ///
-/// This test case tests whether the InfluxDB server can be connected to and gathers info about it
+/// This test case tests whether the raw string can be returned from the InfluxDB
 fn test_read() {
     let client = create_client();
     let query = InfluxDbQuery::raw_read_query("SELECT * FROM weather");
     let result = get_runtime().block_on(client.query(query));
     assert!(result.is_ok(), "Should be no error");
+    assert!(
+        !result.unwrap().contains("error"),
+        "Data contained a database error"
+    );
 }
 
 #[test]
 #[cfg(feature = "use-serde")]
 /// INTEGRATION TEST
 ///
-/// This test case tests whether the InfluxDB server can be connected to and gathers info about it
-fn test_json() {
+/// This test case tests whether JSON can be decoded from a InfluxDB response
+fn test_json_query() {
     use serde::Deserialize;
 
     #[derive(Deserialize, Debug)]

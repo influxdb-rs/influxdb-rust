@@ -1,11 +1,12 @@
+//! Write Query Builder returned by InfluxDbQuery::write_query
+//!
+//! Can only be instantiated by using InfluxDbQuery::write_query
 
 use crate::error::InfluxDbError;
 use crate::query::{InfluxDbQuery, QueryType, ValidQuery};
 use itertools::Itertools;
 
-/// Write Query Builder returned by [InfluxDbQuery::write_query]()
-///
-/// Can only be instantiated by using [InfluxDbQuery::write_query]()
+/// Internal Representation of a Write query that has not yet been built
 pub struct InfluxDbWriteQuery {
     fields: Vec<(String, String)>,
     tags: Vec<(String, String)>,
@@ -14,38 +15,41 @@ pub struct InfluxDbWriteQuery {
 }
 
 impl InfluxDbWriteQuery {
+    /// Creates a new [`InfluxDbWriteQuery`](crate::query::write_query::InfluxDbWriteQuery)
     pub fn new<S>(measurement: S) -> Self
     where
-        S: Into<String>,
+        S: ToString,
     {
         InfluxDbWriteQuery {
             fields: vec![],
             tags: vec![],
-            measurement: measurement.into(),
+            measurement: measurement.to_string(),
             // precision: Precision
         }
     }
 
-    /// Adds a field to the [`InfluxDbWriteQuery`]
+    /// Adds a field to the [`InfluxDbWriteQuery`](crate::query::write_query::InfluxDbWriteQuery)
     ///
     /// # Examples
     ///
     /// ```rust
     /// use influxdb::query::InfluxDbQuery;
     ///
-    /// InfluxDbQuery::write_query("measurement").add_field("field1", "5").build();
+    /// InfluxDbQuery::write_query("measurement").add_field("field1", 5).build();
     /// ```
-    pub fn add_field<S>(mut self, point: S, value: S) -> Self
+    pub fn add_field<S, I>(mut self, tag: S, value: I) -> Self
     where
-        S: Into<String>,
+        S: ToString,
+        I: Into<InfluxDbType>,
     {
-        self.fields.push((point.into(), value.into()));
+        let val: InfluxDbType = value.into();
+        self.fields.push((tag.to_string(), val.to_string()));
         self
     }
 
-    /// Adds a tag to the [`InfluxDbWriteQuery`]
+    /// Adds a tag to the [`InfluxDbWriteQuery`](crate::query::write_query::InfluxDbWriteQuery)
     ///
-    /// Please note that a [`InfluxDbWriteQuery`] requires at least one field. Composing a query with
+    /// Please note that a [`InfluxDbWriteQuery`](crate::query::write_query::InfluxDbWriteQuery) requires at least one field. Composing a query with
     /// only tags will result in a failure building the query.
     ///
     /// # Examples
@@ -54,14 +58,60 @@ impl InfluxDbWriteQuery {
     /// use influxdb::query::InfluxDbQuery;
     ///
     /// InfluxDbQuery::write_query("measurement")
-    ///     .add_tag("field1", "5"); // calling `.build()` now would result in a `Err(InfluxDbError::InvalidQueryError)`
+    ///     .add_tag("field1", 5); // calling `.build()` now would result in a `Err(InfluxDbError::InvalidQueryError)`
     /// ```
-    pub fn add_tag<S>(mut self, tag: S, value: S) -> Self
+    pub fn add_tag<S, I>(mut self, tag: S, value: I) -> Self
     where
-        S: Into<String>,
+        S: ToString,
+        I: Into<InfluxDbType>,
     {
-        self.tags.push((tag.into(), value.into()));
+        let val: InfluxDbType = value.into();
+        self.tags.push((tag.to_string(), val.to_string()));
         self
+    }
+}
+
+pub enum InfluxDbType {
+    Boolean(bool),
+    Float(f64),
+    SignedInteger(i64),
+    UnsignedInteger(u64),
+    Text(String),
+}
+
+impl ToString for InfluxDbType {
+    fn to_string(&self) -> String {
+        use InfluxDbType::*;
+
+        match self {
+            Boolean(x) => x.to_string(),
+            Float(x) => x.to_string(),
+            SignedInteger(x) => x.to_string(),
+            UnsignedInteger(x) => x.to_string(),
+            Text(text) => format!("\"{text}\"", text = text),
+        }
+    }
+}
+
+macro_rules! from_impl {
+        ( $variant:ident => $( $typ:ident ),+ ) => (
+                $(
+                    impl From<$typ> for InfluxDbType {
+                        fn from(b: $typ) -> Self {
+                            InfluxDbType::$variant(b.into())
+                        }
+                    }
+                )+
+        )
+}
+from_impl! {Boolean => bool}
+from_impl! {Float => f32, f64}
+from_impl! {SignedInteger => i8, i16, i32, i64}
+from_impl! {UnsignedInteger => u8, u16, u32, u64}
+from_impl! {Text => String}
+impl From<&str> for InfluxDbType {
+    fn from(b: &str) -> Self {
+        InfluxDbType::Text(b.into())
     }
 }
 
@@ -70,7 +120,9 @@ impl InfluxDbQuery for InfluxDbWriteQuery {
     // todo: time (with precision)
     fn build(self) -> Result<ValidQuery, InfluxDbError> {
         if self.fields.is_empty() {
-            return Err(InfluxDbError::InvalidQueryError);
+            return Err(InfluxDbError::InvalidQueryError {
+                error: "fields cannot be empty".to_string(),
+            });
         }
 
         let mut tags = self
