@@ -21,7 +21,6 @@ before_cache:
 env:
 os:
     - linux
-    - osx
 rust:
     - stable
     - beta
@@ -48,8 +47,8 @@ matrix:
               - cargo install-update -a
           script:
               - |
-                  cargo build --verbose &&
-                  cargo coverage --verbose &&
+                  cargo build &&
+                  cargo coverage &&
                   wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz &&
                   tar xzf master.tar.gz && mkdir kcov-master/build && cd kcov-master/build && cmake .. && make &&
                   sudo make install && cd ../.. &&
@@ -65,6 +64,6 @@ matrix:
 
 script: |
     export RUST_BACKTRACE=1 &&
-    cargo build --verbose &&
-    cargo test --verbose &&
-    cargo doc --no-deps --verbose
+    cargo build &&
+    cargo test &&
+    cargo doc --no-deps
