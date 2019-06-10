@@ -13,7 +13,6 @@
 //!
 //! # Planned Features
 //!
-//!  * Better support queries like `CREATE`, `DROP` or `ALTER` which need to be sent as `POST` requests
 //!  * Running multiple queries in one request (e.g. `SELECT * FROM weather_berlin; SELECT * FROM weather_london`)
 //!  * Read Query Builder instead of supplying raw queries
 //!  * Authentication against InfluxDB
@@ -21,7 +20,13 @@
 //!
 //! # Quickstart
 //!
-//! For a example with using Serde deserialization, please refer to [serde_integration](crate::integrations::serde_integration)
+//! Add the following to your `Cargo.toml`
+//!
+//! ```toml
+//! influxdb = "0.0.1"
+//! ```
+//!
+//! For an example with using Serde deserialization, please refer to [serde_integration](crate::integrations::serde_integration)
 //!
 //! ```rust,no_run
 //! use influxdb::query::InfluxDbQuery;
