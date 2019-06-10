@@ -31,6 +31,20 @@ fn test_ping_influx_db() {
 #[test]
 /// INTEGRATION TEST
 ///
+/// Tests if a database can be created
+fn test_create_database() {
+    let client = create_client();
+    let query = InfluxDbQuery::raw_read_query("CREATE DATABASE test");
+    let result = get_runtime().block_on(client.query(query));
+    assert!(
+        result.is_ok(),
+        format!("Should be no error: {}", result.unwrap_err())
+    );
+}
+
+#[test]
+/// INTEGRATION TEST
+///
 /// This test case tests whether the InfluxDB server can be connected to and gathers info about it
 fn test_write_field() {
     let client = create_client();
