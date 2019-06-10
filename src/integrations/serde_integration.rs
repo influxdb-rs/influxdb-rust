@@ -87,12 +87,7 @@ impl InfluxDbClient {
     {
         use futures::future;
 
-        let query_type = q.get_type();
-        let endpoint = match query_type {
-            QueryType::ReadQuery => "query",
-            QueryType::WriteQuery => "write",
-        };
-
+        let q_type = q.get_type();
         let query = match q.build() {
             Err(err) => {
                 let error = InfluxDbError::InvalidQueryError {
@@ -105,34 +100,32 @@ impl InfluxDbClient {
             Ok(query) => query,
         };
 
-        let query_str = query.get();
-        let url_params = match query_type {
-            QueryType::ReadQuery => format!("&q={}", query_str),
-            QueryType::WriteQuery => String::from(""),
-        };
-
-        let client = match query_type {
-            QueryType::ReadQuery => Client::new().get(
-                format!(
-                    "{url}/{endpoint}?db={db}{url_params}",
+        let client = match q_type {
+            QueryType::ReadQuery => {
+                let read_query = query.get();
+                let http_query_string = format!(
+                    "{url}/query?db={db}&q={read_query}",
                     url = self.database_url(),
-                    endpoint = endpoint,
                     db = self.database_name(),
-                    url_params = url_params
-                )
-                .as_str(),
-            ),
+                    read_query = read_query,
+                );
+
+                if read_query.contains("SELECT") || read_query.contains("SHOW") {
+                    Client::new().get(http_query_string.as_str())
+                } else {
+                    Client::new().post(http_query_string.as_str())
+                }
+            }
             QueryType::WriteQuery => Client::new()
                 .post(
                     format!(
-                        "{url}/{endpoint}?db={db}",
+                        "{url}/write?db={db}",
                         url = self.database_url(),
-                        endpoint = endpoint,
                         db = self.database_name(),
                     )
                     .as_str(),
                 )
-                .body(query_str),
+                .body(query.get()),
         };
 
         Box::new(

@@ -1,4 +1,5 @@
-//! Used to create queries of type [`InfluxDbReadQuery`](crate::query::read_query::InfluxDbReadQuery) or [`InfluxDbWriteQuery`](crate::query::write_query::InfluxDbWriteQuery) which can be executed in InfluxDB
+//! Used to create queries of type [`InfluxDbReadQuery`](crate::query::read_query::InfluxDbReadQuery) or
+//! [`InfluxDbWriteQuery`](crate::query::write_query::InfluxDbWriteQuery) which can be executed in InfluxDB
 //!
 //! # Examples
 //!

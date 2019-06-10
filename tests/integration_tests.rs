@@ -31,12 +31,29 @@ fn test_ping_influx_db() {
 #[test]
 /// INTEGRATION TEST
 ///
+/// Tests if a database can be created
+fn test_create_database() {
+    let client = create_client();
+    let query = InfluxDbQuery::raw_read_query("CREATE DATABASE test");
+    let result = get_runtime().block_on(client.query(query));
+    assert!(
+        result.is_ok(),
+        format!("Should be no error: {}", result.unwrap_err())
+    );
+}
+
+#[test]
+/// INTEGRATION TEST
+///
 /// This test case tests whether the InfluxDB server can be connected to and gathers info about it
 fn test_write_field() {
     let client = create_client();
     let query = InfluxDbQuery::write_query("weather").add_field("temperature", 82);
     let result = get_runtime().block_on(client.query(query));
-    assert!(result.is_ok(), "Should be no error");
+    assert!(
+        result.is_ok(),
+        format!("Should be no error: {}", result.unwrap_err())
+    );
 }
 
 #[test]
@@ -47,7 +64,10 @@ fn test_read() {
     let client = create_client();
     let query = InfluxDbQuery::raw_read_query("SELECT * FROM weather");
     let result = get_runtime().block_on(client.query(query));
-    assert!(result.is_ok(), "Should be no error");
+    assert!(
+        result.is_ok(),
+        format!("Should be no error: {}", result.unwrap_err())
+    );
     assert!(
         !result.unwrap().contains("error"),
         "Data contained a database error"
@@ -72,5 +92,8 @@ fn test_json_query() {
     let query = InfluxDbQuery::raw_read_query("SELECT * FROM weather");
     let result = get_runtime().block_on(client.json_query::<Weather, _>(query));
 
-    assert!(result.is_ok(), "We could read from the DB");
+    assert!(
+        result.is_ok(),
+        format!("We couldn't read from the DB: {}", result.unwrap_err())
+    );
 }
