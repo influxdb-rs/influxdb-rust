@@ -1,0 +1,69 @@
+language: rust
+
+sudo: required
+
+before_install:
+    - wget https://dl.influxdata.com/influxdb/releases/influxdb_1.7.6_amd64.deb
+    - sudo dpkg -i influxdb_1.7.6_amd64.deb
+    - sudo influxd > $HOME/influx.log 2>&1 &
+
+branches:
+    only:
+        - master
+
+cache:
+    directories:
+        - /home/travis/.cargo
+
+before_cache:
+    - rm -rf /home/travis/.cargo/registry
+
+env:
+os:
+    - linux
+rust:
+    - stable
+    - beta
+    - nightly
+
+matrix:
+    fast_finish: true
+    allow_failures:
+    include:
+        - rust: stable
+          env: NAME='linting'
+          before_script:
+              - rustup component add rustfmt-preview
+              - rustup component add clippy-preview
+          script:
+              - cargo fmt --all -- --check
+              - cargo clippy
+
+        - env: NAME='cargo-travis'
+          sudo: required
+          before_script:
+              - cargo install cargo-update || echo "cargo-update already installed"
+              - cargo install cargo-travis || echo "cargo-travis already installed"
+              - cargo install-update -a
+          script:
+              - |
+                  cargo build &&
+                  cargo coverage &&
+                  wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz &&
+                  tar xzf master.tar.gz && mkdir kcov-master/build && cd kcov-master/build && cmake .. && make &&
+                  sudo make install && cd ../.. &&
+                  kcov --coveralls-id=$TRAVIS_JOB_ID --exclude-pattern=/.cargo target/kcov target/debug/influxdb-*
+          addons:
+              apt:
+                  packages:
+                      - libcurl4-openssl-dev
+                      - libelf-dev
+                      - libdw-dev
+                      - binutils-dev
+                      - cmake
+
+script: |
+    export RUST_BACKTRACE=1 &&
+    cargo build &&
+    cargo test &&
+    cargo doc --no-deps
