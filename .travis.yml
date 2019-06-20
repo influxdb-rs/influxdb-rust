@@ -52,7 +52,7 @@ matrix:
                   wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz &&
                   tar xzf master.tar.gz && mkdir kcov-master/build && cd kcov-master/build && cmake .. && make &&
                   sudo make install && cd ../.. &&
-                  kcov --coveralls-id=$TRAVIS_JOB_ID --exclude-pattern=/.cargo target/kcov target/debug/influxdb-*
+                  kcov --coveralls-id=$TRAVIS_JOB_ID --include-path=src --verify target/kcov target/debug/influxdb-*
           addons:
               apt:
                   packages:

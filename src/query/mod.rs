@@ -89,6 +89,14 @@ impl ValidQuery {
         self.0
     }
 }
+impl<T> From<T> for ValidQuery
+where
+    T: ToString,
+{
+    fn from(string: T) -> Self {
+        Self(string.to_string())
+    }
+}
 impl PartialEq<String> for ValidQuery {
     fn eq(&self, other: &String) -> bool {
         &self.0 == other
@@ -104,4 +112,22 @@ impl PartialEq<&str> for ValidQuery {
 pub enum QueryType {
     ReadQuery,
     WriteQuery,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::ValidQuery;
+
+    #[test]
+    fn test_equality_str() {
+        assert_eq!(ValidQuery::from("hello"), "hello");
+    }
+
+    #[test]
+    fn test_equality_string() {
+        assert_eq!(
+            ValidQuery::from(String::from("hello")),
+            String::from("hello")
+        );
+    }
 }

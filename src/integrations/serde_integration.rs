@@ -25,7 +25,7 @@
 //! let mut rt = tokio::runtime::current_thread::Runtime::new().unwrap();
 //! let client = InfluxDbClient::new("http://localhost:8086", "test");
 //! let query = InfluxDbQuery::raw_read_query("SELECT temperature FROM /weather_[a-z]*$/ WHERE time > now() - 1m ORDER BY DESC");
-//! let _result = rt.block_on(client.json_query::<WeatherWithoutCityName, _>(query))
+//! let _result = rt.block_on(client.json_query::<WeatherWithoutCityName>(query))
 //!     .map(|it| {
 //!         it.map(|series_vec| {
 //!             series_vec
@@ -49,8 +49,9 @@ use serde::Deserialize;
 use serde_json;
 
 use crate::error::InfluxDbError;
-use crate::query::{InfluxDbQuery, QueryType};
 
+use crate::query::read_query::InfluxDbReadQuery;
+use crate::query::{InfluxDbQuery, QueryType};
 #[derive(Deserialize)]
 #[doc(hidden)]
 struct _DatabaseError {
@@ -77,28 +78,17 @@ pub struct InfluxDbSeries<T> {
 }
 
 impl InfluxDbClient {
-    pub fn json_query<T: 'static, Q>(
+    pub fn json_query<T: 'static>(
         &self,
-        q: Q,
+        q: InfluxDbReadQuery,
     ) -> Box<dyn Future<Item = Option<Vec<InfluxDbSeries<T>>>, Error = InfluxDbError>>
     where
-        Q: InfluxDbQuery,
         T: DeserializeOwned,
     {
         use futures::future;
 
         let q_type = q.get_type();
-        let query = match q.build() {
-            Err(err) => {
-                let error = InfluxDbError::InvalidQueryError {
-                    error: format!("{}", err),
-                };
-                return Box::new(
-                    future::err::<Option<Vec<InfluxDbSeries<T>>>, InfluxDbError>(error),
-                );
-            }
-            Ok(query) => query,
-        };
+        let query = q.build().unwrap();
 
         let client = match q_type {
             QueryType::ReadQuery => {
@@ -113,7 +103,14 @@ impl InfluxDbClient {
                 if read_query.contains("SELECT") || read_query.contains("SHOW") {
                     Client::new().get(http_query_string.as_str())
                 } else {
-                    Client::new().post(http_query_string.as_str())
+                    let error = InfluxDbError::InvalidQueryError {
+                        error: String::from(
+                            "Only SELECT and SHOW queries supported with JSON deserialization",
+                        ),
+                    };
+                    return Box::new(
+                        future::err::<Option<Vec<InfluxDbSeries<T>>>, InfluxDbError>(error),
+                    );
                 }
             }
             QueryType::WriteQuery => Client::new()
