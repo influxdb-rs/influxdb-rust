@@ -51,7 +51,8 @@ use serde_json;
 use crate::error::InfluxDbError;
 
 use crate::query::read_query::InfluxDbReadQuery;
-use crate::query::{InfluxDbQuery, QueryType};
+use crate::query::InfluxDbQuery;
+
 #[derive(Deserialize)]
 #[doc(hidden)]
 struct _DatabaseError {
@@ -87,42 +88,29 @@ impl InfluxDbClient {
     {
         use futures::future;
 
-        let q_type = q.get_type();
         let query = q.build().unwrap();
 
-        let client = match q_type {
-            QueryType::ReadQuery => {
-                let read_query = query.get();
-                let http_query_string = format!(
-                    "{url}/query?db={db}&q={read_query}",
-                    url = self.database_url(),
-                    db = self.database_name(),
-                    read_query = read_query,
-                );
+        let client = {
+            let read_query = query.get();
+            let http_query_string = format!(
+                "{url}/query?db={db}&q={read_query}",
+                url = self.database_url(),
+                db = self.database_name(),
+                read_query = read_query,
+            );
 
-                if read_query.contains("SELECT") || read_query.contains("SHOW") {
-                    Client::new().get(http_query_string.as_str())
-                } else {
-                    let error = InfluxDbError::InvalidQueryError {
-                        error: String::from(
-                            "Only SELECT and SHOW queries supported with JSON deserialization",
-                        ),
-                    };
-                    return Box::new(
-                        future::err::<Option<Vec<InfluxDbSeries<T>>>, InfluxDbError>(error),
-                    );
-                }
+            if read_query.contains("SELECT") || read_query.contains("SHOW") {
+                Client::new().get(http_query_string.as_str())
+            } else {
+                let error = InfluxDbError::InvalidQueryError {
+                    error: String::from(
+                        "Only SELECT and SHOW queries supported with JSON deserialization",
+                    ),
+                };
+                return Box::new(
+                    future::err::<Option<Vec<InfluxDbSeries<T>>>, InfluxDbError>(error),
+                );
             }
-            QueryType::WriteQuery => Client::new()
-                .post(
-                    format!(
-                        "{url}/write?db={db}",
-                        url = self.database_url(),
-                        db = self.database_name(),
-                    )
-                    .as_str(),
-                )
-                .body(query.get()),
         };
 
         Box::new(

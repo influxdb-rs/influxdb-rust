@@ -102,8 +102,8 @@ fn test_json_query() {
 #[cfg(feature = "use-serde")]
 /// INTEGRATION TEST
 ///
-/// This test case tests whether JSON can be decoded from a InfluxDB response
-fn test_build_error() {
+/// This integration test tests whether using the wrong query method fails building the query
+fn test_serde_query_build_error() {
     use serde::Deserialize;
 
     #[derive(Deserialize, Debug)]
@@ -115,6 +115,25 @@ fn test_build_error() {
     let client = create_client();
     let query = InfluxDbQuery::raw_read_query("CREATE database should_fail");
     let result = get_runtime().block_on(client.json_query::<Weather>(query));
+
+    assert!(
+        result.is_err(),
+        format!(
+            "Should not be able to build JSON query that is not SELECT or SELECT .. INTO: {}",
+            result.unwrap_err()
+        )
+    );
+}
+
+#[test]
+#[cfg(feature = "use-serde")]
+/// INTEGRATION TEST
+///
+/// This test case tests whether JSON can be decoded from a InfluxDB response
+fn test_raw_query_build_error() {
+    let client = create_client();
+    let query = InfluxDbQuery::write_query("weather").add_tag("season", "summer");
+    let result = get_runtime().block_on(client.query(query));
 
     assert!(
         result.is_err(),
