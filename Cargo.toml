@@ -7,7 +7,7 @@ description = "InfluxDB Driver for Rust"
 keywords = ["influxdb", "database", "influx"]
 license-file = "LICENSE.md"
 readme = "README.md"
-include = ["src/**/*", "tests/**/*", "Cargo.toml", "LICENSE"]
+include = ["src/**/*", "tests/**/*", "Cargo.toml", "LICENSE.md"]
 repository = "https://github.com/Empty2k12/influxdb-rust"
 
 [badges]
