@@ -130,10 +130,6 @@ impl InfluxDbClient {
                     error: format!("{}", err),
                 })
                 .and_then(|body| {
-                    if let Ok(utf8) = std::str::from_utf8(&body) {
-                        let s = utf8.to_owned();
-                        println!("{:?}", s);
-                    }
                     // Try parsing InfluxDBs { "error": "error message here" }
                     if let Ok(error) = serde_json::from_slice::<_DatabaseError>(&body) {
                         return futures::future::err(InfluxDbError::DatabaseError {
