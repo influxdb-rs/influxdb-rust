@@ -36,6 +36,7 @@
 //!                 }).collect::<Vec<Weather>>()
 //!         })
 //!     });
+//! ```
 
 use crate::client::InfluxDbClient;
 
@@ -52,6 +53,8 @@ use crate::error::InfluxDbError;
 
 use crate::query::read_query::InfluxDbReadQuery;
 use crate::query::InfluxDbQuery;
+
+use url::form_urlencoded;
 
 #[derive(Deserialize)]
 #[doc(hidden)]
@@ -92,11 +95,14 @@ impl InfluxDbClient {
 
         let client = {
             let read_query = query.get();
+            let encoded: String = form_urlencoded::Serializer::new(String::new())
+                .append_pair("db", self.database_name())
+                .append_pair("q", &read_query)
+                .finish();
             let http_query_string = format!(
-                "{url}/query?db={db}&q={read_query}",
+                "{url}/query?{encoded}",
                 url = self.database_url(),
-                db = self.database_name(),
-                read_query = read_query,
+                encoded = encoded
             );
 
             if read_query.contains("SELECT") || read_query.contains("SHOW") {
@@ -124,6 +130,10 @@ impl InfluxDbClient {
                     error: format!("{}", err),
                 })
                 .and_then(|body| {
+                    if let Ok(utf8) = std::str::from_utf8(&body) {
+                        let s = utf8.to_owned();
+                        println!("{:?}", s);
+                    }
                     // Try parsing InfluxDBs { "error": "error message here" }
                     if let Ok(error) = serde_json::from_slice::<_DatabaseError>(&body) {
                         return futures::future::err(InfluxDbError::DatabaseError {
