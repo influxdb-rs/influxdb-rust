@@ -7,7 +7,7 @@ description = "InfluxDB Driver for Rust"
 keywords = ["influxdb", "database", "influx"]
 license-file = "LICENSE.md"
 readme = "README.md"
-include = ["src/**/*", "tests/**/*", "Cargo.toml", "LICENSE"]
+include = ["src/**/*", "tests/**/*", "Cargo.toml", "LICENSE.md"]
 repository = "https://github.com/Empty2k12/influxdb-rust"
 
 [badges]
@@ -20,6 +20,7 @@ futures = "0.1.27"
 tokio = "0.1.20"
 itertools = "0.8"
 failure = "0.1.5"
+url = "1.7.2"
 serde = { version = "1.0.92", optional = true }
 serde_json = { version = "1.0", optional = true }
 
