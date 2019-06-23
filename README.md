@@ -10,6 +10,9 @@
 </div>
 <br/>
 <p align="center">
+    <a href="https://crates.io/crates/influxdb">
+        <img src="https://img.shields.io/crates/v/influxdb.svg"/>
+    </a>
     <a href="https://travis-ci.org/Empty2k12/influxdb-rust">
         <img src="https://travis-ci.org/Empty2k12/influxdb-rust.svg?branch=master" alt='Build Status' />
     </a>
@@ -47,7 +50,7 @@ Pull requests are always welcome.
 Add the following to your `Cargo.toml`
 
 ```toml
-influxdb = "0.0.1"
+influxdb = "0.0.2"
 ```
 
 For an example with using Serde deserialization, please refer to [serde_integration](crate::integrations::serde_integration)
@@ -96,4 +99,6 @@ in the repository.
 
 ## License
 
-The MIT License @ Gero Gerke 2019
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+@ 2019 Gero Gerke, All rights reserved. 
