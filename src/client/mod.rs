@@ -21,9 +21,13 @@ use reqwest::r#async::{Client, Decoder};
 use std::mem;
 
 use crate::error::InfluxDbError;
-use crate::query::{InfluxDbQuery, QueryType};
+use crate::query::read_query::InfluxDbReadQuery;
+use crate::query::write_query::InfluxDbWriteQuery;
+use crate::query::InfluxDbQuery;
 
 use url::form_urlencoded;
+
+use std::any::Any;
 
 /// Internal Representation of a Client
 pub struct InfluxDbClient {
@@ -108,21 +112,20 @@ impl InfluxDbClient {
     ///
     /// ```rust
     /// use influxdb::client::InfluxDbClient;
-    /// use influxdb::query::InfluxDbQuery;
+    /// use influxdb::query::{InfluxDbQuery, Timestamp};
     ///
     /// let client = InfluxDbClient::new("http://localhost:8086", "test");
     /// let _future = client.query(
-    ///     InfluxDbQuery::write_query("weather")
+    ///     &InfluxDbQuery::write_query(Timestamp::NOW, "weather")
     ///         .add_field("temperature", 82)
     /// );
     /// ```
-    pub fn query<Q>(&self, q: Q) -> Box<dyn Future<Item = String, Error = InfluxDbError>>
+    pub fn query<Q>(&self, q: &Q) -> Box<dyn Future<Item = String, Error = InfluxDbError>>
     where
-        Q: InfluxDbQuery,
+        Q: Any + InfluxDbQuery,
     {
         use futures::future;
 
-        let q_type = q.get_type();
         let query = match q.build() {
             Err(err) => {
                 let error = InfluxDbError::InvalidQueryError {
@@ -133,35 +136,38 @@ impl InfluxDbClient {
             Ok(query) => query,
         };
 
-        let client = match q_type {
-            QueryType::ReadQuery => {
-                let read_query = query.get();
-                let encoded: String = form_urlencoded::Serializer::new(String::new())
-                    .append_pair("db", self.database_name())
-                    .append_pair("q", &read_query)
-                    .finish();
-                let http_query_string = format!(
-                    "{url}/query?{encoded}",
-                    url = self.database_url(),
-                    encoded = encoded
-                );
+        let any_value = q as &dyn Any;
 
-                if read_query.contains("SELECT") || read_query.contains("SHOW") {
-                    Client::new().get(http_query_string.as_str())
-                } else {
-                    Client::new().post(http_query_string.as_str())
-                }
+        let client = if let Some(_) = any_value.downcast_ref::<InfluxDbReadQuery>() {
+            let read_query = query.get();
+            let encoded: String = form_urlencoded::Serializer::new(String::new())
+                .append_pair("db", self.database_name())
+                .append_pair("q", &read_query)
+                .finish();
+            let http_query_string = format!(
+                "{url}/query?{encoded}",
+                url = self.database_url(),
+                encoded = encoded
+            );
+            if read_query.contains("SELECT") || read_query.contains("SHOW") {
+                Client::new().get(http_query_string.as_str())
+            } else {
+                Client::new().post(http_query_string.as_str())
             }
-            QueryType::WriteQuery => Client::new()
+        } else if let Some(write_query) = any_value.downcast_ref::<InfluxDbWriteQuery>() {
+            Client::new()
                 .post(
                     format!(
-                        "{url}/write?db={db}",
+                        "{url}/write?db={db}{precision_str}",
                         url = self.database_url(),
                         db = self.database_name(),
+                        precision_str = write_query.get_precision_modifier()
                     )
                     .as_str(),
                 )
-                .body(query.get()),
+                .body(query.get())
+        } else {
+            unreachable!()
         };
 
         Box::new(
