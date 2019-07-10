@@ -6,6 +6,8 @@ use crate::error::InfluxDbError;
 use crate::query::{InfluxDbQuery, QueryType, Timestamp, ValidQuery};
 use itertools::Itertools;
 
+// todo: batch write queries
+
 /// Internal Representation of a Write query that has not yet been built
 pub struct InfluxDbWriteQuery {
     fields: Vec<(String, String)>,

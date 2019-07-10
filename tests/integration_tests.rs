@@ -21,6 +21,54 @@ where
 /// HELPER METHODS
 ///
 
+/// Simple Helper that creates a Database in InfluxDB for every test that is being run.
+/// Also implements the `Drop` trait so the database is being cleaned up, even when the test failed.
+struct DatabaseIntegration {
+    test_name: String,
+}
+
+/// Single method to prime the test. Since everything is blocking we don't have to handle any futures here.
+impl DatabaseIntegration {
+    fn prime<S>(test_name: S) -> Self
+    where
+        S: ToString,
+    {
+        let ret = DatabaseIntegration {
+            test_name: test_name.to_string(),
+        };
+        ret
+    }
+
+    fn set(&self) {
+        let query = format!("CREATE DATABASE {}", self.test_name);
+        let name = format!("{}", self.test_name);
+        get_runtime()
+            .block_on(create_client(name).query(&InfluxDbQuery::raw_read_query(query)))
+            .expect("could not create db for integration test");
+    }
+}
+
+/// Cleans up the Database - even in case of test failure.
+impl Drop for DatabaseIntegration {
+    fn drop(&mut self) {
+        let query = format!("DROP DATABASE {}", self.test_name);
+        let name = format!("{}", self.test_name);
+        get_runtime()
+            .block_on(create_client(name).query(&InfluxDbQuery::raw_read_query(query)))
+            .expect("could not clear up db for integration test");
+    }
+}
+
+struct RunOnDrop {
+    closure: Box<dyn Fn() -> ()>,
+}
+
+impl Drop for RunOnDrop {
+    fn drop(&mut self) {
+        (self.closure)();
+    }
+}
+
 fn create_db<T>(test_name: T) -> Result<String, InfluxDbError>
 where
     T: ToString,
@@ -56,10 +104,15 @@ fn test_ping_influx_db() {
 #[test]
 /// INTEGRATION TEST
 ///
-/// //todo: describe what this test is doing!
+/// This integration tests that writing data and retrieving the data again is working
 fn test_write_and_read_field() {
     let test_name = "test_write_field";
     create_db(test_name).expect("could not setup db");
+    let _run_on_drop = RunOnDrop {
+        closure: Box::new(|| {
+            delete_db("test_write_field").expect("could not clean up db");
+        }),
+    };
 
     let client = create_client(test_name);
     let write_query =
@@ -88,12 +141,18 @@ fn test_write_and_read_field() {
 #[cfg(feature = "use-serde")]
 /// INTEGRATION TEST
 ///
-/// This test case tests whether JSON can be decoded from a InfluxDB response
+/// This test case tests whether JSON can be decoded from a InfluxDB response and wether that JSON
+/// is equal to the data which was written to the database
 fn test_json_query() {
     use serde::Deserialize;
 
     let test_name = "test_json_query";
     create_db(test_name).expect("could not setup db");
+    let _run_on_drop = RunOnDrop {
+        closure: Box::new(|| {
+            delete_db("test_json_query").expect("could not clean up db");
+        }),
+    };
 
     let client = create_client(test_name);
 
@@ -106,7 +165,7 @@ fn test_json_query() {
         format!("Should be no error: {}", write_result.unwrap_err())
     );
 
-    #[derive(Deserialize, Debug)]
+    #[derive(Deserialize, Debug, PartialEq)]
     struct Weather {
         time: String,
         temperature: i32,
@@ -115,24 +174,23 @@ fn test_json_query() {
     let query = InfluxDbQuery::raw_read_query("SELECT * FROM weather");
     let future = client
         .json_query(query)
-        .map(|mut db_result| db_result.deserialize_next::<Weather>());
+        .and_then(|mut db_result| db_result.deserialize_next::<Weather>());
     let result = get_runtime().block_on(future);
 
     assert!(
         result.is_ok(),
-        format!("We couldn't read from the DB: "
-        //, result.unwrap_err() // todo
-        )
+        format!("We couldn't read from the DB: {}", result.unwrap_err())
     );
 
-    // todo check this out!
-    // assert_eq!(
-    //     result.unwrap(),
-    //     Weather {
-    //         time: 11,
-    //         temperature: 82
-    //     }
-    // )
+    assert_eq!(
+        result.unwrap().series[0].values[0],
+        Weather {
+            time: "1970-01-01T11:00:00Z".to_string(),
+            temperature: 82
+        }
+    );
+
+    delete_db(test_name).expect("could not clean up db");
 }
 
 #[test]
@@ -143,59 +201,80 @@ fn test_json_query() {
 fn test_serde_multi_query() {
     use serde::Deserialize;
 
-    #[derive(Deserialize, Debug)]
-    struct Weather {
+    let test_name = "test_serde_multi_query";
+    create_db(test_name).expect("could not setup db");
+    let _run_on_drop = RunOnDrop {
+        closure: Box::new(|| {
+            delete_db("test_serde_multi_query").expect("could not clean up db");
+        }),
+    };
+
+    #[derive(Deserialize, Debug, PartialEq)]
+    struct Temperature {
         time: String,
         temperature: i32,
     }
 
-    let client = create_client("todo");
-    let query = InfluxDbQuery::raw_read_query("CREATE database should_fail");
+    #[derive(Deserialize, Debug, PartialEq)]
+    struct Humidity {
+        time: String,
+        humidity: i32,
+    }
+
+    let client = create_client(test_name);
+    let write_query = InfluxDbQuery::write_query(Timestamp::HOURS(11), "temperature")
+        .add_field("temperature", 16);
+    let write_query2 =
+        InfluxDbQuery::write_query(Timestamp::HOURS(11), "humidity").add_field("humidity", 69);
+
+    let write_result = get_runtime().block_on(client.query(&write_query));
+    let write_result2 = get_runtime().block_on(client.query(&write_query2));
+
+    assert!(
+        write_result.is_ok(),
+        format!("Write Query 1 failed: {}", write_result.unwrap_err())
+    );
+
+    assert!(
+        write_result2.is_ok(),
+        format!("Write Query 2 failed: {}", write_result2.unwrap_err())
+    );
+
     let future = client
-        .json_query(query)
-        .map(|mut db_result| db_result.deserialize_next::<Weather>());
+        .json_query(
+            InfluxDbQuery::raw_read_query("SELECT * FROM temperature")
+                .add("SELECT * FROM humidity"),
+        )
+        .and_then(|mut db_result| {
+            let temp = db_result.deserialize_next::<Temperature>();
+            let humidity = db_result.deserialize_next::<Humidity>();
+
+            (temp, humidity)
+        });
     let result = get_runtime().block_on(future);
 
     assert!(
-        result.is_err(),
-        format!(
-            "Should not be able to build JSON query that is not SELECT or SELECT .. INTO: " //result.unwrap_err()
-        )
+        result.is_ok(),
+        format!("No problems should be had: {}", result.unwrap_err())
     );
-}
 
-#[test]
-#[cfg(feature = "use-serde")]
-/// INTEGRATION TEST
-///
-/// This test case tests whether JSON can be decoded from a InfluxDB response
-fn test_raw_query_build_error() {
-    let client = create_client("todo");
-    let query =
-        InfluxDbQuery::write_query(Timestamp::HOURS(11), "weather").add_tag("season", "summer");
-    let result = get_runtime().block_on(client.query(&query));
+    let (temp, humidity) = result.unwrap();
 
-    assert!(
-        result.is_err(),
-        format!(
-            "Should not be able to build JSON query that is not SELECT or SELECT .. INTO: {}",
-            result.unwrap_err()
-        )
+    assert_eq!(
+        temp.series[0].values[0],
+        Temperature {
+            time: "1970-01-01T11:00:00Z".to_string(),
+            temperature: 16
+        },
     );
-}
 
-#[test]
-/// INTEGRATION TEST
-fn test_delete_database() {
-    let client = create_client("todo");
-    let query = InfluxDbQuery::raw_read_query("DELETE DATABASE test");
-    let result = get_runtime().block_on(client.query(&query));
-
-    assert!(
-        result.is_err(),
-        format!(
-            "Should not be able to build JSON query that is not SELECT or SELECT .. INTO: {}",
-            result.unwrap_err()
-        )
+    assert_eq!(
+        humidity.series[0].values[0],
+        Humidity {
+            time: "1970-01-01T11:00:00Z".to_string(),
+            humidity: 69
+        }
     );
+
+    delete_db(test_name).expect("could not clean up db");
 }
