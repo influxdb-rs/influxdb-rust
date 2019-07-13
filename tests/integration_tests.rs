@@ -17,48 +17,6 @@ where
     InfluxDbClient::new("http://localhost:8086", db_name)
 }
 
-///
-/// HELPER METHODS
-///
-
-/// Simple Helper that creates a Database in InfluxDB for every test that is being run.
-/// Also implements the `Drop` trait so the database is being cleaned up, even when the test failed.
-struct DatabaseIntegration {
-    test_name: String,
-}
-
-/// Single method to prime the test. Since everything is blocking we don't have to handle any futures here.
-impl DatabaseIntegration {
-    fn prime<S>(test_name: S) -> Self
-    where
-        S: ToString,
-    {
-        let ret = DatabaseIntegration {
-            test_name: test_name.to_string(),
-        };
-        ret
-    }
-
-    fn set(&self) {
-        let query = format!("CREATE DATABASE {}", self.test_name);
-        let name = format!("{}", self.test_name);
-        get_runtime()
-            .block_on(create_client(name).query(&InfluxDbQuery::raw_read_query(query)))
-            .expect("could not create db for integration test");
-    }
-}
-
-/// Cleans up the Database - even in case of test failure.
-impl Drop for DatabaseIntegration {
-    fn drop(&mut self) {
-        let query = format!("DROP DATABASE {}", self.test_name);
-        let name = format!("{}", self.test_name);
-        get_runtime()
-            .block_on(create_client(name).query(&InfluxDbQuery::raw_read_query(query)))
-            .expect("could not clear up db for integration test");
-    }
-}
-
 struct RunOnDrop {
     closure: Box<dyn Fn() -> ()>,
 }
@@ -277,4 +235,19 @@ fn test_serde_multi_query() {
     );
 
     delete_db(test_name).expect("could not clean up db");
+}
+
+#[test]
+#[cfg(feature = "use-serde")]
+/// INTEGRATION TEST
+///
+/// This integration test tests whether using the wrong query method fails building the query
+fn test_wrong_query_errors() {
+    let client = create_client("test_name");
+    let future = client
+        .json_query(
+            InfluxDbQuery::raw_read_query("CREATE DATABASE this_should_fail")
+        );
+    let result = get_runtime().block_on(future);
+    assert!(result.is_err(), "Should only build SELECT and SHOW queries.");
 }

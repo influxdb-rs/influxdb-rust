@@ -42,7 +42,7 @@ impl InfluxDbQuery for InfluxDbReadQuery {
 
 #[cfg(test)]
 mod tests {
-    use crate::query::InfluxDbQuery;
+    use crate::query::{InfluxDbQuery, QueryType};
 
     #[test]
     fn test_read_builder_single_query() {
@@ -58,5 +58,12 @@ mod tests {
             .build();
 
         assert_eq!(query.unwrap(), "SELECT * FROM aachen;SELECT * FROM cologne");
+    }
+
+    #[test]
+    fn test_correct_query_type() {
+        let query = InfluxDbQuery::raw_read_query("SELECT * FROM aachen");
+
+        assert_eq!(query.get_type(), QueryType::ReadQuery);
     }
 }

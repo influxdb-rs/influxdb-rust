@@ -77,17 +77,7 @@ impl InfluxDbWriteQuery {
             return String::from("");
         }
 
-        let modifier = match self.timestamp {
-            Timestamp::NANOSECONDS(_) => "ns",
-            Timestamp::MICROSECONDS(_) => "u",
-            Timestamp::MILLISECONDS(_) => "ms",
-            Timestamp::SECONDS(_) => "s",
-            Timestamp::MINUTES(_) => "m",
-            Timestamp::HOURS(_) => "h",
-            Timestamp::NOW => unreachable!(),
-        };
-
-        format!("&precision={modifier}", modifier = modifier)
+        format!("&precision={modifier}", modifier = self.timestamp)
     }
 }
 
@@ -164,12 +154,7 @@ impl InfluxDbQuery for InfluxDbWriteQuery {
             fields = fields,
             time = match self.timestamp {
                 Timestamp::NOW => String::from(""),
-                Timestamp::NANOSECONDS(ts)
-                | Timestamp::MICROSECONDS(ts)
-                | Timestamp::MILLISECONDS(ts)
-                | Timestamp::SECONDS(ts)
-                | Timestamp::MINUTES(ts)
-                | Timestamp::HOURS(ts) => format!(" {}", ts),
+                _ => format!(" {}", self.timestamp),
             }
         )))
     }
@@ -236,5 +221,17 @@ mod tests {
             query.unwrap(),
             "weather,location=\"us-midwest\",season=\"summer\" temperature=82 11"
         );
+    }
+
+    #[test]
+    fn test_correct_query_type() {
+        use crate::query::QueryType;
+
+        let query = InfluxDbQuery::write_query(Timestamp::HOURS(11), "weather")
+            .add_field("temperature", 82)
+            .add_tag("location", "us-midwest")
+            .add_tag("season", "summer");
+
+        assert_eq!(query.get_type(), QueryType::WriteQuery);
     }
 }
