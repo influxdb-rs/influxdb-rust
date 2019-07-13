@@ -244,10 +244,12 @@ fn test_serde_multi_query() {
 /// This integration test tests whether using the wrong query method fails building the query
 fn test_wrong_query_errors() {
     let client = create_client("test_name");
-    let future = client
-        .json_query(
-            InfluxDbQuery::raw_read_query("CREATE DATABASE this_should_fail")
-        );
+    let future = client.json_query(InfluxDbQuery::raw_read_query(
+        "CREATE DATABASE this_should_fail",
+    ));
     let result = get_runtime().block_on(future);
-    assert!(result.is_err(), "Should only build SELECT and SHOW queries.");
+    assert!(
+        result.is_err(),
+        "Should only build SELECT and SHOW queries."
+    );
 }
