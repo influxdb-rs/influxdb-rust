@@ -58,7 +58,6 @@ For an example with using Serde deserialization, please refer to [serde_integrat
 ```rust
 use influxdb::query::{InfluxDbQuery, Timestamp};
 use influxdb::client::InfluxDbClient;
-use serde::Deserialize;
 use tokio::runtime::current_thread::Runtime;
 
 // Create a InfluxDbClient with URL `http://localhost:8086`
@@ -78,14 +77,14 @@ let mut rt = Runtime::new().expect("Unable to create a runtime");
 
 // To actually submit the data to InfluxDB, the `block_on` method can be used to
 // halt execution of our program until it has been completed.
-let write_result = rt.block_on(client.query(write_query));
+let write_result = rt.block_on(client.query(&write_query));
 assert!(write_result.is_ok(), "Write result was not okay");
 
 // Reading data is as simple as writing. First we need to create a query
 let read_query = InfluxDbQuery::raw_read_query("SELECT _ FROM weather");
 
 // Again, we're blocking until the request is done
-let read_result = rt.block_on(client.query(read_query));
+let read_result = rt.block_on(client.query(&read_query));
 
 assert!(read_result.is_ok(), "Read result was not ok");
 

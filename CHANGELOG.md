@@ -7,19 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.3] - 2019-07-09
+## [0.0.3] - 2019-07-14
 
 ### Added
 
--
+-   Possibility to run multiple queries in one. See the Integration Tests in `tests/integration_tests.rs` for examples.
+-   Ability to specify Timestamp for write queries
 
 ### Changed
 
--
-
-### Removed
-
--
+-   You now have to borrow a query when passing it to the `query` method
 
 ## [0.0.2] - 2019-07-23
 
