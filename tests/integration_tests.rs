@@ -155,6 +155,57 @@ fn test_json_query() {
 #[cfg(feature = "use-serde")]
 /// INTEGRATION TEST
 ///
+/// This test case tests whether JSON can be decoded from a InfluxDB response and wether that JSON
+/// is equal to the data which was written to the database
+fn test_json_query_vec() {
+    use serde::Deserialize;
+
+    let test_name = "test_json_query_vec";
+    create_db(test_name).expect("could not setup db");
+    let _run_on_drop = RunOnDrop {
+        closure: Box::new(|| {
+            delete_db("test_json_query_vec").expect("could not clean up db");
+        }),
+    };
+
+    let client = create_client(test_name);
+    let write_query1 = InfluxDbQuery::write_query(Timestamp::HOURS(11), "temperature_vec")
+        .add_field("temperature", 16);
+    let write_query2 = InfluxDbQuery::write_query(Timestamp::HOURS(12), "temperature_vec")
+        .add_field("temperature", 17);
+    let write_query3 = InfluxDbQuery::write_query(Timestamp::HOURS(13), "temperature_vec")
+        .add_field("temperature", 18);
+
+    let _write_result = get_runtime().block_on(client.query(&write_query1));
+    let _write_result2 = get_runtime().block_on(client.query(&write_query2));
+    let _write_result2 = get_runtime().block_on(client.query(&write_query3));
+
+    #[derive(Deserialize, Debug, PartialEq)]
+    struct Weather {
+        time: String,
+        temperature: i32,
+    }
+
+    let query = InfluxDbQuery::raw_read_query("SELECT * FROM temperature_vec");
+    let future = client
+        .json_query(query)
+        .and_then(|mut db_result| db_result.deserialize_next::<Weather>());
+    let result = get_runtime().block_on(future);
+
+    assert!(
+        result.is_ok(),
+        format!("We couldn't read from the DB: {}", result.unwrap_err())
+    );
+
+    assert_eq!(result.unwrap().series[0].values.len(), 3);
+
+    delete_db(test_name).expect("could not clean up db");
+}
+
+#[test]
+#[cfg(feature = "use-serde")]
+/// INTEGRATION TEST
+///
 /// This integration test tests whether using the wrong query method fails building the query
 fn test_serde_multi_query() {
     use serde::Deserialize;

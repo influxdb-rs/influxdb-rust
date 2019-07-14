@@ -73,11 +73,17 @@ impl InfluxDbWriteQuery {
     }
 
     pub fn get_precision_modifier(&self) -> String {
-        if self.timestamp == Timestamp::NOW {
-            return String::from("");
-        }
+        let modifier = match self.timestamp {
+            Timestamp::NOW => return String::from(""),
+            Timestamp::NANOSECONDS(_) => "ns",
+            Timestamp::MICROSECONDS(_) => "u",
+            Timestamp::MILLISECONDS(_) => "ms",
+            Timestamp::SECONDS(_) => "s",
+            Timestamp::MINUTES(_) => "m",
+            Timestamp::HOURS(_) => "h",
+        };
 
-        format!("&precision={modifier}", modifier = self.timestamp)
+        format!("&precision={modifier}", modifier = modifier)
     }
 }
 
