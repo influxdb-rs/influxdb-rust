@@ -7,13 +7,14 @@
 //! `name`, InfluxDB provides alongside query results.
 //!
 //! ```rust,no_run
-//! use influxdb::query::InfluxDbQuery;
+//! use futures::prelude::*;
 //! use influxdb::client::InfluxDbClient;
+//! use influxdb::query::InfluxDbQuery;
 //! use serde::Deserialize;
 //!
 //! #[derive(Deserialize)]
 //! struct WeatherWithoutCityName {
-//!     temperature: i32
+//!     temperature: i32,
 //! }
 //!
 //! #[derive(Deserialize)]
@@ -24,16 +25,26 @@
 //!
 //! let mut rt = tokio::runtime::current_thread::Runtime::new().unwrap();
 //! let client = InfluxDbClient::new("http://localhost:8086", "test");
-//! let query = InfluxDbQuery::raw_read_query("SELECT temperature FROM /weather_[a-z]*$/ WHERE time > now() - 1m ORDER BY DESC");
-//! let _result = rt.block_on(client.json_query::<WeatherWithoutCityName>(query))
+//! let query = InfluxDbQuery::raw_read_query(
+//!     "SELECT temperature FROM /weather_[a-z]*$/ WHERE time > now() - 1m ORDER BY DESC",
+//! );
+//! let _result = rt
+//!     .block_on(client.json_query(query))
+//!     .map(|mut db_result| db_result.deserialize_next::<WeatherWithoutCityName>())
 //!     .map(|it| {
 //!         it.map(|series_vec| {
 //!             series_vec
+//!                 .series
 //!                 .into_iter()
 //!                 .map(|mut city_series| {
-//!                     let city_name = city_series.name.split("_").collect::<Vec<&str>>().remove(2);
-//!                     Weather { weather: city_series.values.remove(0), city_name: city_name.to_string() }
-//!                 }).collect::<Vec<Weather>>()
+//!                     let city_name =
+//!                         city_series.name.split("_").collect::<Vec<&str>>().remove(2);
+//!                     Weather {
+//!                         weather: city_series.values.remove(0),
+//!                         city_name: city_name.to_string(),
+//!                     }
+//!                 })
+//!                 .collect::<Vec<Weather>>()
 //!         })
 //!     });
 //! ```
@@ -56,6 +67,8 @@ use crate::query::InfluxDbQuery;
 
 use url::form_urlencoded;
 
+use futures::future::Either;
+
 #[derive(Deserialize)]
 #[doc(hidden)]
 struct _DatabaseError {
@@ -64,14 +77,30 @@ struct _DatabaseError {
 
 #[derive(Deserialize, Debug)]
 #[doc(hidden)]
-pub struct DatabaseQueryResult<T> {
-    pub results: Vec<InfluxDbReturn<T>>,
+pub struct DatabaseQueryResult {
+    pub results: Vec<serde_json::Value>,
+}
+
+impl DatabaseQueryResult {
+    pub fn deserialize_next<T: 'static>(
+        &mut self,
+    ) -> impl Future<Item = InfluxDbReturn<T>, Error = InfluxDbError>
+    where
+        T: DeserializeOwned,
+    {
+        match serde_json::from_value::<InfluxDbReturn<T>>(self.results.remove(0)) {
+            Ok(item) => futures::future::result(Ok(item)),
+            Err(err) => futures::future::err(InfluxDbError::DeserializationError {
+                error: format!("could not deserialize: {}", err),
+            }),
+        }
+    }
 }
 
 #[derive(Deserialize, Debug)]
 #[doc(hidden)]
 pub struct InfluxDbReturn<T> {
-    pub series: Option<Vec<InfluxDbSeries<T>>>,
+    pub series: Vec<InfluxDbSeries<T>>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -82,13 +111,10 @@ pub struct InfluxDbSeries<T> {
 }
 
 impl InfluxDbClient {
-    pub fn json_query<T: 'static>(
+    pub fn json_query(
         &self,
         q: InfluxDbReadQuery,
-    ) -> Box<dyn Future<Item = Option<Vec<InfluxDbSeries<T>>>, Error = InfluxDbError>>
-    where
-        T: DeserializeOwned,
-    {
+    ) -> impl Future<Item = DatabaseQueryResult, Error = InfluxDbError> {
         use futures::future;
 
         let query = q.build().unwrap();
@@ -113,13 +139,11 @@ impl InfluxDbClient {
                         "Only SELECT and SHOW queries supported with JSON deserialization",
                     ),
                 };
-                return Box::new(
-                    future::err::<Option<Vec<InfluxDbSeries<T>>>, InfluxDbError>(error),
-                );
+                return Either::B(future::err::<DatabaseQueryResult, InfluxDbError>(error));
             }
         };
 
-        Box::new(
+        Either::A(
             client
                 .send()
                 .and_then(|mut res| {
@@ -137,9 +161,9 @@ impl InfluxDbClient {
                         });
                     } else {
                         // Json has another structure, let's try actually parsing it to the type we're deserializing
-                        let from_slice = serde_json::from_slice::<DatabaseQueryResult<T>>(&body);
+                        let from_slice = serde_json::from_slice::<DatabaseQueryResult>(&body);
 
-                        let mut deserialized = match from_slice {
+                        let deserialized = match from_slice {
                             Ok(deserialized) => deserialized,
                             Err(err) => {
                                 return futures::future::err(InfluxDbError::DeserializationError {
@@ -148,7 +172,7 @@ impl InfluxDbClient {
                             }
                         };
 
-                        return futures::future::result(Ok(deserialized.results.remove(0).series));
+                        return futures::future::result(Ok(deserialized));
                     }
                 }),
         )

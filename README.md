@@ -37,28 +37,27 @@ Pull requests are always welcome.
 
 -   Reading and Writing to InfluxDB
 -   Optional Serde Support for Deserialization
+-   Running multiple queries in one request (e.g. `SELECT * FROM weather_berlin; SELECT * FROM weather_london`)
 
 ## Planned Features
 
--   Running multiple queries in one request (e.g. `SELECT * FROM weather_berlin; SELECT * FROM weather_london`)
 -   Read Query Builder instead of supplying raw queries
 -   Authentication against InfluxDB
--   Methods for setting time and time precision in a query
+-   `#[derive(InfluxDbWritable)]`
 
 ## Quickstart
 
 Add the following to your `Cargo.toml`
 
 ```toml
-influxdb = "0.0.2"
+influxdb = "0.0.3"
 ```
 
 For an example with using Serde deserialization, please refer to [serde_integration](crate::integrations::serde_integration)
 
 ```rust
-use influxdb::query::InfluxDbQuery;
+use influxdb::query::{InfluxDbQuery, Timestamp};
 use influxdb::client::InfluxDbClient;
-use serde::Deserialize;
 use tokio::runtime::current_thread::Runtime;
 
 // Create a InfluxDbClient with URL `http://localhost:8086`
@@ -68,7 +67,7 @@ let client = InfluxDbClient::new("http://localhost:8086", "test");
 // Let's write something to InfluxDB. First we're creating a
 // InfluxDbWriteQuery to write some data.
 // This creates a query which writes a new measurement into a series called `weather`
-let write_query = InfluxDbQuery::write_query("weather")
+let write_query = InfluxDbQuery::write_query(Timestamp::NOW, "weather")
     .add_field("temperature", 82);
 
 // Since this library is async by default, we're going to need a Runtime,
@@ -78,14 +77,14 @@ let mut rt = Runtime::new().expect("Unable to create a runtime");
 
 // To actually submit the data to InfluxDB, the `block_on` method can be used to
 // halt execution of our program until it has been completed.
-let write_result = rt.block_on(client.query(write_query));
+let write_result = rt.block_on(client.query(&write_query));
 assert!(write_result.is_ok(), "Write result was not okay");
 
 // Reading data is as simple as writing. First we need to create a query
 let read_query = InfluxDbQuery::raw_read_query("SELECT _ FROM weather");
 
 // Again, we're blocking until the request is done
-let read_result = rt.block_on(client.query(read_query));
+let read_result = rt.block_on(client.query(&read_query));
 
 assert!(read_result.is_ok(), "Read result was not ok");
 
@@ -101,4 +100,4 @@ in the repository.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-@ 2019 Gero Gerke, All rights reserved. 
+@ 2019 Gero Gerke, All rights reserved.

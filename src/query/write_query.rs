@@ -3,20 +3,22 @@
 //! Can only be instantiated by using InfluxDbQuery::write_query
 
 use crate::error::InfluxDbError;
-use crate::query::{InfluxDbQuery, QueryType, ValidQuery};
+use crate::query::{InfluxDbQuery, QueryType, Timestamp, ValidQuery};
 use itertools::Itertools;
+
+// todo: batch write queries
 
 /// Internal Representation of a Write query that has not yet been built
 pub struct InfluxDbWriteQuery {
     fields: Vec<(String, String)>,
     tags: Vec<(String, String)>,
     measurement: String,
-    // precision: Precision
+    timestamp: Timestamp,
 }
 
 impl InfluxDbWriteQuery {
     /// Creates a new [`InfluxDbWriteQuery`](crate::query::write_query::InfluxDbWriteQuery)
-    pub fn new<S>(measurement: S) -> Self
+    pub fn new<S>(timestamp: Timestamp, measurement: S) -> Self
     where
         S: ToString,
     {
@@ -24,7 +26,7 @@ impl InfluxDbWriteQuery {
             fields: vec![],
             tags: vec![],
             measurement: measurement.to_string(),
-            // precision: Precision
+            timestamp,
         }
     }
 
@@ -33,9 +35,9 @@ impl InfluxDbWriteQuery {
     /// # Examples
     ///
     /// ```rust
-    /// use influxdb::query::InfluxDbQuery;
+    /// use influxdb::query::{InfluxDbQuery, Timestamp};
     ///
-    /// InfluxDbQuery::write_query("measurement").add_field("field1", 5).build();
+    /// InfluxDbQuery::write_query(Timestamp::NOW, "measurement").add_field("field1", 5).build();
     /// ```
     pub fn add_field<S, I>(mut self, tag: S, value: I) -> Self
     where
@@ -55,9 +57,9 @@ impl InfluxDbWriteQuery {
     /// # Examples
     ///
     /// ```rust
-    /// use influxdb::query::InfluxDbQuery;
+    /// use influxdb::query::{InfluxDbQuery, Timestamp};
     ///
-    /// InfluxDbQuery::write_query("measurement")
+    /// InfluxDbQuery::write_query(Timestamp::NOW, "measurement")
     ///     .add_tag("field1", 5); // calling `.build()` now would result in a `Err(InfluxDbError::InvalidQueryError)`
     /// ```
     pub fn add_tag<S, I>(mut self, tag: S, value: I) -> Self
@@ -68,6 +70,20 @@ impl InfluxDbWriteQuery {
         let val: InfluxDbType = value.into();
         self.tags.push((tag.to_string(), val.to_string()));
         self
+    }
+
+    pub fn get_precision_modifier(&self) -> String {
+        let modifier = match self.timestamp {
+            Timestamp::NOW => return String::from(""),
+            Timestamp::NANOSECONDS(_) => "ns",
+            Timestamp::MICROSECONDS(_) => "u",
+            Timestamp::MILLISECONDS(_) => "ms",
+            Timestamp::SECONDS(_) => "s",
+            Timestamp::MINUTES(_) => "m",
+            Timestamp::HOURS(_) => "h",
+        };
+
+        format!("&precision={modifier}", modifier = modifier)
     }
 }
 
@@ -115,10 +131,8 @@ impl From<&str> for InfluxDbType {
     }
 }
 
-// todo: fuse_with(other: ValidQuery), so multiple queries can be run at the same time
 impl InfluxDbQuery for InfluxDbWriteQuery {
-    // todo: time (with precision)
-    fn build(self) -> Result<ValidQuery, InfluxDbError> {
+    fn build(&self) -> Result<ValidQuery, InfluxDbError> {
         if self.fields.is_empty() {
             return Err(InfluxDbError::InvalidQueryError {
                 error: "fields cannot be empty".to_string(),
@@ -127,7 +141,7 @@ impl InfluxDbQuery for InfluxDbWriteQuery {
 
         let mut tags = self
             .tags
-            .into_iter()
+            .iter()
             .map(|(tag, value)| format!("{tag}={value}", tag = tag, value = value))
             .join(",");
         if !tags.is_empty() {
@@ -135,7 +149,7 @@ impl InfluxDbQuery for InfluxDbWriteQuery {
         }
         let fields = self
             .fields
-            .into_iter()
+            .iter()
             .map(|(field, value)| format!("{field}={value}", field = field, value = value))
             .join(",");
 
@@ -144,11 +158,86 @@ impl InfluxDbQuery for InfluxDbWriteQuery {
             measurement = self.measurement,
             tags = tags,
             fields = fields,
-            time = ""
+            time = match self.timestamp {
+                Timestamp::NOW => String::from(""),
+                _ => format!(" {}", self.timestamp),
+            }
         )))
     }
 
     fn get_type(&self) -> QueryType {
         QueryType::WriteQuery
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::query::{InfluxDbQuery, Timestamp};
+
+    #[test]
+    fn test_write_builder_empty_query() {
+        let query = InfluxDbQuery::write_query(Timestamp::HOURS(5), "marina_3").build();
+
+        assert!(query.is_err(), "Query was not empty");
+    }
+
+    #[test]
+    fn test_write_builder_single_field() {
+        let query = InfluxDbQuery::write_query(Timestamp::HOURS(11), "weather")
+            .add_field("temperature", 82)
+            .build();
+
+        assert!(query.is_ok(), "Query was empty");
+        assert_eq!(query.unwrap(), "weather temperature=82 11");
+    }
+
+    #[test]
+    fn test_write_builder_multiple_fields() {
+        let query = InfluxDbQuery::write_query(Timestamp::HOURS(11), "weather")
+            .add_field("temperature", 82)
+            .add_field("wind_strength", 3.7)
+            .build();
+
+        assert!(query.is_ok(), "Query was empty");
+        assert_eq!(
+            query.unwrap(),
+            "weather temperature=82,wind_strength=3.7 11"
+        );
+    }
+
+    #[test]
+    fn test_write_builder_only_tags() {
+        let query = InfluxDbQuery::write_query(Timestamp::HOURS(11), "weather")
+            .add_tag("season", "summer")
+            .build();
+
+        assert!(query.is_err(), "Query missing one or more fields");
+    }
+
+    #[test]
+    fn test_write_builder_full_query() {
+        let query = InfluxDbQuery::write_query(Timestamp::HOURS(11), "weather")
+            .add_field("temperature", 82)
+            .add_tag("location", "us-midwest")
+            .add_tag("season", "summer")
+            .build();
+
+        assert!(query.is_ok(), "Query was empty");
+        assert_eq!(
+            query.unwrap(),
+            "weather,location=\"us-midwest\",season=\"summer\" temperature=82 11"
+        );
+    }
+
+    #[test]
+    fn test_correct_query_type() {
+        use crate::query::QueryType;
+
+        let query = InfluxDbQuery::write_query(Timestamp::HOURS(11), "weather")
+            .add_field("temperature", 82)
+            .add_tag("location", "us-midwest")
+            .add_tag("season", "summer");
+
+        assert_eq!(query.get_type(), QueryType::WriteQuery);
     }
 }
