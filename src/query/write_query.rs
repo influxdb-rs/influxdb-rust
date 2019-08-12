@@ -82,8 +82,8 @@ impl InfluxDbWriteQuery {
             Timestamp::MINUTES(_) => "m",
             Timestamp::HOURS(_) => "h",
         };
-
-        format!("&precision={modifier}", modifier = modifier)
+        modifier.to_string()
+        // format!("&precision={modifier}", modifier = modifier)
     }
 }
 

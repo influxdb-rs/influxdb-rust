@@ -17,6 +17,7 @@
 
 use futures::{Future, Stream};
 use reqwest::r#async::{Client, Decoder};
+use reqwest::Url;
 
 use std::mem;
 
@@ -25,15 +26,32 @@ use crate::query::read_query::InfluxDbReadQuery;
 use crate::query::write_query::InfluxDbWriteQuery;
 use crate::query::InfluxDbQuery;
 
-use url::form_urlencoded;
 
 use std::any::Any;
+
+// Internal Authentication representation
+pub struct InfluxDbAuthentication {
+    pub username: String,
+    pub password: String
+}
+impl InfluxDbAuthentication {
+    pub fn new<S1, S2>(username: S1, password: S2) -> Self
+    where
+        S1: ToString,
+        S2: ToString,
+    {
+        InfluxDbAuthentication {
+            username: username.to_string(),
+            password: password.to_string()
+        }
+    }
+}
 
 /// Internal Representation of a Client
 pub struct InfluxDbClient {
     url: String,
     database: String,
-    // auth: Option<InfluxDbAuthentication>
+    auth: Option<InfluxDbAuthentication>
 }
 
 impl InfluxDbClient {
@@ -51,7 +69,7 @@ impl InfluxDbClient {
     ///
     /// let _client = InfluxDbClient::new("http://localhost:8086", "test");
     /// ```
-    pub fn new<S1, S2>(url: S1, database: S2) -> Self
+    pub fn new<S1, S2>(url: S1, database: S2, auth: Option<InfluxDbAuthentication>) -> Self
     where
         S1: ToString,
         S2: ToString,
@@ -59,6 +77,7 @@ impl InfluxDbClient {
         InfluxDbClient {
             url: url.to_string(),
             database: database.to_string(),
+            auth
         }
     }
 
@@ -70,6 +89,11 @@ impl InfluxDbClient {
     /// Returns the URL of the InfluxDB installation the client is using
     pub fn database_url(&self) -> &str {
         &self.url
+    }
+
+    /// Returns the URL of the InfluxDB installation the client is using
+    fn auth(&self) -> &Option<InfluxDbAuthentication> {
+        &self.auth
     }
 
     /// Pings the InfluxDB Server
@@ -140,31 +164,38 @@ impl InfluxDbClient {
 
         let client = if let Some(_) = any_value.downcast_ref::<InfluxDbReadQuery>() {
             let read_query = query.get();
-            let encoded: String = form_urlencoded::Serializer::new(String::new())
-                .append_pair("db", self.database_name())
-                .append_pair("q", &read_query)
-                .finish();
-            let http_query_string = format!(
-                "{url}/query?{encoded}",
-                url = self.database_url(),
-                encoded = encoded
-            );
+   
+            let mut parameters = vec![
+                ("db", self.database_name()),
+                ("q", &read_query),
+            ];
+            
+            if let Some(auth) = self.auth() {
+                parameters.push(("u", auth.username.as_str()));
+                parameters.push(("p", auth.password.as_str()));
+            }
+
+            let url = Url::parse_with_params(format!("{url}/write", url = self.database_url()).as_str(), parameters).unwrap();
             if read_query.contains("SELECT") || read_query.contains("SHOW") {
-                Client::new().get(http_query_string.as_str())
+                Client::new().get(url)
             } else {
-                Client::new().post(http_query_string.as_str())
+                Client::new().post(url)
             }
         } else if let Some(write_query) = any_value.downcast_ref::<InfluxDbWriteQuery>() {
+            let precision_modfier = write_query.get_precision_modifier();
+            let mut parameters = vec![
+                ("db", self.database_name()),
+                ("precision", precision_modfier.as_str()),
+            ];
+            
+            if let Some(auth) = self.auth() {
+                parameters.push(("u", auth.username.as_str()));
+                parameters.push(("p", auth.password.as_str()));
+            } 
+
+            let url = Url::parse_with_params(format!("{url}/write", url = self.database_url()).as_str(), parameters).unwrap();
             Client::new()
-                .post(
-                    format!(
-                        "{url}/write?db={db}{precision_str}",
-                        url = self.database_url(),
-                        db = self.database_name(),
-                        precision_str = write_query.get_precision_modifier()
-                    )
-                    .as_str(),
-                )
+                .post(url)
                 .body(query.get())
         } else {
             unreachable!()
