@@ -175,7 +175,15 @@ impl InfluxDbClient {
                 parameters.push(("p", auth.password.as_str()));
             }
 
-            let url = Url::parse_with_params(format!("{url}/write", url = self.database_url()).as_str(), parameters).unwrap();
+            let url = match Url::parse_with_params(format!("{url}/query", url = self.database_url()).as_str(), parameters) {
+                Ok(url) => url,
+                Err(err) => {
+                    let error = InfluxDbError::InvalidQueryError {
+                        error: format!("{}", err),
+                    };
+                    return Box::new(future::err::<String, InfluxDbError>(error));
+                }
+            };
             if read_query.contains("SELECT") || read_query.contains("SHOW") {
                 Client::new().get(url)
             } else {
@@ -193,7 +201,15 @@ impl InfluxDbClient {
                 parameters.push(("p", auth.password.as_str()));
             } 
 
-            let url = Url::parse_with_params(format!("{url}/write", url = self.database_url()).as_str(), parameters).unwrap();
+            let url = match Url::parse_with_params(format!("{url}/write", url = self.database_url()).as_str(), parameters) {
+                Ok(url) => url,
+                Err(err) => {
+                    let error = InfluxDbError::InvalidQueryError {
+                        error: format!("{}", err),
+                    };
+                    return Box::new(future::err::<String, InfluxDbError>(error));
+                }
+            };
             Client::new()
                 .post(url)
                 .body(query.get())
