@@ -117,7 +117,7 @@ impl InfluxDbClient {
         use futures::future;
 
         let query = q.build().unwrap();
-        let basic_parameters: Vec<(String, String)> = self.clone().into();
+        let basic_parameters: Vec<(String, String)> = self.into();
         let client = {
             let read_query = query.get();
 

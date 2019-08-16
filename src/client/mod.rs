@@ -55,6 +55,18 @@ impl Into<Vec<(String, String)>> for InfluxDbClient {
     }
 }
 
+impl<'a> Into<Vec<(String, String)>> for &'a InfluxDbClient {
+    fn into(self) -> Vec<(String, String)> {
+        let mut vec: Vec<(String, String)> = Vec::new();
+        vec.push(("db".to_string(), self.database.to_owned()));
+        if let Some(auth) = &self.auth {
+            vec.push(("u".to_string(), auth.username.to_owned()));
+            vec.push(("p".to_string(), auth.password.to_owned()));
+        }
+        vec
+    }
+}
+
 impl InfluxDbClient {
     /// Instantiates a new [`InfluxDbClient`](crate::client::InfluxDbClient)
     ///
@@ -189,7 +201,7 @@ impl InfluxDbClient {
         };
 
         let any_value = q as &dyn Any;
-        let basic_parameters: Vec<(String, String)> = (self.clone()).into();
+        let basic_parameters: Vec<(String, String)> = self.into();
 
         let client = if let Some(_) = any_value.downcast_ref::<InfluxDbReadQuery>() {
             let read_query = query.get();
