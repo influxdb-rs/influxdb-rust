@@ -279,7 +279,6 @@ fn test_non_authed_write_and_read() {
     }
 }
 
-
 #[test]
 /// INTEGRATION TEST
 ///
