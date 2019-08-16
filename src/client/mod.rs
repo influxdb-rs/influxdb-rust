@@ -288,3 +288,64 @@ impl InfluxDbClient {
         )
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::client::InfluxDbClient;
+
+    #[test]
+    fn test_with_auth() {
+        let client = InfluxDbClient::new("http://localhost:8068", "database");
+        assert_eq!(client.url, "http://localhost:8068");
+        assert_eq!(client.database, "database");
+        assert!(client.auth.is_none());
+        let with_auth = client.with_auth("username", "password");
+        assert!(with_auth.auth.is_some());
+        let auth = with_auth.auth.unwrap();
+        assert_eq!(&auth.username, "username");
+        assert_eq!(&auth.password, "password");
+    }
+
+    #[test]
+    fn test_into_impl() {
+        let client = InfluxDbClient::new("http://localhost:8068", "database");
+        assert!(client.auth.is_none());
+        let basic_parameters: Vec<(String, String)> = client.into();
+        assert_eq!(
+            vec![("db".to_string(), "database".to_string())],
+            basic_parameters
+        );
+
+        let with_auth = InfluxDbClient::new("http://localhost:8068", "database")
+            .with_auth("username", "password");
+        let basic_parameters_with_auth: Vec<(String, String)> = with_auth.into();
+        assert_eq!(
+            vec![
+                ("db".to_string(), "database".to_string()),
+                ("u".to_string(), "username".to_string()),
+                ("p".to_string(), "password".to_string())
+            ],
+            basic_parameters_with_auth
+        );
+
+        let client = InfluxDbClient::new("http://localhost:8068", "database");
+        assert!(client.auth.is_none());
+        let basic_parameters: Vec<(String, String)> = (&client).into();
+        assert_eq!(
+            vec![("db".to_string(), "database".to_string())],
+            basic_parameters
+        );
+
+        let with_auth = InfluxDbClient::new("http://localhost:8068", "database")
+            .with_auth("username", "password");
+        let basic_parameters_with_auth: Vec<(String, String)> = (&with_auth).into();
+        assert_eq!(
+            vec![
+                ("db".to_string(), "database".to_string()),
+                ("u".to_string(), "username".to_string()),
+                ("p".to_string(), "password".to_string())
+            ],
+            basic_parameters_with_auth
+        );
+    }
+}
