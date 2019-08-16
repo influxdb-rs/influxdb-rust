@@ -2,10 +2,14 @@ language: rust
 
 sudo: required
 
+services:
+    - docker
+
 before_install:
-    - wget https://dl.influxdata.com/influxdb/releases/influxdb_1.7.6_amd64.deb
-    - sudo dpkg -i influxdb_1.7.6_amd64.deb
-    - sudo influxd > $HOME/influx.log 2>&1 &
+    - docker pull influxdb
+    - docker run -d -p 8086:8086 --name influxdb influxdb
+    - docker run -d -p 9086:8086 --name authed_influxdb -e INFLUXDB_HTTP_AUTH_ENABLED=true -e INFLUXDB_ADMIN_USER=admin -e INFLUXDB_ADMIN_PASSWORD=password -e INFLUXDB_USER=nopriv_user -e INFLUXDB_USER_PASSWORD=password influxdb
+    - docker ps
 
 branches:
     only:
