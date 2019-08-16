@@ -95,8 +95,7 @@ impl InfluxDbClient {
     /// ```rust
     /// use influxdb::client::InfluxDbClient;
     ///
-    /// let client = InfluxDbClient::new("http://localhost:8086", "test");
-    /// let _authed_client =  client.with_auth("admin", "password123")
+    /// let _client = InfluxDbClient::new("http://localhost:9086", "test").with_auth("admin", "password");
     /// ```
     pub fn with_auth<'a, S1, S2>(mut self, username: S1, password: S2) -> Self
     where

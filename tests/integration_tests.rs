@@ -63,23 +63,23 @@ fn test_ping_influx_db() {
 /// INTEGRATION TEST
 ///
 /// This test case tests the Authentication
-fn test_auth_only_write_and_read() {
-    let test_name = "test_auth_only_write_and_read";
-    let client = InfluxDbClient::new("http://localhost:9086", test_name).with_auth("user", "password");
+fn test_authed_write_and_read() {
+    let test_name = "test_authed_write_and_read";
+    let client = InfluxDbClient::new("http://localhost:9086", test_name).with_auth("admin", "password");
     let query = format!("CREATE DATABASE {}", test_name);
     get_runtime().block_on(client.query(&InfluxDbQuery::raw_read_query(query))).expect("could not setup db");
 
     let _run_on_drop = RunOnDrop {
         closure: Box::new(|| {
-            let test_name = "test_auth_only_write_and_read";
-            let client = InfluxDbClient::new("http://localhost:9086", test_name).with_auth("user", "password");
+            let test_name = "test_authed_write_and_read";
+            let client = InfluxDbClient::new("http://localhost:9086", test_name).with_auth("admin", "password");
             let query = format!("DROP DATABASE {}", test_name);
             get_runtime().block_on(client.query(&InfluxDbQuery::raw_read_query(query))).expect("could not clean up db");
         }),
     };
 
 
-    let client = InfluxDbClient::new("http://localhost:9086", test_name).with_auth("user", "password");
+    let client = InfluxDbClient::new("http://localhost:9086", test_name).with_auth("admin", "password");
     let write_query =
         InfluxDbQuery::write_query(Timestamp::HOURS(11), "weather").add_field("temperature", 82);
     let write_result = get_runtime().block_on(client.query(&write_query));
@@ -98,15 +98,108 @@ fn test_auth_only_write_and_read() {
         !read_result.unwrap().contains("error"),
         "Data contained a database error"
     );
+}
 
+#[test]
+/// INTEGRATION TEST
+///
+/// This test case tests the Authentication
+fn test_wrong_authed_write_and_read() {
+    let test_name = "test_wrong_authed_write_and_read";
+    let client = InfluxDbClient::new("http://localhost:9086", test_name).with_auth("admin", "password");
+    let query = format!("CREATE DATABASE {}", test_name);
+    get_runtime().block_on(client.query(&InfluxDbQuery::raw_read_query(query))).expect("could not setup db");
+
+    let _run_on_drop = RunOnDrop {
+        closure: Box::new(|| {
+            let test_name = "test_wrong_authed_write_and_read";
+            let client = InfluxDbClient::new("http://localhost:9086", test_name).with_auth("admin", "password");
+            let query = format!("DROP DATABASE {}", test_name);
+            get_runtime().block_on(client.query(&InfluxDbQuery::raw_read_query(query))).expect("could not clean up db");
+        }),
+    };
+
+
+    let client = InfluxDbClient::new("http://localhost:9086", test_name).with_auth("wrong_user", "password");
+    let write_query =
+        InfluxDbQuery::write_query(Timestamp::HOURS(11), "weather").add_field("temperature", 82);
+    let write_result = get_runtime().block_on(client.query(&write_query));
+    assert!(
+        write_result.is_err(),
+        format!("Should be an error: {}", write_result.unwrap_err())
+    );
+    match write_result {
+        Err(InfluxDbError::AuthorizationError) => assert!(true),
+        _ => assert!(
+            false,
+            format!("Should be an AuthorizationError: {}", write_result.unwrap_err())
+        )
+    }
+    
+
+    let read_query = InfluxDbQuery::raw_read_query("SELECT * FROM weather");
+    let read_result = get_runtime().block_on(client.query(&read_query));
+    assert!(
+        read_result.is_err(),
+        format!("Should be an error: {}", read_result.unwrap_err())
+    );
+    match read_result {
+        Err(InfluxDbError::AuthorizationError) => assert!(true),
+        _ => assert!(
+            false,
+            format!("Should be an AuthorizationError: {}", read_result.unwrap_err())
+        )
+    }
+
+    let client = InfluxDbClient::new("http://localhost:9086", test_name).with_auth("nopriv_user", "password");
+    let read_query = InfluxDbQuery::raw_read_query("SELECT * FROM weather");
+    let read_result = get_runtime().block_on(client.query(&read_query));
+    assert!(
+        read_result.is_err(),
+        format!("Should be an error: {}", read_result.unwrap_err())
+    );
+    match read_result {
+        Err(InfluxDbError::AuthenticationError) => assert!(true),
+        _ => assert!(
+            false,
+            format!("Should be an AuthenticationError: {}", read_result.unwrap_err())
+        )
+    }
+}
+
+#[test]
+/// INTEGRATION TEST
+///
+/// This test case tests the Authentication
+fn test_non_authed_write_and_read() {
+    let test_name = "test_non_authed_write_and_read";
+    let client = InfluxDbClient::new("http://localhost:9086", test_name).with_auth("admin", "password");
+    let query = format!("CREATE DATABASE {}", test_name);
+    get_runtime().block_on(client.query(&InfluxDbQuery::raw_read_query(query))).expect("could not setup db");
+
+    let _run_on_drop = RunOnDrop {
+        closure: Box::new(|| {
+            let test_name = "test_non_authed_write_and_read";
+            let client = InfluxDbClient::new("http://localhost:9086", test_name).with_auth("admin", "password");
+            let query = format!("DROP DATABASE {}", test_name);
+            get_runtime().block_on(client.query(&InfluxDbQuery::raw_read_query(query))).expect("could not clean up db");
+        }),
+    };
     let non_authed_client = InfluxDbClient::new("http://localhost:9086", test_name);
     let write_query =
         InfluxDbQuery::write_query(Timestamp::HOURS(11), "weather").add_field("temperature", 82);
     let write_result = get_runtime().block_on(non_authed_client.query(&write_query));
     assert!(
         write_result.is_err(),
-        format!("Should be an error: {}", write_result.unwrap())
+        format!("Should be an error: {}", write_result.unwrap_err())
     );
+    match write_result {
+        Err(InfluxDbError::AuthorizationError) => assert!(true),
+        _ => assert!(
+            false,
+            format!("Should be an AuthorizationError: {}", write_result.unwrap_err())
+        )
+    }
 
     let read_query = InfluxDbQuery::raw_read_query("SELECT * FROM weather");
     let read_result = get_runtime().block_on(non_authed_client.query(&read_query));
@@ -114,12 +207,13 @@ fn test_auth_only_write_and_read() {
         read_result.is_err(),
         format!("Should be an error: {}", read_result.unwrap())
     );
-    assert!(
-        !read_result.unwrap().contains("error"),
-        "Data contained a database error"
-    );
-
-
+    match read_result {
+        Err(InfluxDbError::AuthorizationError) => assert!(true),
+        _ => assert!(
+            false,
+            format!("Should be an AuthorizationError: {}", read_result.unwrap_err())
+        )
+    }
 }
 
 #[test]
