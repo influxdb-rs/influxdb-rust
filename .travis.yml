@@ -8,6 +8,7 @@ before_install:
     - sudo influxd > $HOME/influx.log 2>&1 &
     - sed -e 's/# auth-enabled = false/auth-enabled = true/' -e 's/# bind-address = ".*:8086"/bind-address = "127.0.0.1:9086"/' -e 's/dir = "\/var\/lib\/influxdb\/meta"/dir = "\/var\/lib\/influxdb\/meta2"/' -e 's/dir = "\/var\/lib\/influxdb\/data"/dir = "\/var\/lib\/influxdb\/data2"/' -e 's/dir = "\/var\/lib\/influxdb\/wal"/dir = "\/var\/lib\/influxdb\/wal2"/' /etc/influxdb/influxdb.conf > $HOME/influxdb_authed.conf
     - sudo influxd -config $HOME/influxdb_authed.conf> $HOME/influx_authed.log 2>&1 &
+    - until curl -s -o /dev/null 'http://localhost:9086' 2>/dev/null; do sleep 1; done
     - influx -port '9086' -execute "CREATE USER admin WITH PASSWORD 'password' WITH ALL PRIVILEGES; CREATE USER nopriv_user WITH PASSWORD 'password';"
 
 branches:
