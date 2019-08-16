@@ -38,11 +38,11 @@ Pull requests are always welcome.
 -   Reading and Writing to InfluxDB
 -   Optional Serde Support for Deserialization
 -   Running multiple queries in one request (e.g. `SELECT * FROM weather_berlin; SELECT * FROM weather_london`)
+-   Authenticated and Unauthenticated Connections
 
 ## Planned Features
 
 -   Read Query Builder instead of supplying raw queries
--   Authentication against InfluxDB
 -   `#[derive(InfluxDbWritable)]`
 
 ## Quickstart
@@ -50,7 +50,7 @@ Pull requests are always welcome.
 Add the following to your `Cargo.toml`
 
 ```toml
-influxdb = "0.0.3"
+influxdb = "0.0.4"
 ```
 
 For an example with using Serde deserialization, please refer to [serde_integration](crate::integrations::serde_integration)

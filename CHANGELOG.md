@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.4] - 2019-08-16
+
+### Added
+
+-   Possibility to authenticate against a InfluxDb instance (many thanks [@valkum](https://github.com/valkum))
+
 ## [0.0.3] - 2019-07-14
 
 ### Added
@@ -26,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   Improved Test Coverage: There's now even more tests verifying correctness of the crate (#5)
 -   It's no longer necessary to supply a wildcard generic when working with serde*integration: `client.json_query::<Weather>(query)` instead of `client.json_query::<Weather, *>(query)`
 
-[unreleased]: https://github.com/Empty2k12/influxdb-rust/compare/v0.0.3...HEAD
+[unreleased]: https://github.com/Empty2k12/influxdb-rust/compare/v0.0.4...HEAD
+[0.0.4]: https://github.com/Empty2k12/influxdb-rust/compare/v0.0.3...v0.0.4
 [0.0.3]: https://github.com/Empty2k12/influxdb-rust/compare/v0.0.2...v0.0.3
 [0.0.2]: https://github.com/Empty2k12/influxdb-rust/releases/tag/v0.0.2
