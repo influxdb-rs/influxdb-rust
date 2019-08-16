@@ -242,7 +242,6 @@ impl InfluxDbClient {
                         _ => {futures::future::ok(res)}
                     }
                 })
-                // .inspect(|&x| println!("about to resolve: {:?}", x))
                 .and_then(|mut res| {
                     let body = mem::replace(res.body_mut(), Decoder::empty());
                     body.concat2()
