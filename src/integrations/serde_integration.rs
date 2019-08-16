@@ -55,6 +55,7 @@ use serde::de::DeserializeOwned;
 
 use futures::{Future, Stream};
 use reqwest::r#async::{Client, Decoder};
+use reqwest::{Url, StatusCode};
 use std::mem;
 
 use serde::Deserialize;
@@ -65,7 +66,6 @@ use crate::error::InfluxDbError;
 use crate::query::read_query::InfluxDbReadQuery;
 use crate::query::InfluxDbQuery;
 
-use url::form_urlencoded;
 
 use futures::future::Either;
 
@@ -118,21 +118,23 @@ impl InfluxDbClient {
         use futures::future;
 
         let query = q.build().unwrap();
-
+        let basic_parameters : Vec<(String, String)> = self.clone().into();
         let client = {
             let read_query = query.get();
-            let encoded: String = form_urlencoded::Serializer::new(String::new())
-                .append_pair("db", self.database_name())
-                .append_pair("q", &read_query)
-                .finish();
-            let http_query_string = format!(
-                "{url}/query?{encoded}",
-                url = self.database_url(),
-                encoded = encoded
-            );
+
+            let mut url = match Url::parse_with_params(format!("{url}/query", url = self.database_url()).as_str(), basic_parameters) {
+                Ok(url) => url,
+                Err(err) => {
+                    let error = InfluxDbError::UrlConstructionError {
+                        error: format!("{}", err),
+                    };
+                    return Either::B(future::err::<DatabaseQueryResult, InfluxDbError>(error));
+                }
+            };
+            url.query_pairs_mut().append_pair("q", &read_query.clone());
 
             if read_query.contains("SELECT") || read_query.contains("SHOW") {
-                Client::new().get(http_query_string.as_str())
+                Client::new().get(url.as_str())
             } else {
                 let error = InfluxDbError::InvalidQueryError {
                     error: String::from(
@@ -146,12 +148,22 @@ impl InfluxDbClient {
         Either::A(
             client
                 .send()
+                .map_err(|err| InfluxDbError::ConnectionError {
+                    error: err,
+                })
+                .and_then(|res| -> future::FutureResult<reqwest::r#async::Response, InfluxDbError> {
+                    match res.status() {
+                        StatusCode::UNAUTHORIZED => {futures::future::err(InfluxDbError::AuthorizationError)}
+                        StatusCode::FORBIDDEN => {futures::future::err(InfluxDbError::AuthenticationError)}
+                        _ => {futures::future::ok(res)}
+                    }
+                })
                 .and_then(|mut res| {
                     let body = mem::replace(res.body_mut(), Decoder::empty());
                     body.concat2()
-                })
-                .map_err(|err| InfluxDbError::ProtocolError {
-                    error: format!("{}", err),
+                    .map_err(|err| InfluxDbError::ProtocolError {
+                        error: format!("{}", err),
+                    })
                 })
                 .and_then(|body| {
                     // Try parsing InfluxDBs { "error": "error message here" }

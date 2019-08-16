@@ -6,6 +6,9 @@ before_install:
     - wget https://dl.influxdata.com/influxdb/releases/influxdb_1.7.6_amd64.deb
     - sudo dpkg -i influxdb_1.7.6_amd64.deb
     - sudo influxd > $HOME/influx.log 2>&1 &
+    - sed -e 's/# auth-enabled = false/auth-enabled = true/' -e 's/# bind-address = ".*:8086"/bind-address = "127.0.0.1:9086"/' /etc/influxdb/influxdb.conf > $HOME/influxdb_authed.conf
+    - sudo influxd -config $HOME/influxdb_authed.conf> $HOME/influx_authed.log 2>&1 &
+    - influx -port '9086' -execute 'CREATE USER user WITH PASSWORD \'password\' WITH ALL PRIVILEGES'
 
 branches:
     only:
