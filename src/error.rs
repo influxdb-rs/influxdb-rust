@@ -34,6 +34,7 @@ pub enum InfluxDbError {
     #[fail(display = "connection error: {}", error)]
     /// Error happens when reqwest fails
     ConnectionError {
-        #[fail(cause)] error: reqwest::Error,
+        #[fail(cause)]
+        error: reqwest::Error,
     },
 }

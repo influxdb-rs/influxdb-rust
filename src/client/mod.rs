@@ -17,7 +17,7 @@
 
 use futures::{Future, Stream};
 use reqwest::r#async::{Client, Decoder};
-use reqwest::{Url, StatusCode};
+use reqwest::{StatusCode, Url};
 
 use std::mem;
 
@@ -26,14 +26,13 @@ use crate::query::read_query::InfluxDbReadQuery;
 use crate::query::write_query::InfluxDbWriteQuery;
 use crate::query::InfluxDbQuery;
 
-
 use std::any::Any;
 
 #[derive(Clone, Debug)]
 /// Internal Authentication representation
 pub(crate) struct InfluxDbAuthentication {
     pub username: String,
-    pub password: String
+    pub password: String,
 }
 
 #[derive(Clone, Debug)]
@@ -41,12 +40,12 @@ pub(crate) struct InfluxDbAuthentication {
 pub struct InfluxDbClient {
     url: String,
     database: String,
-    auth: Option<InfluxDbAuthentication>
+    auth: Option<InfluxDbAuthentication>,
 }
 
 impl Into<Vec<(String, String)>> for InfluxDbClient {
     fn into(self) -> Vec<(String, String)> {
-        let mut vec : Vec<(String, String)> = Vec::new();
+        let mut vec: Vec<(String, String)> = Vec::new();
         vec.push(("db".to_string(), self.database));
         if let Some(auth) = self.auth {
             vec.push(("u".to_string(), auth.username));
@@ -71,7 +70,7 @@ impl InfluxDbClient {
     ///
     /// let _client = InfluxDbClient::new("http://localhost:8086", "test");
     /// ```
-    pub fn new<S1, S2>(url: S1, database: S2, ) -> Self
+    pub fn new<S1, S2>(url: S1, database: S2) -> Self
     where
         S1: ToString,
         S2: ToString,
@@ -79,19 +78,19 @@ impl InfluxDbClient {
         InfluxDbClient {
             url: url.to_string(),
             database: database.to_string(),
-            auth: None
+            auth: None,
         }
     }
 
     /// Add authentication/authorization information to [`InfluxDbClient`](crate::client::InfluxDbClient)
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * username: The Username for InfluxDB.
     /// * password: THe Password for the user.
-    /// 
+    ///
     /// # Examples
-    /// 
+    ///
     /// ```rust
     /// use influxdb::client::InfluxDbClient;
     ///
@@ -104,7 +103,7 @@ impl InfluxDbClient {
     {
         self.auth = Some(InfluxDbAuthentication {
             username: username.to_string(),
-            password: password.to_string()
+            password: password.to_string(),
         });
         self
     }
@@ -190,12 +189,15 @@ impl InfluxDbClient {
         };
 
         let any_value = q as &dyn Any;
-        let basic_parameters : Vec<(String, String)> = (self.clone()).into();
+        let basic_parameters: Vec<(String, String)> = (self.clone()).into();
 
         let client = if let Some(_) = any_value.downcast_ref::<InfluxDbReadQuery>() {
             let read_query = query.get();
-   
-            let mut url = match Url::parse_with_params(format!("{url}/query", url = self.database_url()).as_str(), basic_parameters) {
+
+            let mut url = match Url::parse_with_params(
+                format!("{url}/query", url = self.database_url()).as_str(),
+                basic_parameters,
+            ) {
                 Ok(url) => url,
                 Err(err) => {
                     let error = InfluxDbError::UrlConstructionError {
@@ -212,7 +214,10 @@ impl InfluxDbClient {
                 Client::new().post(url)
             }
         } else if let Some(write_query) = any_value.downcast_ref::<InfluxDbWriteQuery>() {
-            let mut url = match Url::parse_with_params(format!("{url}/write", url = self.database_url()).as_str(), basic_parameters) {
+            let mut url = match Url::parse_with_params(
+                format!("{url}/write", url = self.database_url()).as_str(),
+                basic_parameters,
+            ) {
                 Ok(url) => url,
                 Err(err) => {
                     let error = InfluxDbError::InvalidQueryError {
@@ -221,30 +226,32 @@ impl InfluxDbClient {
                     return Box::new(future::err::<String, InfluxDbError>(error));
                 }
             };
-            url.query_pairs_mut().append_pair("precision", &write_query.get_precision());
-            Client::new()
-                .post(url)
-                .body(query.get())
+            url.query_pairs_mut()
+                .append_pair("precision", &write_query.get_precision());
+            Client::new().post(url).body(query.get())
         } else {
             unreachable!()
         };
         Box::new(
             client
                 .send()
-                .map_err(|err| InfluxDbError::ConnectionError {
-                    error: err,
-                })
-                .and_then(|res| -> future::FutureResult<reqwest::r#async::Response, InfluxDbError> {
-                    match res.status() {
-                        StatusCode::UNAUTHORIZED => {futures::future::err(InfluxDbError::AuthorizationError)}
-                        StatusCode::FORBIDDEN => {futures::future::err(InfluxDbError::AuthenticationError)}
-                        _ => {futures::future::ok(res)}
-                    }
-                })
+                .map_err(|err| InfluxDbError::ConnectionError { error: err })
+                .and_then(
+                    |res| -> future::FutureResult<reqwest::r#async::Response, InfluxDbError> {
+                        match res.status() {
+                            StatusCode::UNAUTHORIZED => {
+                                futures::future::err(InfluxDbError::AuthorizationError)
+                            }
+                            StatusCode::FORBIDDEN => {
+                                futures::future::err(InfluxDbError::AuthenticationError)
+                            }
+                            _ => futures::future::ok(res),
+                        }
+                    },
+                )
                 .and_then(|mut res| {
                     let body = mem::replace(res.body_mut(), Decoder::empty());
-                    body.concat2()
-                    .map_err(|err| InfluxDbError::ProtocolError {
+                    body.concat2().map_err(|err| InfluxDbError::ProtocolError {
                         error: format!("{}", err),
                     })
                 })
