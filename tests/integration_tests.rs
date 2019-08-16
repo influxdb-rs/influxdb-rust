@@ -195,6 +195,32 @@ fn test_wrong_authed_write_and_read() {
 #[test]
 /// INTEGRATION TEST
 ///
+/// This test case tests connection error
+fn test_connection_error() {
+    let test_name = "test_connection_error";
+    let client = InfluxDbClient::new("http://localhost:10086", test_name)
+        .with_auth("nopriv_user", "password");
+    let read_query = InfluxDbQuery::raw_read_query("SELECT * FROM weather");
+    let read_result = get_runtime().block_on(client.query(&read_query));
+    assert!(
+        read_result.is_err(),
+        format!("Should be an error: {}", read_result.unwrap_err())
+    );
+    match read_result {
+        Err(InfluxDbError::ConnectionError{..}) => assert!(true),
+        _ => assert!(
+            false,
+            format!(
+                "Should cause a ConnectionError: {}",
+                read_result.unwrap_err()
+            )
+        ),
+    }
+}
+
+#[test]
+/// INTEGRATION TEST
+///
 /// This test case tests the Authentication
 fn test_non_authed_write_and_read() {
     let test_name = "test_non_authed_write_and_read";

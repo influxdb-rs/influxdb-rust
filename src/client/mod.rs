@@ -251,12 +251,8 @@ impl InfluxDbClient {
                 .and_then(
                     |res| -> future::FutureResult<reqwest::r#async::Response, InfluxDbError> {
                         match res.status() {
-                            StatusCode::UNAUTHORIZED => {
-                                futures::future::err(InfluxDbError::AuthorizationError)
-                            }
-                            StatusCode::FORBIDDEN => {
-                                futures::future::err(InfluxDbError::AuthenticationError)
-                            }
+                            StatusCode::UNAUTHORIZED => futures::future::err(InfluxDbError::AuthorizationError),
+                            StatusCode::FORBIDDEN => futures::future::err(InfluxDbError::AuthenticationError),
                             _ => futures::future::ok(res),
                         }
                     },
@@ -293,6 +289,12 @@ impl InfluxDbClient {
 mod tests {
     use crate::client::InfluxDbClient;
 
+    #[test]
+    fn test_fn_database() {
+        let client = InfluxDbClient::new("http://localhost:8068", "database");
+        assert_eq!("database", client.database_name());
+    }
+    
     #[test]
     fn test_with_auth() {
         let client = InfluxDbClient::new("http://localhost:8068", "database");
