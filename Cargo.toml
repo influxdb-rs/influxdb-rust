@@ -5,9 +5,9 @@ authors = ["Gero Gerke <11deutron11@gmail.com>"]
 edition = "2018"
 description = "InfluxDB Driver for Rust"
 keywords = ["influxdb", "database", "influx"]
-license-file = "LICENSE.md"
+license = "MIT"
 readme = "README.md"
-include = ["src/**/*", "tests/**/*", "Cargo.toml", "LICENSE.md"]
+include = ["src/**/*", "tests/**/*", "Cargo.toml", "LICENSE"]
 repository = "https://github.com/Empty2k12/influxdb-rust"
 
 [badges]
