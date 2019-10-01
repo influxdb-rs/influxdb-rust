@@ -8,8 +8,6 @@ The following is a set of guidelines for contributing to influxdb-rust, which is
 
 [Code of Conduct](#code-of-conduct)
 
-[I don't want to read this whole thing, I just have a question!!!](#i-dont-want-to-read-this-whole-thing-i-just-have-a-question)
-
 [How Can I Contribute?](#how-can-i-contribute)
 
 -   [Reporting Bugs](#reporting-bugs)
@@ -20,10 +18,7 @@ The following is a set of guidelines for contributing to influxdb-rust, which is
 [Styleguides](#styleguides)
 
 -   [Git Commit Messages](#git-commit-messages)
--   [JavaScript Styleguide](#javascript-styleguide)
--   [CoffeeScript Styleguide](#coffeescript-styleguide)
--   [Specs Styleguide](#specs-styleguide)
--   [Documentation Styleguide](#documentation-styleguide)
+-   [Rust Styleguide](#rust-styleguide)
 
 [Additional Notes](#additional-notes)
 
@@ -78,9 +73,9 @@ Enhancement suggestions are tracked as [GitHub issues](https://guides.github.com
 
 Unsure where to begin contributing to influxdb-rust? You can start by looking through these `good first issue` and `Type of Change: Minor` issues:
 
--   [good first issue issues][good first issue] - issues which are suited for new developers. usually just some lines of code or just a test.
--   [Type of Change: Minor issues][type of change: minor] - issues which only change a small amount of code in the library.
--   [Hacktoberfest issues][hacktoberfest] - issues which are suited for someone taking part in Hacktoberfest.
+-   [good first issue issues](https://github.com/Empty2k12/influxdb-rust/labels/good%20first%20issue) - issues which are suited for new developers. usually just some lines of code or just a test.
+-   [Type of Change: Minor issues](https://github.com/Empty2k12/influxdb-rust/labels/Type%20of%20Change%3A%20Minor) - issues which only change a small amount of code in the library.
+-   [Hacktoberfest issues](https://github.com/Empty2k12/influxdb-rust/labels/Hacktoberfest) - issues which are suited for someone taking part in Hacktoberfest.
 
 #### Local development
 
