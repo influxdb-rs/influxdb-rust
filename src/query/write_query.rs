@@ -4,7 +4,6 @@
 
 use crate::error::InfluxDbError;
 use crate::query::{InfluxDbQuery, QueryType, Timestamp, ValidQuery};
-use itertools::Itertools;
 
 // todo: batch write queries
 
@@ -142,6 +141,7 @@ impl InfluxDbQuery for InfluxDbWriteQuery {
             .tags
             .iter()
             .map(|(tag, value)| format!("{tag}={value}", tag = tag, value = value))
+            .collect::<Vec<String>>()
             .join(",");
         if !tags.is_empty() {
             tags.insert_str(0, ",");
@@ -150,6 +150,7 @@ impl InfluxDbQuery for InfluxDbWriteQuery {
             .fields
             .iter()
             .map(|(field, value)| format!("{field}={value}", field = field, value = value))
+            .collect::<Vec<String>>()
             .join(",");
 
         Ok(ValidQuery(format!(
