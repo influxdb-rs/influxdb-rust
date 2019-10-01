@@ -31,7 +31,7 @@ This library is a work in progress. Although we've been using it in production a
 we've prioritized features that fit our use cases. This means a feature you might need is not implemented
 yet or could be handled better.
 
-Pull requests are always welcome. See [Contributing](./CONTRIBUTING.md) and [Code of Conduct](./CODE-OF-CONDUCT.md).
+Pull requests are always welcome. See [Contributing](./CONTRIBUTING.md) and [Code of Conduct](./CODE_OF_CONDUCT.md).
 
 ## Currently Supported Features
 
