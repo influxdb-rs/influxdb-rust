@@ -31,7 +31,7 @@ This library is a work in progress. Although we've been using it in production a
 we're prioritized features that fit our use cases. This means a feature you might need is not implemented
 yet or could be handled better.
 
-Pull requests are always welcome.
+Pull requests are always welcome. See [Contributing][contributing.md] and [Code of Conduct][code-of-conduct.md].
 
 ## Currently Supported Features
 
