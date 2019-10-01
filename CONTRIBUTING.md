@@ -26,7 +26,7 @@ The following is a set of guidelines for contributing to influxdb-rust, which is
 
 ## Code of Conduct
 
-This project and everyone participating in it is governed by the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code. Please report unacceptable behavior to [influxdbrust@gerogerke.de](mailto:influxdbrust@gerogerke.de).
+This project and everyone participating in it is governed by the [Contributor Covenant Code of Conduct](./CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code. Please report unacceptable behavior to [influxdbrust@gerogerke.de](mailto:influxdbrust@gerogerke.de).
 
 ## How Can I Contribute?
 
