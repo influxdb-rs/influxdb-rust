@@ -50,6 +50,24 @@ impl fmt::Display for Timestamp {
     }
 }
 
+/// Internal enum used to represent either type of query.
+pub enum InfluxDbQueryTypes<'a> {
+    Read(&'a InfluxDbReadQuery),
+    Write(&'a InfluxDbWriteQuery),
+}
+
+impl<'a> From<&'a InfluxDbReadQuery> for InfluxDbQueryTypes<'a> {
+    fn from(query: &'a InfluxDbReadQuery) -> Self {
+        Self::Read(query)
+    }
+}
+
+impl<'a> From<&'a InfluxDbWriteQuery> for InfluxDbQueryTypes<'a> {
+    fn from(query: &'a InfluxDbWriteQuery) -> Self {
+        Self::Write(query)
+    }
+}
+
 pub trait InfluxDbQuery {
     /// Builds valid InfluxSQL which can be run against the Database.
     /// In case no fields have been specified, it will return an error,
@@ -71,7 +89,7 @@ pub trait InfluxDbQuery {
     fn get_type(&self) -> QueryType;
 }
 
-impl InfluxDbQuery {
+impl dyn InfluxDbQuery {
     /// Returns a [`InfluxDbWriteQuery`](crate::query::write_query::InfluxDbWriteQuery) builder.
     ///
     /// # Examples
