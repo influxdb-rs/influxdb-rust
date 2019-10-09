@@ -21,7 +21,7 @@ impl InfluxDbReadQuery {
     }
 
     /// Adds a query to the [`InfluxDbReadQuery`]
-    pub fn add<S>(mut self, query: S) -> Self
+    pub fn add_query<S>(mut self, query: S) -> Self
     where
         S: ToString,
     {

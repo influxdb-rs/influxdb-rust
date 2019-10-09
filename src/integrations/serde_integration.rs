@@ -173,9 +173,9 @@ impl InfluxDbClient {
                 .and_then(|body| {
                     // Try parsing InfluxDBs { "error": "error message here" }
                     if let Ok(error) = serde_json::from_slice::<_DatabaseError>(&body) {
-                        return futures::future::err(InfluxDbError::DatabaseError {
+                        futures::future::err(InfluxDbError::DatabaseError {
                             error: error.error.to_string(),
-                        });
+                        })
                     } else {
                         // Json has another structure, let's try actually parsing it to the type we're deserializing
                         let from_slice = serde_json::from_slice::<DatabaseQueryResult>(&body);
@@ -189,7 +189,7 @@ impl InfluxDbClient {
                             }
                         };
 
-                        return futures::future::result(Ok(deserialized));
+                        futures::future::result(Ok(deserialized))
                     }
                 }),
         )
