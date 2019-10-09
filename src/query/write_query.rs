@@ -29,7 +29,7 @@ impl WriteQuery {
         }
     }
 
-    /// Adds a field to the [`WriteQuery`](crate::query::write_query::WriteQuery)
+    /// Adds a field to the [`WriteQuery`](crate::WriteQuery)
     ///
     /// # Examples
     ///
@@ -48,15 +48,15 @@ impl WriteQuery {
         self
     }
 
-    /// Adds a tag to the [`WriteQuery`](crate::query::write_query::WriteQuery)
+    /// Adds a tag to the [`WriteQuery`](crate::WriteQuery)
     ///
-    /// Please note that a [`WriteQuery`](crate::query::write_query::WriteQuery) requires at least one field. Composing a query with
+    /// Please note that a [`WriteQuery`](crate::WriteQuery) requires at least one field. Composing a query with
     /// only tags will result in a failure building the query.
     ///
     /// # Examples
     ///
     /// ```rust
-    /// use influxdb::query::{Query, Timestamp};
+    /// use influxdb::{Query, Timestamp};
     ///
     /// Query::write_query(Timestamp::NOW, "measurement")
     ///     .add_tag("field1", 5); // calling `.build()` now would result in a `Err(Error::InvalidQueryError)`

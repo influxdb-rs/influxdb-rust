@@ -65,7 +65,7 @@ impl<'a> Into<Vec<(String, String)>> for &'a Client {
 }
 
 impl Client {
-    /// Instantiates a new [`Client`](crate::client::Client)
+    /// Instantiates a new [`Client`](crate::Client)
     ///
     /// # Arguments
     ///
@@ -75,7 +75,7 @@ impl Client {
     /// # Examples
     ///
     /// ```rust
-    /// use influxdb::client::Client;
+    /// use influxdb::Client;
     ///
     /// let _client = Client::new("http://localhost:8086", "test");
     /// ```
@@ -91,7 +91,7 @@ impl Client {
         }
     }
 
-    /// Add authentication/authorization information to [`Client`](crate::client::Client)
+    /// Add authentication/authorization information to [`Client`](crate::Client)
     ///
     /// # Arguments
     ///
@@ -101,7 +101,7 @@ impl Client {
     /// # Examples
     ///
     /// ```rust
-    /// use influxdb::client::Client;
+    /// use influxdb::Client;
     ///
     /// let _client = Client::new("http://localhost:9086", "test").with_auth("admin", "password");
     /// ```
@@ -155,19 +155,18 @@ impl Client {
             })
     }
 
-    /// Sends a [`ReadQuery`](crate::query::read_query::ReadQuery) or [`WriteQuery`](crate::query::write_query::WriteQuery) to the InfluxDB Server.
+    /// Sends a [`ReadQuery`](crate::ReadQuery) or [`WriteQuery`](crate::WriteQuery) to the InfluxDB Server.
     ///
     /// A version capable of parsing the returned string is available under the [serde_integration](crate::integrations::serde_integration)
     ///
     /// # Arguments
     ///
-    ///  * `q`: Query of type [`ReadQuery`](crate::query::read_query::ReadQuery) or [`WriteQuery`](crate::query::write_query::WriteQuery)
+    ///  * `q`: Query of type [`ReadQuery`](crate::ReadQuery) or [`WriteQuery`](crate::WriteQuery)
     ///
     /// # Examples
     ///
     /// ```rust
-    /// use influxdb::client::Client;
-    /// use influxdb::query::{Query, Timestamp};
+    /// use influxdb::{Client, Query, Timestamp};
     ///
     /// let client = Client::new("http://localhost:8086", "test");
     /// let _future = client.query(
@@ -288,7 +287,7 @@ impl Client {
 
 #[cfg(test)]
 mod tests {
-    use crate::client::Client;
+    use crate::Client;
 
     #[test]
     fn test_fn_database() {

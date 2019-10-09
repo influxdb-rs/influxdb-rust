@@ -74,7 +74,7 @@ pub trait Query {
     /// # Examples
     ///
     /// ```rust
-    /// use influxdb::query::{Query, Timestamp};
+    /// use influxdb::{Query, Timestamp};
     ///
     /// let invalid_query = Query::write_query(Timestamp::NOW, "measurement").build();
     /// assert!(invalid_query.is_err());
@@ -88,14 +88,14 @@ pub trait Query {
 }
 
 impl dyn Query {
-    /// Returns a [`WriteQuery`](crate::query::write_query::WriteQuery) builder.
+    /// Returns a [`WriteQuery`](crate::WriteQuery) builder.
     ///
     /// # Examples
     ///
     /// ```rust
-    /// use influxdb::query::{Query, Timestamp};
+    /// use influxdb::{Query, Timestamp};
     ///
-    /// Query::write_query(Timestamp::NOW, "measurement"); // Is of type [`WriteQuery`](crate::query::write_query::WriteQuery)
+    /// Query::write_query(Timestamp::NOW, "measurement"); // Is of type [`WriteQuery`](crate::WriteQuery)
     /// ```
     pub fn write_query<S>(timestamp: Timestamp, measurement: S) -> WriteQuery
     where
@@ -104,14 +104,14 @@ impl dyn Query {
         WriteQuery::new(timestamp, measurement)
     }
 
-    /// Returns a [`ReadQuery`](crate::query::read_query::ReadQuery) builder.
+    /// Returns a [`ReadQuery`](crate::ReadQuery) builder.
     ///
     /// # Examples
     ///
     /// ```rust
-    /// use influxdb::query::Query;
+    /// use influxdb::Query;
     ///
-    /// Query::raw_read_query("SELECT * FROM weather"); // Is of type [`ReadQuery`](crate::query::read_query::ReadQuery)
+    /// Query::raw_read_query("SELECT * FROM weather"); // Is of type [`ReadQuery`](crate::ReadQuery)
     /// ```
     pub fn raw_read_query<S>(read_query: S) -> ReadQuery
     where
