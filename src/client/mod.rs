@@ -104,7 +104,7 @@ impl InfluxDbClient {
     ///
     /// let _client = InfluxDbClient::new("http://localhost:9086", "test").with_auth("admin", "password");
     /// ```
-    pub fn with_auth<'a, S1, S2>(mut self, username: S1, password: S2) -> Self
+    pub fn with_auth<S1, S2>(mut self, username: S1, password: S2) -> Self
     where
         S1: ToString,
         S2: ToString,

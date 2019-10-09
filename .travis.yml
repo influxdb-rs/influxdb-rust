@@ -41,7 +41,7 @@ matrix:
               - rustup component add clippy-preview
           script:
               - cargo fmt --all -- --check
-              - cargo clippy
+              - cargo clippy --all-targets --all-features -- -D warnings
 
         - env: NAME='cargo-travis'
           sudo: required

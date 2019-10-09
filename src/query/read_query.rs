@@ -21,7 +21,7 @@ impl InfluxDbReadQuery {
     }
 
     /// Adds a query to the [`InfluxDbReadQuery`]
-    pub fn add<S>(mut self, query: S) -> Self
+    pub fn add_query<S>(mut self, query: S) -> Self
     where
         S: ToString,
     {
@@ -54,7 +54,7 @@ mod tests {
     #[test]
     fn test_read_builder_multi_query() {
         let query = InfluxDbQuery::raw_read_query("SELECT * FROM aachen")
-            .add("SELECT * FROM cologne")
+            .add_query("SELECT * FROM cologne")
             .build();
 
         assert_eq!(query.unwrap(), "SELECT * FROM aachen;SELECT * FROM cologne");
