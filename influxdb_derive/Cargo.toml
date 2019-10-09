@@ -1,0 +1,23 @@
+[package]
+name = "influxdb_derive"
+version = "0.0.4"
+authors = ["Gero Gerke <11deutron11@gmail.com>"]
+edition = "2018"
+description = "InfluxDB Driver for Rust - Derive"
+keywords = ["influxdb", "database", "influx"]
+license = "MIT"
+readme = "README.md"
+include = ["src/**/*", "tests/**/*", "Cargo.toml", "../LICENSE"]
+repository = "https://github.com/Empty2k12/influxdb-rust"
+
+[lib]
+proc-macro = true
+
+[badges]
+travis-ci = { repository = "Empty2k12/influxdb-rust", branch = "master" }
+coveralls = { repository = "Empty2k12/influxdb-rust", branch = "master", service = "github" }
+
+[dependencies]
+proc-macro2 = "1"
+quote = "1"
+syn = { version = "1", features = ["extra-traits", "full"] }

@@ -1,27 +1,2 @@
-[package]
-name = "influxdb"
-version = "0.0.4"
-authors = ["Gero Gerke <11deutron11@gmail.com>"]
-edition = "2018"
-description = "InfluxDB Driver for Rust"
-keywords = ["influxdb", "database", "influx"]
-license = "MIT"
-readme = "README.md"
-include = ["src/**/*", "tests/**/*", "Cargo.toml", "LICENSE"]
-repository = "https://github.com/Empty2k12/influxdb-rust"
-
-[badges]
-travis-ci = { repository = "Empty2k12/influxdb-rust", branch = "master" }
-coveralls = { repository = "Empty2k12/influxdb-rust", branch = "master", service = "github" }
-
-[dependencies]
-reqwest = "0.9.17"
-futures = "0.1.27"
-tokio = "0.1.20"
-failure = "0.1.5"
-serde = { version = "1.0.92", optional = true }
-serde_json = { version = "1.0", optional = true }
-
-[features]
-use-serde = ["serde", "serde_json"]
-default = ["use-serde"]
+[workspace]
+members = ["influxdb", "influxdb_derive"]
