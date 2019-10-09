@@ -176,11 +176,11 @@ mod tests {
 
     #[test]
     fn test_format_for_timestamp_now() {
-        assert!(format!("{}", Timestamp::NOW) == String::from(""));
+        assert!(format!("{}", Timestamp::NOW) == "");
     }
 
     #[test]
     fn test_format_for_timestamp_else() {
-        assert!(format!("{}", Timestamp::NANOSECONDS(100)) == String::from("100"));
+        assert!(format!("{}", Timestamp::NANOSECONDS(100)) == "100");
     }
 }

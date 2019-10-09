@@ -1,3 +1,5 @@
+#![allow(clippy::panicking_unwrap)]
+#![allow(clippy::unnecessary_unwrap)]
 extern crate influxdb;
 
 use futures::prelude::*;
@@ -78,14 +80,11 @@ fn test_connection_error() {
         format!("Should be an error: {}", read_result.unwrap_err())
     );
     match read_result {
-        Err(InfluxDbError::ConnectionError { .. }) => assert!(true),
-        _ => assert!(
-            false,
-            format!(
-                "Should cause a ConnectionError: {}",
-                read_result.unwrap_err()
-            )
-        ),
+        Err(InfluxDbError::ConnectionError { .. }) => {}
+        _ => panic!(format!(
+            "Should cause a ConnectionError: {}",
+            read_result.unwrap_err()
+        )),
     }
 }
 
@@ -171,14 +170,11 @@ fn test_wrong_authed_write_and_read() {
         format!("Should be an error: {}", write_result.unwrap_err())
     );
     match write_result {
-        Err(InfluxDbError::AuthorizationError) => assert!(true),
-        _ => assert!(
-            false,
-            format!(
-                "Should be an AuthorizationError: {}",
-                write_result.unwrap_err()
-            )
-        ),
+        Err(InfluxDbError::AuthorizationError) => {}
+        _ => panic!(format!(
+            "Should be an AuthorizationError: {}",
+            write_result.unwrap_err()
+        )),
     }
 
     let read_query = InfluxDbQuery::raw_read_query("SELECT * FROM weather");
@@ -188,14 +184,11 @@ fn test_wrong_authed_write_and_read() {
         format!("Should be an error: {}", read_result.unwrap_err())
     );
     match read_result {
-        Err(InfluxDbError::AuthorizationError) => assert!(true),
-        _ => assert!(
-            false,
-            format!(
-                "Should be an AuthorizationError: {}",
-                read_result.unwrap_err()
-            )
-        ),
+        Err(InfluxDbError::AuthorizationError) => {}
+        _ => panic!(format!(
+            "Should be an AuthorizationError: {}",
+            read_result.unwrap_err()
+        )),
     }
 
     let client = InfluxDbClient::new("http://localhost:9086", test_name)
@@ -207,14 +200,11 @@ fn test_wrong_authed_write_and_read() {
         format!("Should be an error: {}", read_result.unwrap_err())
     );
     match read_result {
-        Err(InfluxDbError::AuthenticationError) => assert!(true),
-        _ => assert!(
-            false,
-            format!(
-                "Should be an AuthenticationError: {}",
-                read_result.unwrap_err()
-            )
-        ),
+        Err(InfluxDbError::AuthenticationError) => {}
+        _ => panic!(format!(
+            "Should be an AuthenticationError: {}",
+            read_result.unwrap_err()
+        )),
     }
 }
 
@@ -251,14 +241,11 @@ fn test_non_authed_write_and_read() {
         format!("Should be an error: {}", write_result.unwrap_err())
     );
     match write_result {
-        Err(InfluxDbError::AuthorizationError) => assert!(true),
-        _ => assert!(
-            false,
-            format!(
-                "Should be an AuthorizationError: {}",
-                write_result.unwrap_err()
-            )
-        ),
+        Err(InfluxDbError::AuthorizationError) => {}
+        _ => panic!(format!(
+            "Should be an AuthorizationError: {}",
+            write_result.unwrap_err()
+        )),
     }
 
     let read_query = InfluxDbQuery::raw_read_query("SELECT * FROM weather");
@@ -268,14 +255,11 @@ fn test_non_authed_write_and_read() {
         format!("Should be an error: {}", read_result.unwrap())
     );
     match read_result {
-        Err(InfluxDbError::AuthorizationError) => assert!(true),
-        _ => assert!(
-            false,
-            format!(
-                "Should be an AuthorizationError: {}",
-                read_result.unwrap_err()
-            )
-        ),
+        Err(InfluxDbError::AuthorizationError) => {}
+        _ => panic!(format!(
+            "Should be an AuthorizationError: {}",
+            read_result.unwrap_err()
+        )),
     }
 }
 
