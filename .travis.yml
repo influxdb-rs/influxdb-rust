@@ -69,5 +69,5 @@ matrix:
 script: |
     export RUST_BACKTRACE=1 &&
     cargo build &&
-    cargo test &&
+    cargo test --features derive &&
     cargo doc --no-deps
