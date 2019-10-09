@@ -71,6 +71,27 @@ pub trait InfluxDbQuery {
     fn get_type(&self) -> QueryType;
 }
 
+pub trait InfluxDbWriteable
+{
+    fn into_query(self) -> InfluxDbWriteQuery;
+}
+
+impl<S : ToString> InfluxDbWriteable for (Timestamp, S)
+{
+    fn into_query(self) -> InfluxDbWriteQuery
+    {
+        InfluxDbWriteQuery::new(self.0, self.1)
+    }
+}
+
+impl<W : InfluxDbWriteable> From<W> for InfluxDbWriteQuery
+{
+    fn from(query : W) -> Self
+    {
+        query.into_query()
+    }
+}
+
 impl InfluxDbQuery {
     /// Returns a [`InfluxDbWriteQuery`](crate::query::write_query::InfluxDbWriteQuery) builder.
     ///
@@ -85,7 +106,7 @@ impl InfluxDbQuery {
     where
         S: ToString,
     {
-        InfluxDbWriteQuery::new(timestamp, measurement)
+        (timestamp, measurement).into()
     }
 
     /// Returns a [`InfluxDbReadQuery`](crate::query::read_query::InfluxDbReadQuery) builder.
