@@ -28,6 +28,9 @@ use crate::error::InfluxDbError;
 use crate::query::read_query::InfluxDbReadQuery;
 use crate::query::write_query::InfluxDbWriteQuery;
 
+#[cfg(feature = "derive")]
+pub use influxdb_derive::derive_writeable;
+
 #[derive(PartialEq)]
 pub enum Timestamp {
     NOW,

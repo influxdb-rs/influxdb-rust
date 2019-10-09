@@ -524,3 +524,34 @@ fn test_wrong_query_errors() {
         "Should only build SELECT and SHOW queries."
     );
 }
+
+#[cfg(feature = "derive")]
+#[derive(InfluxDbWriteable)]
+struct Humidity {
+    time: i32,
+    humidity: i32,
+}
+
+#[cfg(feature = "derive")]
+#[test]
+fn test_derive_simple_write() {
+    let test_name = "test_derive_simple_write";
+    create_db(test_name).expect("could not setup db");
+    let _run_on_drop = RunOnDrop {
+        closure: Box::new(|| {
+            delete_db(test_name).expect("could not clean up db");
+        }),
+    };
+    
+    let humidity = Humidity {
+        time: 15,
+        humidity: 30
+    };
+    let query = humidity.into_query();
+    let future = client.query(&query);
+    let result = get_runtime().block_on(future);
+    assert!(
+        result.is_err(),
+        "Should only build SELECT and SHOW queries."
+    );
+}
