@@ -18,6 +18,5 @@ travis-ci = { repository = "Empty2k12/influxdb-rust", branch = "master" }
 coveralls = { repository = "Empty2k12/influxdb-rust", branch = "master", service = "github" }
 
 [dependencies]
-proc-macro2 = "1"
 quote = "1"
 syn = { version = "1", features = ["extra-traits", "full"] }

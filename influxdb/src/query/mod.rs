@@ -91,26 +91,29 @@ pub trait InfluxDbQuery {
 
 pub trait InfluxDbWriteable
 {
-    fn into_query(self) -> InfluxDbWriteQuery;
+    fn into_query(self, name : String) -> InfluxDbWriteQuery;
 }
 
-impl<S : ToString> InfluxDbWriteable for (Timestamp, S)
+impl InfluxDbWriteable for Timestamp
 {
-    fn into_query(self) -> InfluxDbWriteQuery
+    fn into_query(self, name : String) -> InfluxDbWriteQuery
     {
-        InfluxDbWriteQuery::new(self.0, self.1)
+        InfluxDbWriteQuery::new(self, name)
     }
 }
 
-impl<W : InfluxDbWriteable> From<W> for InfluxDbWriteQuery
-{
-    fn from(query : W) -> Self
-    {
-        query.into_query()
-    }
-}
 impl dyn InfluxDbQuery {
     /// Returns a [`InfluxDbWriteQuery`](crate::query::write_query::InfluxDbWriteQuery) builder.
+    ///
+    /// # Deprecated
+    ///
+    /// Use `InfluxDbWriteable` instead:
+    ///
+    /// ```rust
+    /// use influxdb::query::{InfluxDbWriteable, Timestamp};
+    ///
+    /// Timestamp::NOW.into_query("measurement".to_string()); // Is of type [`InfluxDbWriteQuery`](crate::query::write_query::InfluxDbWriteQuery)
+    /// ```
     ///
     /// # Examples
     ///
@@ -119,11 +122,12 @@ impl dyn InfluxDbQuery {
     ///
     /// InfluxDbQuery::write_query(Timestamp::NOW, "measurement"); // Is of type [`InfluxDbWriteQuery`](crate::query::write_query::InfluxDbWriteQuery)
     /// ```
+    #[deprecated(since = "0.0.5")]
     pub fn write_query<S>(timestamp: Timestamp, measurement: S) -> InfluxDbWriteQuery
     where
         S: ToString,
     {
-        (timestamp, measurement).into()
+        timestamp.into_query(measurement.to_string())
     }
 
     /// Returns a [`InfluxDbReadQuery`](crate::query::read_query::InfluxDbReadQuery) builder.
