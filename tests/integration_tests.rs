@@ -1,5 +1,3 @@
-#![allow(clippy::panicking_unwrap)]
-#![allow(clippy::unnecessary_unwrap)]
 extern crate influxdb;
 
 use futures::prelude::*;
@@ -7,6 +5,14 @@ use influxdb::client::InfluxDbClient;
 use influxdb::error::InfluxDbError;
 use influxdb::query::{InfluxDbQuery, Timestamp};
 use tokio::runtime::current_thread::Runtime;
+
+fn assert_result_err<A: std::fmt::Debug, B: std::fmt::Debug>(result: &Result<A, B>) {
+    result.as_ref().expect_err("assert_result_err failed");
+}
+
+fn assert_result_ok<A: std::fmt::Debug, B: std::fmt::Debug>(result: &Result<A, B>) {
+    result.as_ref().expect("assert_result_ok failed");
+}
 
 fn get_runtime() -> Runtime {
     Runtime::new().expect("Unable to create a runtime")
@@ -52,11 +58,7 @@ where
 fn test_ping_influx_db() {
     let client = create_client("notusedhere");
     let result = get_runtime().block_on(client.ping());
-    assert!(
-        result.is_ok(),
-        "Should be no error: {}",
-        result.unwrap_err()
-    );
+    assert_result_ok(&result);
 
     let (build, version) = result.unwrap();
     assert!(!build.is_empty(), "Build should not be empty");
@@ -75,10 +77,7 @@ fn test_connection_error() {
         .with_auth("nopriv_user", "password");
     let read_query = InfluxDbQuery::raw_read_query("SELECT * FROM weather");
     let read_result = get_runtime().block_on(client.query(&read_query));
-    assert!(
-        read_result.is_err(),
-        format!("Should be an error: {}", read_result.unwrap_err())
-    );
+    assert_result_err(&read_result);
     match read_result {
         Err(InfluxDbError::ConnectionError { .. }) => {}
         _ => panic!(format!(
@@ -118,17 +117,11 @@ fn test_authed_write_and_read() {
     let write_query =
         InfluxDbQuery::write_query(Timestamp::HOURS(11), "weather").add_field("temperature", 82);
     let write_result = get_runtime().block_on(client.query(&write_query));
-    assert!(
-        write_result.is_ok(),
-        format!("Should be no error: {}", write_result.unwrap_err())
-    );
+    assert_result_ok(&write_result);
 
     let read_query = InfluxDbQuery::raw_read_query("SELECT * FROM weather");
     let read_result = get_runtime().block_on(client.query(&read_query));
-    assert!(
-        read_result.is_ok(),
-        format!("Should be no error: {}", read_result.unwrap_err())
-    );
+    assert_result_ok(&read_result);
     assert!(
         !read_result.unwrap().contains("error"),
         "Data contained a database error"
@@ -165,10 +158,7 @@ fn test_wrong_authed_write_and_read() {
     let write_query =
         InfluxDbQuery::write_query(Timestamp::HOURS(11), "weather").add_field("temperature", 82);
     let write_result = get_runtime().block_on(client.query(&write_query));
-    assert!(
-        write_result.is_err(),
-        format!("Should be an error: {}", write_result.unwrap_err())
-    );
+    assert_result_err(&write_result);
     match write_result {
         Err(InfluxDbError::AuthorizationError) => {}
         _ => panic!(format!(
@@ -179,10 +169,7 @@ fn test_wrong_authed_write_and_read() {
 
     let read_query = InfluxDbQuery::raw_read_query("SELECT * FROM weather");
     let read_result = get_runtime().block_on(client.query(&read_query));
-    assert!(
-        read_result.is_err(),
-        format!("Should be an error: {}", read_result.unwrap_err())
-    );
+    assert_result_err(&read_result);
     match read_result {
         Err(InfluxDbError::AuthorizationError) => {}
         _ => panic!(format!(
@@ -195,10 +182,7 @@ fn test_wrong_authed_write_and_read() {
         .with_auth("nopriv_user", "password");
     let read_query = InfluxDbQuery::raw_read_query("SELECT * FROM weather");
     let read_result = get_runtime().block_on(client.query(&read_query));
-    assert!(
-        read_result.is_err(),
-        format!("Should be an error: {}", read_result.unwrap_err())
-    );
+    assert_result_err(&read_result);
     match read_result {
         Err(InfluxDbError::AuthenticationError) => {}
         _ => panic!(format!(
@@ -236,10 +220,7 @@ fn test_non_authed_write_and_read() {
     let write_query =
         InfluxDbQuery::write_query(Timestamp::HOURS(11), "weather").add_field("temperature", 82);
     let write_result = get_runtime().block_on(non_authed_client.query(&write_query));
-    assert!(
-        write_result.is_err(),
-        format!("Should be an error: {}", write_result.unwrap_err())
-    );
+    assert_result_err(&write_result);
     match write_result {
         Err(InfluxDbError::AuthorizationError) => {}
         _ => panic!(format!(
@@ -250,10 +231,7 @@ fn test_non_authed_write_and_read() {
 
     let read_query = InfluxDbQuery::raw_read_query("SELECT * FROM weather");
     let read_result = get_runtime().block_on(non_authed_client.query(&read_query));
-    assert!(
-        read_result.is_err(),
-        format!("Should be an error: {}", read_result.unwrap())
-    );
+    assert_result_err(&read_result);
     match read_result {
         Err(InfluxDbError::AuthorizationError) => {}
         _ => panic!(format!(
@@ -280,17 +258,11 @@ fn test_write_and_read_field() {
     let write_query =
         InfluxDbQuery::write_query(Timestamp::HOURS(11), "weather").add_field("temperature", 82);
     let write_result = get_runtime().block_on(client.query(&write_query));
-    assert!(
-        write_result.is_ok(),
-        format!("Should be no error: {}", write_result.unwrap_err())
-    );
+    assert_result_ok(&write_result);
 
     let read_query = InfluxDbQuery::raw_read_query("SELECT * FROM weather");
     let read_result = get_runtime().block_on(client.query(&read_query));
-    assert!(
-        read_result.is_ok(),
-        format!("Should be no error: {}", read_result.unwrap_err())
-    );
+    assert_result_ok(&read_result);
     assert!(
         !read_result.unwrap().contains("error"),
         "Data contained a database error"
@@ -322,10 +294,7 @@ fn test_json_query() {
     let write_query =
         InfluxDbQuery::write_query(Timestamp::HOURS(11), "weather").add_field("temperature", 82);
     let write_result = get_runtime().block_on(client.query(&write_query));
-    assert!(
-        write_result.is_ok(),
-        format!("Should be no error: {}", write_result.unwrap_err())
-    );
+    assert_result_ok(&write_result);
 
     #[derive(Deserialize, Debug, PartialEq)]
     struct Weather {
@@ -338,11 +307,7 @@ fn test_json_query() {
         .json_query(query)
         .and_then(|mut db_result| db_result.deserialize_next::<Weather>());
     let result = get_runtime().block_on(future);
-
-    assert!(
-        result.is_ok(),
-        format!("We couldn't read from the DB: {}", result.unwrap_err())
-    );
+    assert_result_ok(&result);
 
     assert_eq!(
         result.unwrap().series[0].values[0],
@@ -395,12 +360,7 @@ fn test_json_query_vec() {
         .json_query(query)
         .and_then(|mut db_result| db_result.deserialize_next::<Weather>());
     let result = get_runtime().block_on(future);
-
-    assert!(
-        result.is_ok(),
-        format!("We couldn't read from the DB: {}", result.unwrap_err())
-    );
-
+    assert_result_ok(&result);
     assert_eq!(result.unwrap().series[0].values.len(), 3);
 
     delete_db(test_name).expect("could not clean up db");
@@ -442,16 +402,8 @@ fn test_serde_multi_query() {
 
     let write_result = get_runtime().block_on(client.query(&write_query));
     let write_result2 = get_runtime().block_on(client.query(&write_query2));
-
-    assert!(
-        write_result.is_ok(),
-        format!("Write Query 1 failed: {}", write_result.unwrap_err())
-    );
-
-    assert!(
-        write_result2.is_ok(),
-        format!("Write Query 2 failed: {}", write_result2.unwrap_err())
-    );
+    assert_result_ok(&write_result);
+    assert_result_ok(&write_result2);
 
     let future = client
         .json_query(
@@ -465,14 +417,9 @@ fn test_serde_multi_query() {
             (temp, humidity)
         });
     let result = get_runtime().block_on(future);
-
-    assert!(
-        result.is_ok(),
-        format!("No problems should be had: {}", result.unwrap_err())
-    );
+    assert_result_ok(&result);
 
     let (temp, humidity) = result.unwrap();
-
     assert_eq!(
         temp.series[0].values[0],
         Temperature {
@@ -480,7 +427,6 @@ fn test_serde_multi_query() {
             temperature: 16
         },
     );
-
     assert_eq!(
         humidity.series[0].values[0],
         Humidity {
