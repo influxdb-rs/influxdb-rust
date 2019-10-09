@@ -34,7 +34,7 @@ impl WriteQuery {
     /// # Examples
     ///
     /// ```rust
-    /// use influxdb::query::{Query, Timestamp};
+    /// use influxdb::{Query, Timestamp};
     ///
     /// Query::write_query(Timestamp::NOW, "measurement").add_field("field1", 5).build();
     /// ```
