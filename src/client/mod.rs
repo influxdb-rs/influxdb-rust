@@ -22,11 +22,7 @@ use reqwest::{StatusCode, Url};
 use std::mem;
 
 use crate::error::InfluxDbError;
-use crate::query::read_query::InfluxDbReadQuery;
-use crate::query::write_query::InfluxDbWriteQuery;
-use crate::query::InfluxDbQuery;
-
-use std::any::Any;
+use crate::query::{InfluxDbQuery, InfluxDbQueryTypes};
 
 #[derive(Clone, Debug)]
 /// Internal Authentication representation
@@ -184,9 +180,10 @@ impl InfluxDbClient {
     /// a [`InfluxDbError`] variant will be returned.
     ///
     /// [`InfluxDbError`]: enum.InfluxDbError.html
-    pub fn query<Q>(&self, q: &Q) -> Box<dyn Future<Item = String, Error = InfluxDbError>>
+    pub fn query<'q, Q>(&self, q: &'q Q) -> Box<dyn Future<Item = String, Error = InfluxDbError>>
     where
-        Q: Any + InfluxDbQuery,
+        Q: InfluxDbQuery,
+        &'q Q: Into<InfluxDbQueryTypes<'q>>,
     {
         use futures::future;
 
@@ -200,49 +197,48 @@ impl InfluxDbClient {
             Ok(query) => query,
         };
 
-        let any_value = q as &dyn Any;
         let basic_parameters: Vec<(String, String)> = self.into();
 
-        let client = if let Some(_) = any_value.downcast_ref::<InfluxDbReadQuery>() {
-            let read_query = query.get();
+        let client = match q.into() {
+            InfluxDbQueryTypes::Read(_) => {
+                let read_query = query.get();
+                let mut url = match Url::parse_with_params(
+                    format!("{url}/query", url = self.database_url()).as_str(),
+                    basic_parameters,
+                ) {
+                    Ok(url) => url,
+                    Err(err) => {
+                        let error = InfluxDbError::UrlConstructionError {
+                            error: format!("{}", err),
+                        };
+                        return Box::new(future::err::<String, InfluxDbError>(error));
+                    }
+                };
+                url.query_pairs_mut().append_pair("q", &read_query.clone());
 
-            let mut url = match Url::parse_with_params(
-                format!("{url}/query", url = self.database_url()).as_str(),
-                basic_parameters,
-            ) {
-                Ok(url) => url,
-                Err(err) => {
-                    let error = InfluxDbError::UrlConstructionError {
-                        error: format!("{}", err),
-                    };
-                    return Box::new(future::err::<String, InfluxDbError>(error));
+                if read_query.contains("SELECT") || read_query.contains("SHOW") {
+                    Client::new().get(url)
+                } else {
+                    Client::new().post(url)
                 }
-            };
-            url.query_pairs_mut().append_pair("q", &read_query.clone());
-
-            if read_query.contains("SELECT") || read_query.contains("SHOW") {
-                Client::new().get(url)
-            } else {
-                Client::new().post(url)
             }
-        } else if let Some(write_query) = any_value.downcast_ref::<InfluxDbWriteQuery>() {
-            let mut url = match Url::parse_with_params(
-                format!("{url}/write", url = self.database_url()).as_str(),
-                basic_parameters,
-            ) {
-                Ok(url) => url,
-                Err(err) => {
-                    let error = InfluxDbError::InvalidQueryError {
-                        error: format!("{}", err),
-                    };
-                    return Box::new(future::err::<String, InfluxDbError>(error));
-                }
-            };
-            url.query_pairs_mut()
-                .append_pair("precision", &write_query.get_precision());
-            Client::new().post(url).body(query.get())
-        } else {
-            unreachable!()
+            InfluxDbQueryTypes::Write(write_query) => {
+                let mut url = match Url::parse_with_params(
+                    format!("{url}/write", url = self.database_url()).as_str(),
+                    basic_parameters,
+                ) {
+                    Ok(url) => url,
+                    Err(err) => {
+                        let error = InfluxDbError::InvalidQueryError {
+                            error: format!("{}", err),
+                        };
+                        return Box::new(future::err::<String, InfluxDbError>(error));
+                    }
+                };
+                url.query_pairs_mut()
+                    .append_pair("precision", &write_query.get_precision());
+                Client::new().post(url).body(query.get())
+            }
         };
         Box::new(
             client
