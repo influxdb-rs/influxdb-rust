@@ -472,7 +472,7 @@ fn test_serde_multi_query() {
     let future = client
         .json_query(
             InfluxDbQuery::raw_read_query("SELECT * FROM temperature")
-                .add("SELECT * FROM humidity"),
+                .add_query("SELECT * FROM humidity"),
         )
         .and_then(|mut db_result| {
             let temp = db_result.deserialize_next::<Temperature>();
