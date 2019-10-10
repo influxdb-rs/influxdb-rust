@@ -14,7 +14,6 @@ before_install:
 branches:
     only:
         - master
-        - fix/28-cargo-readme
 
 cache:
     directories:
@@ -70,10 +69,9 @@ matrix:
         - rust: stable
           env: NAME='readme-check'
           before_script:
-            - bash update_cargo-readme.sh
+            - bash auxiliary/update_cargo-readme.sh
           script:
-            - cargo readme > README.md.expected
-            - diff README.md README.md.expected
+            - bash auxiliary/check_readme_consistency.sh
 
 script: |
     export RUST_BACKTRACE=1 &&

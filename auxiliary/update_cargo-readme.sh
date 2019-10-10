@@ -1,4 +1,5 @@
 #!/usr/bin/bash
+
 our_version=$(cargo readme -V | perl -ne 'print $1 while  /v([\d.]+)/g')
 last_version=$(cargo search cargo-readme | perl -ne 'print $1 while /^cargo-readme = "([\d.]+)"/g')
 
