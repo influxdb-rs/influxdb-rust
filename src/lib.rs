@@ -1,21 +1,22 @@
 //! Library for talking to InfluxDB
 //!
 //! This library is a work in progress. Although we've been using it in production at [OpenVelo](https://openvelo.org/),
-//! we're prioritized features that fit our use cases. This means a feature you might need is not implemented
+//! we've prioritized features that fit our use cases. This means a feature you might need is not implemented
 //! yet or could be handled better.
 //!
-//! Pull requests are always welcome.
+//! Pull requests are always welcome. See [Contributing](https://github.com/Empty2k12/influxdb-rust/blob/master/CONTRIBUTING.md) and [Code of Conduct](https://github.com/Empty2k12/influxdb-rust/blob/master/CODE_OF_CONDUCT.md).
 //!
 //! # Currently Supported Features
 //!
 //!  * Reading and Writing to InfluxDB
 //!  * Optional Serde Support for Deserialization
+//!  * Running multiple queries in one request (e.g. `SELECT * FROM weather_berlin; SELECT * FROM weather_london`)
+//!  * Authenticated and Unauthenticated Connections
 //!
 //! # Planned Features
 //!
-//!  * Running multiple queries in one request (e.g. `SELECT * FROM weather_berlin; SELECT * FROM weather_london`)
 //!  * Read Query Builder instead of supplying raw queries
-//!  * Authentication against InfluxDB
+//!  * `#[derive(InfluxDbWritable)]`
 //!  * Methods for setting time and time precision in a query
 //!
 //! # Quickstart
@@ -23,7 +24,7 @@
 //! Add the following to your `Cargo.toml`
 //!
 //! ```toml
-//! influxdb = "0.0.1"
+//! influxdb = "0.0.4"
 //! ```
 //!
 //! For an example with using Serde deserialization, please refer to [serde_integration](crate::integrations::serde_integration)
@@ -31,7 +32,6 @@
 //! ```rust,no_run
 //! use influxdb::query::{InfluxDbQuery, Timestamp};
 //! use influxdb::client::InfluxDbClient;
-//! use serde::Deserialize;
 //! use tokio::runtime::current_thread::Runtime;
 //!
 //! // Create a InfluxDbClient with URL `http://localhost:8086`
@@ -69,6 +69,12 @@
 //!
 //! For further examples, check out the Integration Tests in `tests/integration_tests.rs`
 //! in the repository.
+//! 
+//! # License
+//! 
+//! [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+//! 
+//! @ 2019 Gero Gerke, All rights reserved.
 
 #[macro_use]
 extern crate failure;

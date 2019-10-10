@@ -27,23 +27,26 @@
     </a>
 </p>
 
+Library for talking to InfluxDB
+
 This library is a work in progress. Although we've been using it in production at [OpenVelo](https://openvelo.org/),
 we've prioritized features that fit our use cases. This means a feature you might need is not implemented
 yet or could be handled better.
 
-Pull requests are always welcome. See [Contributing](./CONTRIBUTING.md) and [Code of Conduct](./CODE_OF_CONDUCT.md).
+Pull requests are always welcome. See [Contributing](https://github.com/Empty2k12/influxdb-rust/blob/master/CONTRIBUTING.md) and [Code of Conduct](https://github.com/Empty2k12/influxdb-rust/blob/master/CODE_OF_CONDUCT.md).
 
 ## Currently Supported Features
 
--   Reading and Writing to InfluxDB
--   Optional Serde Support for Deserialization
--   Running multiple queries in one request (e.g. `SELECT * FROM weather_berlin; SELECT * FROM weather_london`)
--   Authenticated and Unauthenticated Connections
+ * Reading and Writing to InfluxDB
+ * Optional Serde Support for Deserialization
+ * Running multiple queries in one request (e.g. `SELECT * FROM weather_berlin; SELECT * FROM weather_london`)
+ * Authenticated and Unauthenticated Connections
 
 ## Planned Features
 
--   Read Query Builder instead of supplying raw queries
--   `#[derive(InfluxDbWritable)]`
+ * Read Query Builder instead of supplying raw queries
+ * `#[derive(InfluxDbWritable)]`
+ * Methods for setting time and time precision in a query
 
 ## Quickstart
 
@@ -81,7 +84,7 @@ let write_result = rt.block_on(client.query(&write_query));
 assert!(write_result.is_ok(), "Write result was not okay");
 
 // Reading data is as simple as writing. First we need to create a query
-let read_query = InfluxDbQuery::raw_read_query("SELECT _ FROM weather");
+let read_query = InfluxDbQuery::raw_read_query("SELECT * FROM weather");
 
 // Again, we're blocking until the request is done
 let read_result = rt.block_on(client.query(&read_query));

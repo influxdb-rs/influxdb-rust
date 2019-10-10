@@ -70,7 +70,7 @@ matrix:
         - rust: stable
           env: NAME='readme-check'
           before_script:
-            - cargo install cargo-readme
+            - bash update_cargo-readme.sh
           script:
             - cargo readme > README.md.expected
             - diff README.md README.md.expected
