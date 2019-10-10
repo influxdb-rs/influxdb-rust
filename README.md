@@ -43,7 +43,7 @@ Pull requests are always welcome. See [Contributing](./CONTRIBUTING.md) and [Cod
 ## Planned Features
 
 -   Read Query Builder instead of supplying raw queries
--   `#[derive(InfluxDbWritable)]`
+-   `#[derive(InfluxDbReadable)]` and `#[derive(InfluxDbWriteable)]` proc macros
 
 ## Quickstart
 
@@ -56,18 +56,16 @@ influxdb = "0.0.4"
 For an example with using Serde deserialization, please refer to [serde_integration](crate::integrations::serde_integration)
 
 ```rust
-use influxdb::query::{InfluxDbQuery, Timestamp};
-use influxdb::client::InfluxDbClient;
+use influxdb::{Client, Query, Timestamp};
 use tokio::runtime::current_thread::Runtime;
 
-// Create a InfluxDbClient with URL `http://localhost:8086`
+// Create a Client with URL `http://localhost:8086`
 // and database name `test`
-let client = InfluxDbClient::new("http://localhost:8086", "test");
+let client = Client::new("http://localhost:8086", "test");
 
-// Let's write something to InfluxDB. First we're creating a
-// InfluxDbWriteQuery to write some data.
+// Let's write something to InfluxDB. First we're creating a `WriteQuery` to write some data.
 // This creates a query which writes a new measurement into a series called `weather`
-let write_query = InfluxDbQuery::write_query(Timestamp::NOW, "weather")
+let write_query = Query::write_query(Timestamp::NOW, "weather")
     .add_field("temperature", 82);
 
 // Since this library is async by default, we're going to need a Runtime,
@@ -81,7 +79,7 @@ let write_result = rt.block_on(client.query(&write_query));
 assert!(write_result.is_ok(), "Write result was not okay");
 
 // Reading data is as simple as writing. First we need to create a query
-let read_query = InfluxDbQuery::raw_read_query("SELECT _ FROM weather");
+let read_query = Query::raw_read_query("SELECT _ FROM weather");
 
 // Again, we're blocking until the request is done
 let read_result = rt.block_on(client.query(&read_query));
