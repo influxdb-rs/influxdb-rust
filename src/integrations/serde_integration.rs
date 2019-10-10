@@ -83,9 +83,9 @@ pub struct DatabaseQueryResult {
 impl DatabaseQueryResult {
     pub fn deserialize_next<T: 'static>(
         &mut self,
-    ) -> impl Future<Item = InfluxDbReturn<T>, Error = InfluxDbError>
+    ) -> impl Future<Item = InfluxDbReturn<T>, Error = InfluxDbError> + Send
     where
-        T: DeserializeOwned,
+        T: DeserializeOwned + Send,
     {
         match serde_json::from_value::<InfluxDbReturn<T>>(self.results.remove(0)) {
             Ok(item) => futures::future::result(Ok(item)),
@@ -113,7 +113,7 @@ impl InfluxDbClient {
     pub fn json_query(
         &self,
         q: InfluxDbReadQuery,
-    ) -> impl Future<Item = DatabaseQueryResult, Error = InfluxDbError> {
+    ) -> impl Future<Item = DatabaseQueryResult, Error = InfluxDbError> + Send {
         use futures::future;
 
         let query = q.build().unwrap();

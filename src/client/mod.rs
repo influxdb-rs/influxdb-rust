@@ -129,7 +129,7 @@ impl InfluxDbClient {
     /// Pings the InfluxDB Server
     ///
     /// Returns a tuple of build type and version number
-    pub fn ping(&self) -> impl Future<Item = (String, String), Error = InfluxDbError> {
+    pub fn ping(&self) -> impl Future<Item = (String, String), Error = InfluxDbError> + Send {
         Client::new()
             .get(format!("{}/ping", self.url).as_str())
             .send()
@@ -180,7 +180,10 @@ impl InfluxDbClient {
     /// a [`InfluxDbError`] variant will be returned.
     ///
     /// [`InfluxDbError`]: enum.InfluxDbError.html
-    pub fn query<'q, Q>(&self, q: &'q Q) -> Box<dyn Future<Item = String, Error = InfluxDbError>>
+    pub fn query<'q, Q>(
+        &self,
+        q: &'q Q,
+    ) -> Box<dyn Future<Item = String, Error = InfluxDbError> + Send>
     where
         Q: InfluxDbQuery,
         &'q Q: Into<InfluxDbQueryTypes<'q>>,
