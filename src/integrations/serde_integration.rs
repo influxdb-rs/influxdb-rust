@@ -8,8 +8,7 @@
 //!
 //! ```rust,no_run
 //! use futures::prelude::*;
-//! use influxdb::client::InfluxDbClient;
-//! use influxdb::query::InfluxDbQuery;
+//! use influxdb::{Client, Query};
 //! use serde::Deserialize;
 //!
 //! #[derive(Deserialize)]
@@ -24,8 +23,8 @@
 //! }
 //!
 //! let mut rt = tokio::runtime::current_thread::Runtime::new().unwrap();
-//! let client = InfluxDbClient::new("http://localhost:8086", "test");
-//! let query = InfluxDbQuery::raw_read_query(
+//! let client = Client::new("http://localhost:8086", "test");
+//! let query = Query::raw_read_query(
 //!     "SELECT temperature FROM /weather_[a-z]*$/ WHERE time > now() - 1m ORDER BY DESC",
 //! );
 //! let _result = rt
@@ -49,22 +48,17 @@
 //!     });
 //! ```
 
-use crate::client::InfluxDbClient;
-
 use serde::de::DeserializeOwned;
 
 use futures::{Future, Stream};
-use reqwest::r#async::{Client, Decoder};
+use reqwest::r#async::{Client as ReqwestClient, Decoder};
 use reqwest::{StatusCode, Url};
 use std::mem;
 
 use serde::Deserialize;
 use serde_json;
 
-use crate::error::InfluxDbError;
-
-use crate::query::read_query::InfluxDbReadQuery;
-use crate::query::InfluxDbQuery;
+use crate::{Client, Error, Query, ReadQuery};
 
 use futures::future::Either;
 
@@ -81,15 +75,13 @@ pub struct DatabaseQueryResult {
 }
 
 impl DatabaseQueryResult {
-    pub fn deserialize_next<T: 'static>(
-        &mut self,
-    ) -> impl Future<Item = InfluxDbReturn<T>, Error = InfluxDbError>
+    pub fn deserialize_next<T: 'static>(&mut self) -> impl Future<Item = Return<T>, Error = Error>
     where
         T: DeserializeOwned,
     {
-        match serde_json::from_value::<InfluxDbReturn<T>>(self.results.remove(0)) {
+        match serde_json::from_value::<Return<T>>(self.results.remove(0)) {
             Ok(item) => futures::future::result(Ok(item)),
-            Err(err) => futures::future::err(InfluxDbError::DeserializationError {
+            Err(err) => futures::future::err(Error::DeserializationError {
                 error: format!("could not deserialize: {}", err),
             }),
         }
@@ -98,22 +90,22 @@ impl DatabaseQueryResult {
 
 #[derive(Deserialize, Debug)]
 #[doc(hidden)]
-pub struct InfluxDbReturn<T> {
-    pub series: Vec<InfluxDbSeries<T>>,
+pub struct Return<T> {
+    pub series: Vec<Series<T>>,
 }
 
 #[derive(Deserialize, Debug)]
 /// Represents a returned series from InfluxDB
-pub struct InfluxDbSeries<T> {
+pub struct Series<T> {
     pub name: String,
     pub values: Vec<T>,
 }
 
-impl InfluxDbClient {
+impl Client {
     pub fn json_query(
         &self,
-        q: InfluxDbReadQuery,
-    ) -> impl Future<Item = DatabaseQueryResult, Error = InfluxDbError> {
+        q: ReadQuery,
+    ) -> impl Future<Item = DatabaseQueryResult, Error = Error> {
         use futures::future;
 
         let query = q.build().unwrap();
@@ -127,38 +119,38 @@ impl InfluxDbClient {
             ) {
                 Ok(url) => url,
                 Err(err) => {
-                    let error = InfluxDbError::UrlConstructionError {
+                    let error = Error::UrlConstructionError {
                         error: format!("{}", err),
                     };
-                    return Either::B(future::err::<DatabaseQueryResult, InfluxDbError>(error));
+                    return Either::B(future::err::<DatabaseQueryResult, Error>(error));
                 }
             };
             url.query_pairs_mut().append_pair("q", &read_query.clone());
 
             if read_query.contains("SELECT") || read_query.contains("SHOW") {
-                Client::new().get(url.as_str())
+                ReqwestClient::new().get(url.as_str())
             } else {
-                let error = InfluxDbError::InvalidQueryError {
+                let error = Error::InvalidQueryError {
                     error: String::from(
                         "Only SELECT and SHOW queries supported with JSON deserialization",
                     ),
                 };
-                return Either::B(future::err::<DatabaseQueryResult, InfluxDbError>(error));
+                return Either::B(future::err::<DatabaseQueryResult, Error>(error));
             }
         };
 
         Either::A(
             client
                 .send()
-                .map_err(|err| InfluxDbError::ConnectionError { error: err })
+                .map_err(|err| Error::ConnectionError { error: err })
                 .and_then(
-                    |res| -> future::FutureResult<reqwest::r#async::Response, InfluxDbError> {
+                    |res| -> future::FutureResult<reqwest::r#async::Response, Error> {
                         match res.status() {
                             StatusCode::UNAUTHORIZED => {
-                                futures::future::err(InfluxDbError::AuthorizationError)
+                                futures::future::err(Error::AuthorizationError)
                             }
                             StatusCode::FORBIDDEN => {
-                                futures::future::err(InfluxDbError::AuthenticationError)
+                                futures::future::err(Error::AuthenticationError)
                             }
                             _ => futures::future::ok(res),
                         }
@@ -166,14 +158,14 @@ impl InfluxDbClient {
                 )
                 .and_then(|mut res| {
                     let body = mem::replace(res.body_mut(), Decoder::empty());
-                    body.concat2().map_err(|err| InfluxDbError::ProtocolError {
+                    body.concat2().map_err(|err| Error::ProtocolError {
                         error: format!("{}", err),
                     })
                 })
                 .and_then(|body| {
                     // Try parsing InfluxDBs { "error": "error message here" }
                     if let Ok(error) = serde_json::from_slice::<_DatabaseError>(&body) {
-                        futures::future::err(InfluxDbError::DatabaseError {
+                        futures::future::err(Error::DatabaseError {
                             error: error.error.to_string(),
                         })
                     } else {
@@ -183,7 +175,7 @@ impl InfluxDbClient {
                         let deserialized = match from_slice {
                             Ok(deserialized) => deserialized,
                             Err(err) => {
-                                return futures::future::err(InfluxDbError::DeserializationError {
+                                return futures::future::err(Error::DeserializationError {
                                     error: format!("serde error: {}", err),
                                 })
                             }

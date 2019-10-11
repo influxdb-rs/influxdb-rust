@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 
-cargo readme --template auxiliary/README.tpl > README.md.expected
+cargo readme > README.md.expected
 
 diff README.md README.md.expected
 

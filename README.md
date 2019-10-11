@@ -27,26 +27,23 @@
     </a>
 </p>
 
-Library for talking to InfluxDB
-
 This library is a work in progress. Although we've been using it in production at [OpenVelo](https://openvelo.org/),
 we've prioritized features that fit our use cases. This means a feature you might need is not implemented
 yet or could be handled better.
 
 Pull requests are always welcome. See [Contributing](https://github.com/Empty2k12/influxdb-rust/blob/master/CONTRIBUTING.md) and [Code of Conduct](https://github.com/Empty2k12/influxdb-rust/blob/master/CODE_OF_CONDUCT.md).
 
-## Currently Supported Features
+### Currently Supported Features
 
- * Reading and Writing to InfluxDB
- * Optional Serde Support for Deserialization
- * Running multiple queries in one request (e.g. `SELECT * FROM weather_berlin; SELECT * FROM weather_london`)
- * Authenticated and Unauthenticated Connections
+-   Reading and Writing to InfluxDB
+-   Optional Serde Support for Deserialization
+-   Running multiple queries in one request (e.g. `SELECT * FROM weather_berlin; SELECT * FROM weather_london`)
+-   Authenticated and Unauthenticated Connections
 
-## Planned Features
+### Planned Features
 
- * Read Query Builder instead of supplying raw queries
- * `#[derive(InfluxDbWritable)]`
- * Methods for setting time and time precision in a query
+-   Read Query Builder instead of supplying raw queries
+-   `#[derive(InfluxDbReadable)]` and `#[derive(InfluxDbWriteable)]` proc macros
 
 ## Quickstart
 
@@ -59,18 +56,18 @@ influxdb = "0.0.4"
 For an example with using Serde deserialization, please refer to [serde_integration](crate::integrations::serde_integration)
 
 ```rust
-use influxdb::query::{InfluxDbQuery, Timestamp};
-use influxdb::client::InfluxDbClient;
+use influxdb::{Client, Query, Timestamp};
+use serde::Deserialize;
 use tokio::runtime::current_thread::Runtime;
 
-// Create a InfluxDbClient with URL `http://localhost:8086`
+// Create a Client with URL `http://localhost:8086`
 // and database name `test`
-let client = InfluxDbClient::new("http://localhost:8086", "test");
+let client = Client::new("http://localhost:8086", "test");
 
 // Let's write something to InfluxDB. First we're creating a
-// InfluxDbWriteQuery to write some data.
+// WriteQuery to write some data.
 // This creates a query which writes a new measurement into a series called `weather`
-let write_query = InfluxDbQuery::write_query(Timestamp::NOW, "weather")
+let write_query = Query::write_query(Timestamp::NOW, "weather")
     .add_field("temperature", 82);
 
 // Since this library is async by default, we're going to need a Runtime,
@@ -84,7 +81,7 @@ let write_result = rt.block_on(client.query(&write_query));
 assert!(write_result.is_ok(), "Write result was not okay");
 
 // Reading data is as simple as writing. First we need to create a query
-let read_query = InfluxDbQuery::raw_read_query("SELECT * FROM weather");
+let read_query = Query::raw_read_query("SELECT * FROM weather");
 
 // Again, we're blocking until the request is done
 let read_result = rt.block_on(client.query(&read_query));
@@ -102,5 +99,6 @@ in the repository.
 ## License
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 
 @ 2019 Gero Gerke, All rights reserved.
