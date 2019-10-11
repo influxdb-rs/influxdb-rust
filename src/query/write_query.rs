@@ -98,14 +98,13 @@ impl Display for Type {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         use Type::*;
 
-        let displayed = match self {
-            Boolean(x) => x.to_string(),
-            Float(x) => x.to_string(),
-            SignedInteger(x) => x.to_string(),
-            UnsignedInteger(x) => x.to_string(),
-            Text(text) => format!("\"{text}\"", text = text),
-        };
-        write!(f, "{}", displayed)
+        match self {
+            Boolean(x) => write!(f, "{}", x),
+            Float(x) => write!(f, "{}", x),
+            SignedInteger(x) => write!(f, "{}", x),
+            UnsignedInteger(x) => write!(f, "{}", x),
+            Text(text) => write!(f, "\"{text}\"", text = text),
+        }
     }
 }
 
