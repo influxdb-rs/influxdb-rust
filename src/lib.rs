@@ -21,7 +21,7 @@
 //! Add the following to your `Cargo.toml`
 //!
 //! ```toml
-//! influxdb = "0.0.4"
+//! influxdb = "0.0.5"
 //! ```
 //!
 //! For an example with using Serde deserialization, please refer to [serde_integration](crate::integrations::serde_integration)
