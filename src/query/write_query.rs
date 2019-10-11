@@ -44,7 +44,7 @@ impl WriteQuery {
         I: Into<Type>,
     {
         let val: Type = value.into();
-        self.fields.push((tag.into(), val.to_string()));
+        self.fields.push((tag.into(), val.into()));
         self
     }
 
@@ -67,7 +67,7 @@ impl WriteQuery {
         I: Into<Type>,
     {
         let val: Type = value.into();
-        self.tags.push((tag.into(), val.to_string()));
+        self.tags.push((tag.into(), val.into()));
         self
     }
 
