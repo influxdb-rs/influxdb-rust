@@ -1,8 +1,8 @@
-//! Library for talking to InfluxDB
-//!
 //! This library is a work in progress. Although we've been using it in production at [OpenVelo](https://openvelo.org/),
-//! we're prioritized features that fit our use cases. This means a feature you might need is not implemented
+//! we've prioritized features that fit our use cases. This means a feature you might need is not implemented
 //! yet or could be handled better.
+//!
+//! Pull requests are always welcome. See [Contributing](https://github.com/Empty2k12/influxdb-rust/blob/master/CONTRIBUTING.md) and [Code of Conduct](https://github.com/Empty2k12/influxdb-rust/blob/master/CODE_OF_CONDUCT.md).
 //!
 //! ## Currently Supported Features
 //!
@@ -14,7 +14,7 @@
 //! ## Planned Features
 //!
 //! -   Read Query Builder instead of supplying raw queries
-//! -   `#[derive(InfluxDbWritable)]`
+//! -   `#[derive(InfluxDbReadable)]` and `#[derive(InfluxDbWriteable)]` proc macros
 //!
 //! # Quickstart
 //!
@@ -66,6 +66,11 @@
 //!
 //! For further examples, check out the Integration Tests in `tests/integration_tests.rs`
 //! in the repository.
+//!
+//! # License
+//!
+//! [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+//!
 
 #[macro_use]
 extern crate failure;
