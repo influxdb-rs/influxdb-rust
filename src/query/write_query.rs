@@ -4,6 +4,7 @@
 
 use crate::query::{QueryType, ValidQuery};
 use crate::{Error, Query, Timestamp};
+use std::fmt::{Display, Formatter};
 
 // todo: batch write queries
 
@@ -44,7 +45,7 @@ impl WriteQuery {
         I: Into<Type>,
     {
         let val: Type = value.into();
-        self.fields.push((tag.into(), val.into()));
+        self.fields.push((tag.into(), val.to_string()));
         self
     }
 
@@ -67,7 +68,7 @@ impl WriteQuery {
         I: Into<Type>,
     {
         let val: Type = value.into();
-        self.tags.push((tag.into(), val.into()));
+        self.tags.push((tag.into(), val.to_string()));
         self
     }
 
@@ -93,17 +94,18 @@ pub enum Type {
     Text(String),
 }
 
-impl Into<String> for Type {
-    fn into(self) -> String {
+impl Display for Type {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         use Type::*;
 
-        match self {
+        let displayed = match self {
             Boolean(x) => x.to_string(),
             Float(x) => x.to_string(),
             SignedInteger(x) => x.to_string(),
             UnsignedInteger(x) => x.to_string(),
             Text(text) => format!("\"{text}\"", text = text),
-        }
+        };
+        write!(f, "{}", displayed)
     }
 }
 
