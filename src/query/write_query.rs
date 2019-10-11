@@ -19,12 +19,12 @@ impl WriteQuery {
     /// Creates a new [`WriteQuery`](crate::query::write_query::WriteQuery)
     pub fn new<S>(timestamp: Timestamp, measurement: S) -> Self
     where
-        S: ToString,
+        S: Into<String>,
     {
         WriteQuery {
             fields: vec![],
             tags: vec![],
-            measurement: measurement.to_string(),
+            measurement: measurement.into(),
             timestamp,
         }
     }
@@ -40,11 +40,11 @@ impl WriteQuery {
     /// ```
     pub fn add_field<S, I>(mut self, tag: S, value: I) -> Self
     where
-        S: ToString,
+        S: Into<String>,
         I: Into<Type>,
     {
         let val: Type = value.into();
-        self.fields.push((tag.to_string(), val.to_string()));
+        self.fields.push((tag.into(), val.to_string()));
         self
     }
 
@@ -63,11 +63,11 @@ impl WriteQuery {
     /// ```
     pub fn add_tag<S, I>(mut self, tag: S, value: I) -> Self
     where
-        S: ToString,
+        S: Into<String>,
         I: Into<Type>,
     {
         let val: Type = value.into();
-        self.tags.push((tag.to_string(), val.to_string()));
+        self.tags.push((tag.into(), val.to_string()));
         self
     }
 
@@ -93,8 +93,8 @@ pub enum Type {
     Text(String),
 }
 
-impl ToString for Type {
-    fn to_string(&self) -> String {
+impl Into<String> for Type {
+    fn into(self) -> String {
         use Type::*;
 
         match self {
