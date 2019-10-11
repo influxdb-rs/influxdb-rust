@@ -4,6 +4,7 @@
 
 use crate::query::{QueryType, ValidQuery};
 use crate::{Error, Query, Timestamp};
+use std::fmt::{Display, Formatter};
 
 // todo: batch write queries
 
@@ -19,12 +20,12 @@ impl WriteQuery {
     /// Creates a new [`WriteQuery`](crate::query::write_query::WriteQuery)
     pub fn new<S>(timestamp: Timestamp, measurement: S) -> Self
     where
-        S: ToString,
+        S: Into<String>,
     {
         WriteQuery {
             fields: vec![],
             tags: vec![],
-            measurement: measurement.to_string(),
+            measurement: measurement.into(),
             timestamp,
         }
     }
@@ -40,11 +41,11 @@ impl WriteQuery {
     /// ```
     pub fn add_field<S, I>(mut self, tag: S, value: I) -> Self
     where
-        S: ToString,
+        S: Into<String>,
         I: Into<Type>,
     {
         let val: Type = value.into();
-        self.fields.push((tag.to_string(), val.to_string()));
+        self.fields.push((tag.into(), val.to_string()));
         self
     }
 
@@ -63,11 +64,11 @@ impl WriteQuery {
     /// ```
     pub fn add_tag<S, I>(mut self, tag: S, value: I) -> Self
     where
-        S: ToString,
+        S: Into<String>,
         I: Into<Type>,
     {
         let val: Type = value.into();
-        self.tags.push((tag.to_string(), val.to_string()));
+        self.tags.push((tag.into(), val.to_string()));
         self
     }
 
@@ -93,16 +94,16 @@ pub enum Type {
     Text(String),
 }
 
-impl ToString for Type {
-    fn to_string(&self) -> String {
+impl Display for Type {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         use Type::*;
 
         match self {
-            Boolean(x) => x.to_string(),
-            Float(x) => x.to_string(),
-            SignedInteger(x) => x.to_string(),
-            UnsignedInteger(x) => x.to_string(),
-            Text(text) => format!("\"{text}\"", text = text),
+            Boolean(x) => write!(f, "{}", x),
+            Float(x) => write!(f, "{}", x),
+            SignedInteger(x) => write!(f, "{}", x),
+            UnsignedInteger(x) => write!(f, "{}", x),
+            Text(text) => write!(f, "\"{text}\"", text = text),
         }
     }
 }

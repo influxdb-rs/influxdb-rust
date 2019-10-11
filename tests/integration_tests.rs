@@ -20,7 +20,7 @@ fn get_runtime() -> Runtime {
 
 fn create_client<T>(db_name: T) -> Client
 where
-    T: ToString,
+    T: Into<String>,
 {
     Client::new("http://localhost:8086", db_name)
 }
@@ -35,19 +35,21 @@ impl Drop for RunOnDrop {
     }
 }
 
-fn create_db<T>(test_name: T) -> Result<String, Error>
+fn create_db<T>(name: T) -> Result<String, Error>
 where
-    T: ToString,
+    T: Into<String>,
 {
-    let query = format!("CREATE DATABASE {}", test_name.to_string());
+    let test_name = name.into();
+    let query = format!("CREATE DATABASE {}", test_name);
     get_runtime().block_on(create_client(test_name).query(&Query::raw_read_query(query)))
 }
 
-fn delete_db<T>(test_name: T) -> Result<String, Error>
+fn delete_db<T>(name: T) -> Result<String, Error>
 where
-    T: ToString,
+    T: Into<String>,
 {
-    let query = format!("DROP DATABASE {}", test_name.to_string());
+    let test_name = name.into();
+    let query = format!("DROP DATABASE {}", test_name);
     get_runtime().block_on(create_client(test_name).query(&Query::raw_read_query(query)))
 }
 

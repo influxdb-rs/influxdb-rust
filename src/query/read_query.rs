@@ -13,19 +13,19 @@ impl ReadQuery {
     /// Creates a new [`ReadQuery`]
     pub fn new<S>(query: S) -> Self
     where
-        S: ToString,
+        S: Into<String>,
     {
         ReadQuery {
-            queries: vec![query.to_string()],
+            queries: vec![query.into()],
         }
     }
 
     /// Adds a query to the [`ReadQuery`]
     pub fn add_query<S>(mut self, query: S) -> Self
     where
-        S: ToString,
+        S: Into<String>,
     {
-        self.queries.push(query.to_string());
+        self.queries.push(query.into());
         self
     }
 }

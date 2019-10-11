@@ -99,7 +99,7 @@ impl dyn Query {
     /// ```
     pub fn write_query<S>(timestamp: Timestamp, measurement: S) -> WriteQuery
     where
-        S: ToString,
+        S: Into<String>,
     {
         WriteQuery::new(timestamp, measurement)
     }
@@ -115,7 +115,7 @@ impl dyn Query {
     /// ```
     pub fn raw_read_query<S>(read_query: S) -> ReadQuery
     where
-        S: ToString,
+        S: Into<String>,
     {
         ReadQuery::new(read_query)
     }
@@ -131,10 +131,10 @@ impl ValidQuery {
 }
 impl<T> From<T> for ValidQuery
 where
-    T: ToString,
+    T: Into<String>,
 {
     fn from(string: T) -> Self {
-        Self(string.to_string())
+        Self(string.into())
     }
 }
 impl PartialEq<String> for ValidQuery {

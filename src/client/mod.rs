@@ -81,12 +81,12 @@ impl Client {
     /// ```
     pub fn new<S1, S2>(url: S1, database: S2) -> Self
     where
-        S1: ToString,
-        S2: ToString,
+        S1: Into<String>,
+        S2: Into<String>,
     {
         Client {
-            url: url.to_string(),
-            database: database.to_string(),
+            url: url.into(),
+            database: database.into(),
             auth: None,
         }
     }
@@ -107,12 +107,12 @@ impl Client {
     /// ```
     pub fn with_auth<S1, S2>(mut self, username: S1, password: S2) -> Self
     where
-        S1: ToString,
-        S2: ToString,
+        S1: Into<String>,
+        S2: Into<String>,
     {
         self.auth = Some(Authentication {
-            username: username.to_string(),
-            password: password.to_string(),
+            username: username.into(),
+            password: password.into(),
         });
         self
     }
