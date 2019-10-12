@@ -112,8 +112,7 @@ fn test_authed_write_and_read() {
     };
 
     let client = Client::new("http://localhost:9086", test_name).with_auth("admin", "password");
-    let write_query =
-        Query::write_query(Timestamp::HOURS(11), "weather").add_field("temperature", 82);
+    let write_query = Timestamp::HOURS(11).into_query("weather".to_string()).add_field("temperature", 82);
     let write_result = get_runtime().block_on(client.query(&write_query));
     assert_result_ok(&write_result);
 
@@ -152,8 +151,7 @@ fn test_wrong_authed_write_and_read() {
 
     let client =
         Client::new("http://localhost:9086", test_name).with_auth("wrong_user", "password");
-    let write_query =
-        Query::write_query(Timestamp::HOURS(11), "weather").add_field("temperature", 82);
+    let write_query = Timestamp::HOURS(11).into_query("weather".to_string()).add_field("temperature", 82);
     let write_result = get_runtime().block_on(client.query(&write_query));
     assert_result_err(&write_result);
     match write_result {
@@ -213,8 +211,7 @@ fn test_non_authed_write_and_read() {
         }),
     };
     let non_authed_client = Client::new("http://localhost:9086", test_name);
-    let write_query =
-        Query::write_query(Timestamp::HOURS(11), "weather").add_field("temperature", 82);
+    let write_query = Timestamp::HOURS(11).into_query("weather".to_string()).add_field("temperature", 82);
     let write_result = get_runtime().block_on(non_authed_client.query(&write_query));
     assert_result_err(&write_result);
     match write_result {
@@ -251,8 +248,7 @@ fn test_write_and_read_field() {
     };
 
     let client = create_client(test_name);
-    let write_query =
-        Query::write_query(Timestamp::HOURS(11), "weather").add_field("temperature", 82);
+    let write_query = Timestamp::HOURS(11).into_query("weather".to_string()).add_field("temperature", 82);
     let write_result = get_runtime().block_on(client.query(&write_query));
     assert_result_ok(&write_result);
 
@@ -286,9 +282,7 @@ fn test_json_query() {
 
     let client = create_client(test_name);
 
-    // todo: implement deriving so objects can easily be placed in InfluxDB
-    let write_query =
-        Query::write_query(Timestamp::HOURS(11), "weather").add_field("temperature", 82);
+    let write_query = Timestamp::HOURS(11).into_query("weather".to_string()).add_field("temperature", 82);
     let write_result = get_runtime().block_on(client.query(&write_query));
     assert_result_ok(&write_result);
 
@@ -334,12 +328,9 @@ fn test_json_query_vec() {
     };
 
     let client = create_client(test_name);
-    let write_query1 =
-        Query::write_query(Timestamp::HOURS(11), "temperature_vec").add_field("temperature", 16);
-    let write_query2 =
-        Query::write_query(Timestamp::HOURS(12), "temperature_vec").add_field("temperature", 17);
-    let write_query3 =
-        Query::write_query(Timestamp::HOURS(13), "temperature_vec").add_field("temperature", 18);
+    let write_query1 = Timestamp::HOURS(11).into_query("temperature_vec".to_string()).add_field("temperature", 16);
+    let write_query2 = Timestamp::HOURS(12).into_query("temperature_vec".to_string()).add_field("temperature", 17);
+    let write_query3 = Timestamp::HOURS(13).into_query("temperature_vec".to_string()).add_field("temperature", 18);
 
     let _write_result = get_runtime().block_on(client.query(&write_query1));
     let _write_result2 = get_runtime().block_on(client.query(&write_query2));
@@ -391,10 +382,8 @@ fn test_serde_multi_query() {
     }
 
     let client = create_client(test_name);
-    let write_query =
-        Query::write_query(Timestamp::HOURS(11), "temperature").add_field("temperature", 16);
-    let write_query2 =
-        Query::write_query(Timestamp::HOURS(11), "humidity").add_field("humidity", 69);
+    let write_query = Timestamp::HOURS(11).into_query("temperature".to_string()).add_field("temperature", 16);
+    let write_query2 = Timestamp::HOURS(11).into_query("humidity".to_string()).add_field("humidity", 69);
 
     let write_result = get_runtime().block_on(client.query(&write_query));
     let write_result2 = get_runtime().block_on(client.query(&write_query2));

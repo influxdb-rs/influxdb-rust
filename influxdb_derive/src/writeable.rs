@@ -17,7 +17,7 @@ pub fn expand_writeable(tokens : TokenStream) -> TokenStream
 	let fields : Vec<Ident> = match input.fields {
 		Fields::Named(fields) => fields.named.into_iter().map(|field|
 			field.ident.expect("fields without ident are not supported")
-		).filter(|field| field.to_string() != time_field.to_string()).collect(),
+		).filter(|field| *field != *time_field.to_string()).collect(),
 		_ => panic!("a struct without named fields is not supported")
 	};
 	
@@ -35,6 +35,5 @@ pub fn expand_writeable(tokens : TokenStream) -> TokenStream
 			}
 		}
 	};
-	eprintln!("{}", output);
 	output.into()
 }

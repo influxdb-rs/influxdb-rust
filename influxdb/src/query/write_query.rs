@@ -181,18 +181,18 @@ impl Query for WriteQuery {
 
 #[cfg(test)]
 mod tests {
-    use crate::query::{Query, Timestamp};
+    use crate::query::{InfluxDbWriteable, Query, Timestamp};
 
     #[test]
     fn test_write_builder_empty_query() {
-        let query = Query::write_query(Timestamp::HOURS(5), "marina_3").build();
+        let query = Timestamp::HOURS(5).into_query("marina_3".to_string()).build();
 
         assert!(query.is_err(), "Query was not empty");
     }
 
     #[test]
     fn test_write_builder_single_field() {
-        let query = Query::write_query(Timestamp::HOURS(11), "weather")
+        let query = Timestamp::HOURS(11).into_query("weather".to_string())
             .add_field("temperature", 82)
             .build();
 
@@ -202,7 +202,7 @@ mod tests {
 
     #[test]
     fn test_write_builder_multiple_fields() {
-        let query = Query::write_query(Timestamp::HOURS(11), "weather")
+        let query = Timestamp::HOURS(11).into_query("weather".to_string())
             .add_field("temperature", 82)
             .add_field("wind_strength", 3.7)
             .build();
@@ -216,7 +216,7 @@ mod tests {
 
     #[test]
     fn test_write_builder_only_tags() {
-        let query = Query::write_query(Timestamp::HOURS(11), "weather")
+        let query = Timestamp::HOURS(11).into_query("weather".to_string())
             .add_tag("season", "summer")
             .build();
 
@@ -225,7 +225,7 @@ mod tests {
 
     #[test]
     fn test_write_builder_full_query() {
-        let query = Query::write_query(Timestamp::HOURS(11), "weather")
+        let query = Timestamp::HOURS(11).into_query("weather".to_string())
             .add_field("temperature", 82)
             .add_tag("location", "us-midwest")
             .add_tag("season", "summer")
@@ -242,7 +242,7 @@ mod tests {
     fn test_correct_query_type() {
         use crate::query::QueryType;
 
-        let query = Query::write_query(Timestamp::HOURS(11), "weather")
+        let query = Timestamp::HOURS(11).into_query("weather".to_string())
             .add_field("temperature", 82)
             .add_tag("location", "us-midwest")
             .add_tag("season", "summer");
