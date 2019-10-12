@@ -26,6 +26,6 @@ serde_json = { version = "1.0", optional = true }
 tokio = "0.1.20"
 
 [features]
-default = ["use-serde"]
+default = []
 use-serde = ["serde", "serde_json"]
 derive = ["influxdb_derive"]
