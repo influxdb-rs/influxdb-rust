@@ -90,15 +90,12 @@ pub trait Query {
     fn get_type(&self) -> QueryType;
 }
 
-pub trait InfluxDbWriteable
-{
-    fn into_query(self, name : String) -> WriteQuery;
+pub trait InfluxDbWriteable {
+    fn into_query(self, name: String) -> WriteQuery;
 }
 
-impl InfluxDbWriteable for Timestamp
-{
-    fn into_query(self, name : String) -> WriteQuery
-    {
+impl InfluxDbWriteable for Timestamp {
+    fn into_query(self, name: String) -> WriteQuery {
         WriteQuery::new(self, name)
     }
 }
