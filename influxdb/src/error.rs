@@ -2,7 +2,7 @@
 use reqwest;
 
 #[derive(Debug, Fail)]
-pub enum InfluxDbError {
+pub enum Error {
     #[fail(display = "query is invalid: {}", error)]
     /// Error happens when a query is invalid
     InvalidQueryError { error: String },

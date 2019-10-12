@@ -1,19 +1,19 @@
-//! Used to create queries of type [`InfluxDbReadQuery`](crate::query::read_query::InfluxDbReadQuery) or
-//! [`InfluxDbWriteQuery`](crate::query::write_query::InfluxDbWriteQuery) which can be executed in InfluxDB
+//! Used to create queries of type [`ReadQuery`](crate::query::read_query::ReadQuery) or
+//! [`WriteQuery`](crate::query::write_query::WriteQuery) which can be executed in InfluxDB
 //!
 //! # Examples
 //!
 //! ```rust
-//! use influxdb::query::{InfluxDbQuery, Timestamp};
+//! use influxdb::{Query, Timestamp};
 //!
-//! let write_query = InfluxDbQuery::write_query(Timestamp::NOW, "measurement")
+//! let write_query = Query::write_query(Timestamp::NOW, "measurement")
 //!     .add_field("field1", 5)
 //!     .add_tag("author", "Gero")
 //!     .build();
 //!
 //! assert!(write_query.is_ok());
 //!
-//! let read_query = InfluxDbQuery::raw_read_query("SELECT * FROM weather")
+//! let read_query = Query::raw_read_query("SELECT * FROM weather")
 //!     .build();
 //!
 //! assert!(read_query.is_ok());
@@ -24,9 +24,7 @@ pub mod write_query;
 
 use std::fmt;
 
-use crate::error::InfluxDbError;
-use crate::query::read_query::InfluxDbReadQuery;
-use crate::query::write_query::InfluxDbWriteQuery;
+use crate::{Error, ReadQuery, WriteQuery};
 
 #[cfg(feature = "derive")]
 pub use influxdb_derive::derive_writeable;
@@ -54,24 +52,24 @@ impl fmt::Display for Timestamp {
 }
 
 /// Internal enum used to represent either type of query.
-pub enum InfluxDbQueryTypes<'a> {
-    Read(&'a InfluxDbReadQuery),
-    Write(&'a InfluxDbWriteQuery),
+pub enum QueryTypes<'a> {
+    Read(&'a ReadQuery),
+    Write(&'a WriteQuery),
 }
 
-impl<'a> From<&'a InfluxDbReadQuery> for InfluxDbQueryTypes<'a> {
-    fn from(query: &'a InfluxDbReadQuery) -> Self {
+impl<'a> From<&'a ReadQuery> for QueryTypes<'a> {
+    fn from(query: &'a ReadQuery) -> Self {
         Self::Read(query)
     }
 }
 
-impl<'a> From<&'a InfluxDbWriteQuery> for InfluxDbQueryTypes<'a> {
-    fn from(query: &'a InfluxDbWriteQuery) -> Self {
+impl<'a> From<&'a WriteQuery> for QueryTypes<'a> {
+    fn from(query: &'a WriteQuery) -> Self {
         Self::Write(query)
     }
 }
 
-pub trait InfluxDbQuery {
+pub trait Query {
     /// Builds valid InfluxSQL which can be run against the Database.
     /// In case no fields have been specified, it will return an error,
     /// as that is invalid InfluxSQL syntax.
@@ -79,15 +77,15 @@ pub trait InfluxDbQuery {
     /// # Examples
     ///
     /// ```rust
-    /// use influxdb::query::{InfluxDbQuery, Timestamp};
+    /// use influxdb::{Query, Timestamp};
     ///
-    /// let invalid_query = InfluxDbQuery::write_query(Timestamp::NOW, "measurement").build();
+    /// let invalid_query = Query::write_query(Timestamp::NOW, "measurement").build();
     /// assert!(invalid_query.is_err());
     ///
-    /// let valid_query = InfluxDbQuery::write_query(Timestamp::NOW, "measurement").add_field("myfield1", 11).build();
+    /// let valid_query = Query::write_query(Timestamp::NOW, "measurement").add_field("myfield1", 11).build();
     /// assert!(valid_query.is_ok());
     /// ```
-    fn build(&self) -> Result<ValidQuery, InfluxDbError>;
+    fn build(&self) -> Result<ValidQuery, Error>;
 
     fn get_type(&self) -> QueryType;
 }
@@ -105,8 +103,8 @@ impl InfluxDbWriteable for Timestamp
     }
 }
 
-impl dyn InfluxDbQuery {
-    /// Returns a [`InfluxDbWriteQuery`](crate::query::write_query::InfluxDbWriteQuery) builder.
+impl dyn Query {
+    /// Returns a [`WriteQuery`](crate::WriteQuery) builder.
     ///
     /// # Deprecated
     ///
@@ -115,38 +113,38 @@ impl dyn InfluxDbQuery {
     /// ```rust
     /// use influxdb::query::{InfluxDbWriteable, Timestamp};
     ///
-    /// Timestamp::NOW.into_query("measurement".to_string()); // Is of type [`InfluxDbWriteQuery`](crate::query::write_query::InfluxDbWriteQuery)
+    /// Timestamp::NOW.into_query("measurement".to_string()); // Is of type [`WriteQuery`](crate::WriteQuery)
     /// ```
     ///
     /// # Examples
     ///
     /// ```rust
-    /// use influxdb::query::{InfluxDbQuery, Timestamp};
+    /// use influxdb::{Query, Timestamp};
     ///
-    /// InfluxDbQuery::write_query(Timestamp::NOW, "measurement"); // Is of type [`InfluxDbWriteQuery`](crate::query::write_query::InfluxDbWriteQuery)
+    /// Query::write_query(Timestamp::NOW, "measurement"); // Is of type [`WriteQuery`](crate::WriteQuery)
     /// ```
-    #[deprecated(since = "0.0.5")]
+    #[deprecated(since = "0.0.6")]
     pub fn write_query<S>(timestamp: Timestamp, measurement: S) -> InfluxDbWriteQuery
     where
-        S: ToString,
+        S: Into<String>,
     {
-        timestamp.into_query(measurement.to_string())
+        timestamp.into_query(measurement.into())
     }
 
-    /// Returns a [`InfluxDbReadQuery`](crate::query::read_query::InfluxDbReadQuery) builder.
+    /// Returns a [`ReadQuery`](crate::ReadQuery) builder.
     ///
     /// # Examples
     ///
     /// ```rust
-    /// use influxdb::query::InfluxDbQuery;
+    /// use influxdb::Query;
     ///
-    /// InfluxDbQuery::raw_read_query("SELECT * FROM weather"); // Is of type [`InfluxDbReadQuery`](crate::query::read_query::InfluxDbReadQuery)
+    /// Query::raw_read_query("SELECT * FROM weather"); // Is of type [`ReadQuery`](crate::ReadQuery)
     /// ```
-    pub fn raw_read_query<S>(read_query: S) -> InfluxDbReadQuery
+    pub fn raw_read_query<S>(read_query: S) -> ReadQuery
     where
-        S: ToString,
+        S: Into<String>,
     {
-        InfluxDbReadQuery::new(read_query)
+        ReadQuery::new(read_query)
     }
 }
 
@@ -160,10 +158,10 @@ impl ValidQuery {
 }
 impl<T> From<T> for ValidQuery
 where
-    T: ToString,
+    T: Into<String>,
 {
     fn from(string: T) -> Self {
-        Self(string.to_string())
+        Self(string.into())
     }
 }
 impl PartialEq<String> for ValidQuery {
@@ -203,11 +201,11 @@ mod tests {
 
     #[test]
     fn test_format_for_timestamp_now() {
-        assert!(format!("{}", Timestamp::NOW) == String::from(""));
+        assert!(format!("{}", Timestamp::NOW) == "");
     }
 
     #[test]
     fn test_format_for_timestamp_else() {
-        assert!(format!("{}", Timestamp::NANOSECONDS(100)) == String::from("100"));
+        assert!(format!("{}", Timestamp::NANOSECONDS(100)) == "100");
     }
 }

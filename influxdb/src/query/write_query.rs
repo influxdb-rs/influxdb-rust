@@ -1,73 +1,74 @@
-//! Write Query Builder returned by InfluxDbQuery::write_query
+//! Write Query Builder returned by Query::write_query
 //!
-//! Can only be instantiated by using InfluxDbQuery::write_query
+//! Can only be instantiated by using Query::write_query
 
-use crate::error::InfluxDbError;
-use crate::query::{InfluxDbQuery, QueryType, Timestamp, ValidQuery};
+use crate::query::{QueryType, ValidQuery};
+use crate::{Error, Query, Timestamp};
+use std::fmt::{Display, Formatter};
 
 // todo: batch write queries
 
 /// Internal Representation of a Write query that has not yet been built
-pub struct InfluxDbWriteQuery {
+pub struct WriteQuery {
     fields: Vec<(String, String)>,
     tags: Vec<(String, String)>,
     measurement: String,
     timestamp: Timestamp,
 }
 
-impl InfluxDbWriteQuery {
-    /// Creates a new [`InfluxDbWriteQuery`](crate::query::write_query::InfluxDbWriteQuery)
+impl WriteQuery {
+    /// Creates a new [`WriteQuery`](crate::query::write_query::WriteQuery)
     pub fn new<S>(timestamp: Timestamp, measurement: S) -> Self
     where
-        S: ToString,
+        S: Into<String>,
     {
-        InfluxDbWriteQuery {
+        WriteQuery {
             fields: vec![],
             tags: vec![],
-            measurement: measurement.to_string(),
+            measurement: measurement.into(),
             timestamp,
         }
     }
 
-    /// Adds a field to the [`InfluxDbWriteQuery`](crate::query::write_query::InfluxDbWriteQuery)
+    /// Adds a field to the [`WriteQuery`](crate::WriteQuery)
     ///
     /// # Examples
     ///
     /// ```rust
-    /// use influxdb::query::{InfluxDbQuery, Timestamp};
+    /// use influxdb::{Query, Timestamp};
     ///
-    /// InfluxDbQuery::write_query(Timestamp::NOW, "measurement").add_field("field1", 5).build();
+    /// Query::write_query(Timestamp::NOW, "measurement").add_field("field1", 5).build();
     /// ```
     pub fn add_field<S, I>(mut self, tag: S, value: I) -> Self
     where
-        S: ToString,
-        I: Into<InfluxDbType>,
+        S: Into<String>,
+        I: Into<Type>,
     {
-        let val: InfluxDbType = value.into();
-        self.fields.push((tag.to_string(), val.to_string()));
+        let val: Type = value.into();
+        self.fields.push((tag.into(), val.to_string()));
         self
     }
 
-    /// Adds a tag to the [`InfluxDbWriteQuery`](crate::query::write_query::InfluxDbWriteQuery)
+    /// Adds a tag to the [`WriteQuery`](crate::WriteQuery)
     ///
-    /// Please note that a [`InfluxDbWriteQuery`](crate::query::write_query::InfluxDbWriteQuery) requires at least one field. Composing a query with
+    /// Please note that a [`WriteQuery`](crate::WriteQuery) requires at least one field. Composing a query with
     /// only tags will result in a failure building the query.
     ///
     /// # Examples
     ///
     /// ```rust
-    /// use influxdb::query::{InfluxDbQuery, Timestamp};
+    /// use influxdb::{Query, Timestamp};
     ///
-    /// InfluxDbQuery::write_query(Timestamp::NOW, "measurement")
-    ///     .add_tag("field1", 5); // calling `.build()` now would result in a `Err(InfluxDbError::InvalidQueryError)`
+    /// Query::write_query(Timestamp::NOW, "measurement")
+    ///     .add_tag("field1", 5); // calling `.build()` now would result in a `Err(Error::InvalidQueryError)`
     /// ```
     pub fn add_tag<S, I>(mut self, tag: S, value: I) -> Self
     where
-        S: ToString,
-        I: Into<InfluxDbType>,
+        S: Into<String>,
+        I: Into<Type>,
     {
-        let val: InfluxDbType = value.into();
-        self.tags.push((tag.to_string(), val.to_string()));
+        let val: Type = value.into();
+        self.tags.push((tag.into(), val.to_string()));
         self
     }
 
@@ -85,7 +86,7 @@ impl InfluxDbWriteQuery {
     }
 }
 
-pub enum InfluxDbType {
+pub enum Type {
     Boolean(bool),
     Float(f64),
     SignedInteger(i64),
@@ -93,16 +94,16 @@ pub enum InfluxDbType {
     Text(String),
 }
 
-impl ToString for InfluxDbType {
-    fn to_string(&self) -> String {
-        use InfluxDbType::*;
+impl Display for Type {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        use Type::*;
 
         match self {
-            Boolean(x) => x.to_string(),
-            Float(x) => x.to_string(),
-            SignedInteger(x) => x.to_string(),
-            UnsignedInteger(x) => x.to_string(),
-            Text(text) => format!("\"{text}\"", text = text),
+            Boolean(x) => write!(f, "{}", x),
+            Float(x) => write!(f, "{}", x),
+            SignedInteger(x) => write!(f, "{}", x),
+            UnsignedInteger(x) => write!(f, "{}", x),
+            Text(text) => write!(f, "\"{text}\"", text = text),
         }
     }
 }
@@ -110,9 +111,9 @@ impl ToString for InfluxDbType {
 macro_rules! from_impl {
         ( $variant:ident => $( $typ:ident ),+ ) => (
                 $(
-                    impl From<$typ> for InfluxDbType {
+                    impl From<$typ> for Type {
                         fn from(b: $typ) -> Self {
-                            InfluxDbType::$variant(b.into())
+                            Type::$variant(b.into())
                         }
                     }
                 )+
@@ -123,16 +124,16 @@ from_impl! {Float => f32, f64}
 from_impl! {SignedInteger => i8, i16, i32, i64}
 from_impl! {UnsignedInteger => u8, u16, u32, u64}
 from_impl! {Text => String}
-impl From<&str> for InfluxDbType {
+impl From<&str> for Type {
     fn from(b: &str) -> Self {
-        InfluxDbType::Text(b.into())
+        Type::Text(b.into())
     }
 }
 
-impl InfluxDbQuery for InfluxDbWriteQuery {
-    fn build(&self) -> Result<ValidQuery, InfluxDbError> {
+impl Query for WriteQuery {
+    fn build(&self) -> Result<ValidQuery, Error> {
         if self.fields.is_empty() {
-            return Err(InfluxDbError::InvalidQueryError {
+            return Err(Error::InvalidQueryError {
                 error: "fields cannot be empty".to_string(),
             });
         }
@@ -172,18 +173,18 @@ impl InfluxDbQuery for InfluxDbWriteQuery {
 
 #[cfg(test)]
 mod tests {
-    use crate::query::{InfluxDbQuery, Timestamp};
+    use crate::query::{Query, Timestamp};
 
     #[test]
     fn test_write_builder_empty_query() {
-        let query = InfluxDbQuery::write_query(Timestamp::HOURS(5), "marina_3").build();
+        let query = Query::write_query(Timestamp::HOURS(5), "marina_3").build();
 
         assert!(query.is_err(), "Query was not empty");
     }
 
     #[test]
     fn test_write_builder_single_field() {
-        let query = InfluxDbQuery::write_query(Timestamp::HOURS(11), "weather")
+        let query = Query::write_query(Timestamp::HOURS(11), "weather")
             .add_field("temperature", 82)
             .build();
 
@@ -193,7 +194,7 @@ mod tests {
 
     #[test]
     fn test_write_builder_multiple_fields() {
-        let query = InfluxDbQuery::write_query(Timestamp::HOURS(11), "weather")
+        let query = Query::write_query(Timestamp::HOURS(11), "weather")
             .add_field("temperature", 82)
             .add_field("wind_strength", 3.7)
             .build();
@@ -207,7 +208,7 @@ mod tests {
 
     #[test]
     fn test_write_builder_only_tags() {
-        let query = InfluxDbQuery::write_query(Timestamp::HOURS(11), "weather")
+        let query = Query::write_query(Timestamp::HOURS(11), "weather")
             .add_tag("season", "summer")
             .build();
 
@@ -216,7 +217,7 @@ mod tests {
 
     #[test]
     fn test_write_builder_full_query() {
-        let query = InfluxDbQuery::write_query(Timestamp::HOURS(11), "weather")
+        let query = Query::write_query(Timestamp::HOURS(11), "weather")
             .add_field("temperature", 82)
             .add_tag("location", "us-midwest")
             .add_tag("season", "summer")
@@ -233,7 +234,7 @@ mod tests {
     fn test_correct_query_type() {
         use crate::query::QueryType;
 
-        let query = InfluxDbQuery::write_query(Timestamp::HOURS(11), "weather")
+        let query = Query::write_query(Timestamp::HOURS(11), "weather")
             .add_field("temperature", 82)
             .add_tag("location", "us-midwest")
             .add_tag("season", "summer");

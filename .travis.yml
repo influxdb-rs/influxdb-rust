@@ -41,7 +41,7 @@ matrix:
               - rustup component add clippy-preview
           script:
               - cargo fmt --all -- --check
-              - cargo clippy
+              - cargo clippy --all-targets --all-features -- -D warnings
 
         - env: NAME='cargo-travis'
           sudo: required
@@ -65,6 +65,13 @@ matrix:
                       - libdw-dev
                       - binutils-dev
                       - cmake
+
+        - rust: stable
+          env: NAME='readme-check'
+          before_script:
+            - bash auxiliary/update_cargo-readme.sh
+          script:
+            - bash auxiliary/check_readme_consistency.sh
 
 script: |
     export RUST_BACKTRACE=1 &&
