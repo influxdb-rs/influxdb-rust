@@ -83,8 +83,7 @@ pub use client::Client;
 pub use error::Error;
 pub use query::read_query::ReadQuery;
 pub use query::write_query::WriteQuery;
-pub use query::Query;
-pub use query::Timestamp;
+pub use query::{InfluxDbWriteable, Query, Timestamp};
 
 #[cfg(feature = "use-serde")]
 pub mod integrations {

@@ -1,3 +1,5 @@
+# -*- eval: (cargo-minor-mode 1) -*-
+
 [package]
 name = "influxdb_derive"
 version = "0.0.5"

@@ -129,6 +129,14 @@ impl From<&str> for Type {
         Type::Text(b.into())
     }
 }
+impl<T> From<&T> for Type
+where T : Copy + Into<Type>
+{
+    fn from(t : &T) -> Self
+    {
+        (*t).into()
+    }
+}
 
 impl Query for WriteQuery {
     fn build(&self) -> Result<ValidQuery, Error> {

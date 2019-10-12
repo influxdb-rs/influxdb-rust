@@ -27,7 +27,7 @@ use std::fmt;
 use crate::{Error, ReadQuery, WriteQuery};
 
 #[cfg(feature = "derive")]
-pub use influxdb_derive::derive_writeable;
+pub use influxdb_derive::InfluxDbWriteable;
 
 #[derive(PartialEq)]
 pub enum Timestamp {
@@ -92,14 +92,14 @@ pub trait Query {
 
 pub trait InfluxDbWriteable
 {
-    fn into_query(self, name : String) -> InfluxDbWriteQuery;
+    fn into_query(self, name : String) -> WriteQuery;
 }
 
 impl InfluxDbWriteable for Timestamp
 {
-    fn into_query(self, name : String) -> InfluxDbWriteQuery
+    fn into_query(self, name : String) -> WriteQuery
     {
-        InfluxDbWriteQuery::new(self, name)
+        WriteQuery::new(self, name)
     }
 }
 
@@ -124,7 +124,7 @@ impl dyn Query {
     /// Query::write_query(Timestamp::NOW, "measurement"); // Is of type [`WriteQuery`](crate::WriteQuery)
     /// ```
     #[deprecated(since = "0.0.6")]
-    pub fn write_query<S>(timestamp: Timestamp, measurement: S) -> InfluxDbWriteQuery
+    pub fn write_query<S>(timestamp: Timestamp, measurement: S) -> WriteQuery
     where
         S: Into<String>,
     {

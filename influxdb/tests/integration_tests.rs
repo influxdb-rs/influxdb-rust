@@ -1,9 +1,7 @@
 extern crate influxdb;
 
 use futures::prelude::*;
-use influxdb::Client;
-use influxdb::Error;
-use influxdb::{Query, Timestamp};
+use influxdb::{Client, Error, InfluxDbWriteable, Query, Timestamp};
 use tokio::runtime::current_thread::Runtime;
 
 fn assert_result_err<A: std::fmt::Debug, B: std::fmt::Debug>(result: &Result<A, B>) {
@@ -453,7 +451,7 @@ fn test_wrong_query_errors() {
 #[cfg(feature = "derive")]
 #[derive(InfluxDbWriteable)]
 struct Humidity {
-    time: i32,
+    time: Timestamp,
     humidity: i32,
 }
 
@@ -464,19 +462,20 @@ fn test_derive_simple_write() {
     create_db(test_name).expect("could not setup db");
     let _run_on_drop = RunOnDrop {
         closure: Box::new(|| {
-            delete_db(test_name).expect("could not clean up db");
+            delete_db("test_derive_simple_write").expect("could not clean up db");
         }),
     };
     
     let humidity = Humidity {
-        time: 15,
+        time: Timestamp::NOW,
         humidity: 30
     };
-    let query = humidity.into_query();
+    let query = humidity.into_query("humidity".to_string());
+    let client = create_client(test_name);
     let future = client.query(&query);
     let result = get_runtime().block_on(future);
     assert!(
-        result.is_err(),
-        "Should only build SELECT and SHOW queries."
+        result.is_ok(),
+        "unable to insert into db"
     );
 }

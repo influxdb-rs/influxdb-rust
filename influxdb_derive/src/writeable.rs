@@ -22,11 +22,11 @@ pub fn expand_writeable(tokens : TokenStream) -> TokenStream
 	};
 	
 	let output = quote! {
-		impl #generics ::influxdb::query::InfluxDbWriteable for #ident #generics
+		impl #generics ::influxdb::InfluxDbWriteable for #ident #generics
 		{
-			fn into_query(self, name : String) -> ::influxdb::query::write_query::InfluxDbWriteQuery
+			fn into_query(self, name : String) -> ::influxdb::WriteQuery
 			{
-				let timestamp : ::influxdb::query::Timestamp = self.#time_field;
+				let timestamp : ::influxdb::Timestamp = self.#time_field;
 				let mut query = timestamp.into_query(name);
 				#(
 					query = query.add_field(stringify!(#fields), &self.#fields);
@@ -35,5 +35,6 @@ pub fn expand_writeable(tokens : TokenStream) -> TokenStream
 			}
 		}
 	};
+	eprintln!("{}", output);
 	output.into()
 }
