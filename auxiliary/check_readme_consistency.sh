@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 
-cargo readme -r influxdb > README.md.expected
+cargo readme -r influxdb -t ../README.tpl > README.md.expected
 
 diff README.md README.md.expected
 
