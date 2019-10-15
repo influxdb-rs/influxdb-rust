@@ -43,7 +43,7 @@ matrix:
               - cargo fmt --all -- --check
               - cargo clippy --all-targets --all-features -- -D warnings
 
-        - env: NAME='cargo-travis'
+        - env: NAME='coverage'
           sudo: required
           before_script:
               - cargo install cargo-update || echo "cargo-update already installed"
@@ -56,7 +56,7 @@ matrix:
                   wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz &&
                   tar xzf master.tar.gz && mkdir kcov-master/build && cd kcov-master/build && cmake .. && make &&
                   sudo make install && cd ../.. &&
-                  kcov --coveralls-id=$TRAVIS_JOB_ID --exclude-pattern=/.cargo --exclude-path=./tests target/kcov target/debug/influxdb-*
+                  kcov --coveralls-id=$TRAVIS_JOB_ID --exclude-pattern=/.cargo --exclude-path=./influxdb/tests target/kcov target/debug/influxdb-*
           addons:
               apt:
                   packages:
@@ -69,9 +69,9 @@ matrix:
         - rust: stable
           env: NAME='readme-check'
           before_script:
-            - bash auxiliary/update_cargo-readme.sh
+              - bash auxiliary/update_cargo-readme.sh
           script:
-            - bash auxiliary/check_readme_consistency.sh
+              - bash auxiliary/check_readme_consistency.sh
 
 script: |
     export RUST_BACKTRACE=1 &&
