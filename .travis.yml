@@ -53,10 +53,10 @@ matrix:
               - |
                   cargo build &&
                   cargo coverage &&
+                  ls -la &&
                   wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz &&
                   tar xzf master.tar.gz && mkdir kcov-master/build && cd kcov-master/build && cmake .. && make &&
                   sudo make install && cd ../.. &&
-                  ls -la &&
                   kcov --coveralls-id=$TRAVIS_JOB_ID --exclude-pattern=/.cargo --exclude-path=./influxdb/tests target/kcov target/debug/influxdb-*
           addons:
               apt:
