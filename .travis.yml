@@ -63,7 +63,7 @@ matrix:
               - make
               - sudo make install
               - popd
-              - kcov --coveralls-id=$TRAVIS_JOB_ID --exclude-pattern=/.cargo --exclude-path=./influxdb/tests target/kcov target/debug/influxdb-*
+              - kcov --coveralls-id=$TRAVIS_JOB_ID --exclude-pattern=/.cargo target/kcov-master target/debug/influxdb-*
           addons:
               apt:
                   packages:
