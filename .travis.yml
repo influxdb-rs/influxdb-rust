@@ -45,13 +45,8 @@ matrix:
 
         - env: NAME='coverage'
           sudo: required
-          before_script:
-              - cargo install cargo-update || echo "cargo-update already installed"
-              - cargo install cargo-travis || echo "cargo-travis already installed"
-              - cargo install-update -a
           script:
               - cargo build
-              - cargo coverage
               - ls -la
               - ls -la target/
               - ls -la target/debug/
