@@ -47,6 +47,7 @@ matrix:
           sudo: required
           script:
               - cargo build
+              - cargo test
               - ls -la
               - ls -la target/
               - ls -la target/debug/
