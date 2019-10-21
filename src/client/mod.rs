@@ -8,38 +8,39 @@
 //! # Examples
 //!
 //! ```rust
-//! use influxdb::client::InfluxDbClient;
+//! use influxdb::Client;
 //!
-//! let client = InfluxDbClient::new("http://localhost:8086", "test");
+//! let client = Client::new("http://localhost:8086", "test");
 //!
 //! assert_eq!(client.database_name(), "test");
 //! ```
 
 use futures::{Future, Stream};
-use reqwest::r#async::{Client, Decoder};
+use reqwest::r#async::{Client as ReqwestClient, Decoder};
 use reqwest::{StatusCode, Url};
 
 use std::mem;
 
-use crate::error::InfluxDbError;
-use crate::query::{InfluxDbQuery, InfluxDbQueryTypes};
+use crate::query::QueryTypes;
+use crate::Error;
+use crate::Query;
 
 #[derive(Clone, Debug)]
 /// Internal Authentication representation
-pub(crate) struct InfluxDbAuthentication {
+pub(crate) struct Authentication {
     pub username: String,
     pub password: String,
 }
 
 #[derive(Clone, Debug)]
 /// Internal Representation of a Client
-pub struct InfluxDbClient {
+pub struct Client {
     url: String,
     database: String,
-    auth: Option<InfluxDbAuthentication>,
+    auth: Option<Authentication>,
 }
 
-impl Into<Vec<(String, String)>> for InfluxDbClient {
+impl Into<Vec<(String, String)>> for Client {
     fn into(self) -> Vec<(String, String)> {
         let mut vec: Vec<(String, String)> = Vec::new();
         vec.push(("db".to_string(), self.database));
@@ -51,7 +52,7 @@ impl Into<Vec<(String, String)>> for InfluxDbClient {
     }
 }
 
-impl<'a> Into<Vec<(String, String)>> for &'a InfluxDbClient {
+impl<'a> Into<Vec<(String, String)>> for &'a Client {
     fn into(self) -> Vec<(String, String)> {
         let mut vec: Vec<(String, String)> = Vec::new();
         vec.push(("db".to_string(), self.database.to_owned()));
@@ -63,8 +64,8 @@ impl<'a> Into<Vec<(String, String)>> for &'a InfluxDbClient {
     }
 }
 
-impl InfluxDbClient {
-    /// Instantiates a new [`InfluxDbClient`](crate::client::InfluxDbClient)
+impl Client {
+    /// Instantiates a new [`Client`](crate::Client)
     ///
     /// # Arguments
     ///
@@ -74,23 +75,23 @@ impl InfluxDbClient {
     /// # Examples
     ///
     /// ```rust
-    /// use influxdb::client::InfluxDbClient;
+    /// use influxdb::Client;
     ///
-    /// let _client = InfluxDbClient::new("http://localhost:8086", "test");
+    /// let _client = Client::new("http://localhost:8086", "test");
     /// ```
     pub fn new<S1, S2>(url: S1, database: S2) -> Self
     where
-        S1: ToString,
-        S2: ToString,
+        S1: Into<String>,
+        S2: Into<String>,
     {
-        InfluxDbClient {
-            url: url.to_string(),
-            database: database.to_string(),
+        Client {
+            url: url.into(),
+            database: database.into(),
             auth: None,
         }
     }
 
-    /// Add authentication/authorization information to [`InfluxDbClient`](crate::client::InfluxDbClient)
+    /// Add authentication/authorization information to [`Client`](crate::Client)
     ///
     /// # Arguments
     ///
@@ -100,18 +101,18 @@ impl InfluxDbClient {
     /// # Examples
     ///
     /// ```rust
-    /// use influxdb::client::InfluxDbClient;
+    /// use influxdb::Client;
     ///
-    /// let _client = InfluxDbClient::new("http://localhost:9086", "test").with_auth("admin", "password");
+    /// let _client = Client::new("http://localhost:9086", "test").with_auth("admin", "password");
     /// ```
-    pub fn with_auth<'a, S1, S2>(mut self, username: S1, password: S2) -> Self
+    pub fn with_auth<S1, S2>(mut self, username: S1, password: S2) -> Self
     where
-        S1: ToString,
-        S2: ToString,
+        S1: Into<String>,
+        S2: Into<String>,
     {
-        self.auth = Some(InfluxDbAuthentication {
-            username: username.to_string(),
-            password: password.to_string(),
+        self.auth = Some(Authentication {
+            username: username.into(),
+            password: password.into(),
         });
         self
     }
@@ -130,7 +131,7 @@ impl InfluxDbClient {
     ///
     /// Returns a tuple of build type and version number
     pub fn ping(&self) -> impl Future<Item = (String, String), Error = InfluxDbError> + Send {
-        Client::new()
+        ReqwestClient::new()
             .get(format!("{}/ping", self.url).as_str())
             .send()
             .map(|res| {
@@ -149,53 +150,52 @@ impl InfluxDbClient {
 
                 (String::from(build), String::from(version))
             })
-            .map_err(|err| InfluxDbError::ProtocolError {
+            .map_err(|err| Error::ProtocolError {
                 error: format!("{}", err),
             })
     }
 
-    /// Sends a [`InfluxDbReadQuery`](crate::query::read_query::InfluxDbReadQuery) or [`InfluxDbWriteQuery`](crate::query::write_query::InfluxDbWriteQuery) to the InfluxDB Server.
+    /// Sends a [`ReadQuery`](crate::ReadQuery) or [`WriteQuery`](crate::WriteQuery) to the InfluxDB Server.
     ///
     /// A version capable of parsing the returned string is available under the [serde_integration](crate::integrations::serde_integration)
     ///
     /// # Arguments
     ///
-    ///  * `q`: Query of type [`InfluxDbReadQuery`](crate::query::read_query::InfluxDbReadQuery) or [`InfluxDbWriteQuery`](crate::query::write_query::InfluxDbWriteQuery)
+    ///  * `q`: Query of type [`ReadQuery`](crate::ReadQuery) or [`WriteQuery`](crate::WriteQuery)
     ///
     /// # Examples
     ///
     /// ```rust
-    /// use influxdb::client::InfluxDbClient;
-    /// use influxdb::query::{InfluxDbQuery, Timestamp};
+    /// use influxdb::{Client, Query, Timestamp};
     ///
-    /// let client = InfluxDbClient::new("http://localhost:8086", "test");
+    /// let client = Client::new("http://localhost:8086", "test");
     /// let _future = client.query(
-    ///     &InfluxDbQuery::write_query(Timestamp::NOW, "weather")
+    ///     &Query::write_query(Timestamp::NOW, "weather")
     ///         .add_field("temperature", 82)
     /// );
     /// ```
     /// # Errors
     ///
     /// If the function can not finish the query,
-    /// a [`InfluxDbError`] variant will be returned.
+    /// a [`Error`] variant will be returned.
     ///
-    /// [`InfluxDbError`]: enum.InfluxDbError.html
+    /// [`Error`]: enum.Error.html
     pub fn query<'q, Q>(
         &self,
         q: &'q Q,
-    ) -> Box<dyn Future<Item = String, Error = InfluxDbError> + Send>
+    ) -> Box<dyn Future<Item = String, Error = Error> + Send>
     where
-        Q: InfluxDbQuery,
-        &'q Q: Into<InfluxDbQueryTypes<'q>>,
+        Q: Query,
+        &'q Q: Into<QueryTypes<'q>>,
     {
         use futures::future;
 
         let query = match q.build() {
             Err(err) => {
-                let error = InfluxDbError::InvalidQueryError {
+                let error = Error::InvalidQueryError {
                     error: format!("{}", err),
                 };
-                return Box::new(future::err::<String, InfluxDbError>(error));
+                return Box::new(future::err::<String, Error>(error));
             }
             Ok(query) => query,
         };
@@ -203,7 +203,7 @@ impl InfluxDbClient {
         let basic_parameters: Vec<(String, String)> = self.into();
 
         let client = match q.into() {
-            InfluxDbQueryTypes::Read(_) => {
+            QueryTypes::Read(_) => {
                 let read_query = query.get();
                 let mut url = match Url::parse_with_params(
                     format!("{url}/query", url = self.database_url()).as_str(),
@@ -211,50 +211,50 @@ impl InfluxDbClient {
                 ) {
                     Ok(url) => url,
                     Err(err) => {
-                        let error = InfluxDbError::UrlConstructionError {
+                        let error = Error::UrlConstructionError {
                             error: format!("{}", err),
                         };
-                        return Box::new(future::err::<String, InfluxDbError>(error));
+                        return Box::new(future::err::<String, Error>(error));
                     }
                 };
                 url.query_pairs_mut().append_pair("q", &read_query.clone());
 
                 if read_query.contains("SELECT") || read_query.contains("SHOW") {
-                    Client::new().get(url)
+                    ReqwestClient::new().get(url)
                 } else {
-                    Client::new().post(url)
+                    ReqwestClient::new().post(url)
                 }
             }
-            InfluxDbQueryTypes::Write(write_query) => {
+            QueryTypes::Write(write_query) => {
                 let mut url = match Url::parse_with_params(
                     format!("{url}/write", url = self.database_url()).as_str(),
                     basic_parameters,
                 ) {
                     Ok(url) => url,
                     Err(err) => {
-                        let error = InfluxDbError::InvalidQueryError {
+                        let error = Error::InvalidQueryError {
                             error: format!("{}", err),
                         };
-                        return Box::new(future::err::<String, InfluxDbError>(error));
+                        return Box::new(future::err::<String, Error>(error));
                     }
                 };
                 url.query_pairs_mut()
                     .append_pair("precision", &write_query.get_precision());
-                Client::new().post(url).body(query.get())
+                ReqwestClient::new().post(url).body(query.get())
             }
         };
         Box::new(
             client
                 .send()
-                .map_err(|err| InfluxDbError::ConnectionError { error: err })
+                .map_err(|err| Error::ConnectionError { error: err })
                 .and_then(
-                    |res| -> future::FutureResult<reqwest::r#async::Response, InfluxDbError> {
+                    |res| -> future::FutureResult<reqwest::r#async::Response, Error> {
                         match res.status() {
                             StatusCode::UNAUTHORIZED => {
-                                futures::future::err(InfluxDbError::AuthorizationError)
+                                futures::future::err(Error::AuthorizationError)
                             }
                             StatusCode::FORBIDDEN => {
-                                futures::future::err(InfluxDbError::AuthenticationError)
+                                futures::future::err(Error::AuthenticationError)
                             }
                             _ => futures::future::ok(res),
                         }
@@ -262,7 +262,7 @@ impl InfluxDbClient {
                 )
                 .and_then(|mut res| {
                     let body = mem::replace(res.body_mut(), Decoder::empty());
-                    body.concat2().map_err(|err| InfluxDbError::ProtocolError {
+                    body.concat2().map_err(|err| Error::ProtocolError {
                         error: format!("{}", err),
                     })
                 })
@@ -272,7 +272,7 @@ impl InfluxDbClient {
 
                         // todo: improve error parsing without serde
                         if s.contains("\"error\"") {
-                            return futures::future::err(InfluxDbError::DatabaseError {
+                            return futures::future::err(Error::DatabaseError {
                                 error: format!("influxdb error: \"{}\"", s),
                             });
                         }
@@ -280,7 +280,7 @@ impl InfluxDbClient {
                         return futures::future::ok(s);
                     }
 
-                    futures::future::err(InfluxDbError::DeserializationError {
+                    futures::future::err(Error::DeserializationError {
                         error: "response could not be converted to UTF-8".to_string(),
                     })
                 }),
@@ -290,17 +290,17 @@ impl InfluxDbClient {
 
 #[cfg(test)]
 mod tests {
-    use crate::client::InfluxDbClient;
+    use crate::Client;
 
     #[test]
     fn test_fn_database() {
-        let client = InfluxDbClient::new("http://localhost:8068", "database");
+        let client = Client::new("http://localhost:8068", "database");
         assert_eq!("database", client.database_name());
     }
 
     #[test]
     fn test_with_auth() {
-        let client = InfluxDbClient::new("http://localhost:8068", "database");
+        let client = Client::new("http://localhost:8068", "database");
         assert_eq!(client.url, "http://localhost:8068");
         assert_eq!(client.database, "database");
         assert!(client.auth.is_none());
@@ -313,7 +313,7 @@ mod tests {
 
     #[test]
     fn test_into_impl() {
-        let client = InfluxDbClient::new("http://localhost:8068", "database");
+        let client = Client::new("http://localhost:8068", "database");
         assert!(client.auth.is_none());
         let basic_parameters: Vec<(String, String)> = client.into();
         assert_eq!(
@@ -321,8 +321,8 @@ mod tests {
             basic_parameters
         );
 
-        let with_auth = InfluxDbClient::new("http://localhost:8068", "database")
-            .with_auth("username", "password");
+        let with_auth =
+            Client::new("http://localhost:8068", "database").with_auth("username", "password");
         let basic_parameters_with_auth: Vec<(String, String)> = with_auth.into();
         assert_eq!(
             vec![
@@ -333,7 +333,7 @@ mod tests {
             basic_parameters_with_auth
         );
 
-        let client = InfluxDbClient::new("http://localhost:8068", "database");
+        let client = Client::new("http://localhost:8068", "database");
         assert!(client.auth.is_none());
         let basic_parameters: Vec<(String, String)> = (&client).into();
         assert_eq!(
@@ -341,8 +341,8 @@ mod tests {
             basic_parameters
         );
 
-        let with_auth = InfluxDbClient::new("http://localhost:8068", "database")
-            .with_auth("username", "password");
+        let with_auth =
+            Client::new("http://localhost:8068", "database").with_auth("username", "password");
         let basic_parameters_with_auth: Vec<(String, String)> = (&with_auth).into();
         assert_eq!(
             vec![
