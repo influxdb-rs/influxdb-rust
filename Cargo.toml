@@ -2,3 +2,7 @@
 
 [workspace]
 members = ["influxdb", "influxdb_derive"]
+
+[patch.crates-io]
+influxdb = { path = "./influxdb" }
+influxdb_derive = { path = "./influxdb_derive" }

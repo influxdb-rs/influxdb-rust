@@ -9,7 +9,7 @@ description = "InfluxDB Driver for Rust"
 keywords = ["influxdb", "database", "influx"]
 license = "MIT"
 readme = "README.md"
-include = ["src/**/*", "tests/**/*", "Cargo.toml", "../LICENSE"]
+include = ["src/**/*", "tests/**/*", "Cargo.toml", "LICENSE"]
 repository = "https://github.com/Empty2k12/influxdb-rust"
 
 [badges]
@@ -19,7 +19,7 @@ coveralls = { repository = "Empty2k12/influxdb-rust", branch = "master", service
 [dependencies]
 failure = "0.1.5"
 futures = "0.1.27"
-influxdb_derive = { path = "../influxdb_derive", optional = true }
+influxdb_derive = { version = "0.0.1", optional = true }
 reqwest = "0.9.17"
 serde = { version = "1.0.92", optional = true }
 serde_json = { version = "1.0", optional = true }
