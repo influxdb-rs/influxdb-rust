@@ -75,9 +75,11 @@ pub struct DatabaseQueryResult {
 }
 
 impl DatabaseQueryResult {
-    pub fn deserialize_next<T: 'static>(&mut self) -> impl Future<Item = Return<T>, Error = Error>
+    pub fn deserialize_next<T: 'static>(
+        &mut self,
+    ) -> impl Future<Item = Return<T>, Error = Error> + Send
     where
-        T: DeserializeOwned,
+        T: DeserializeOwned + Send,
     {
         match serde_json::from_value::<Return<T>>(self.results.remove(0)) {
             Ok(item) => futures::future::result(Ok(item)),
@@ -105,7 +107,7 @@ impl Client {
     pub fn json_query(
         &self,
         q: ReadQuery,
-    ) -> impl Future<Item = DatabaseQueryResult, Error = Error> {
+    ) -> impl Future<Item = DatabaseQueryResult, Error = Error> + Send {
         use futures::future;
 
         let query = q.build().unwrap();
