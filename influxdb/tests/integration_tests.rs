@@ -275,7 +275,55 @@ fn test_write_and_read_field() {
 #[cfg(feature = "use-serde")]
 /// INTEGRATION TEST
 ///
-/// This test case tests whether JSON can be decoded from a InfluxDB response and wether that JSON
+/// This integration tests that writing data and retrieving the data again is working
+fn test_write_and_read_option() {
+    use serde::Deserialize;
+    let test_name = "test_write_and_read_option";
+    create_db(test_name).expect("could not setup db");
+    let _run_on_drop = RunOnDrop {
+        closure: Box::new(|| {
+            delete_db("test_write_and_read_option").expect("could not clean up db");
+        }),
+    };
+
+    let client = create_client(test_name);
+    // Todo: Convert this to derive based insert for easier comparison of structs
+    let write_query = Query::write_query(Timestamp::HOURS(11), "weather")
+        .add_field("temperature", 82)
+        .add_field("wind_strength", <Option<u64>>::None);
+    let write_result = get_runtime().block_on(client.query(&write_query));
+    assert_result_ok(&write_result);
+
+    #[derive(Deserialize, Debug, PartialEq)]
+    struct Weather {
+        time: String,
+        temperature: i32,
+        wind_strength: Option<u64>,
+    }
+
+    let query = Query::raw_read_query("SELECT time, temperature, wind_strength FROM weather");
+    let future = client
+        .json_query(query)
+        .and_then(|mut db_result| db_result.deserialize_next::<Weather>());
+    let result = get_runtime().block_on(future);
+    assert_result_ok(&result);
+
+    assert_eq!(
+        result.unwrap().series[0].values[0],
+        Weather {
+            time: "1970-01-01T11:00:00Z".to_string(),
+            temperature: 82,
+            wind_strength: None,
+        }
+    );
+    delete_db(test_name).expect("could not clean up db");
+}
+
+#[test]
+#[cfg(feature = "use-serde")]
+/// INTEGRATION TEST
+///
+/// This test case tests whether JSON can be decoded from a InfluxDB response and whether that JSON
 /// is equal to the data which was written to the database
 fn test_json_query() {
     use serde::Deserialize;
