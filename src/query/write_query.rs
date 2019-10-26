@@ -8,6 +8,31 @@ use std::fmt::{Display, Formatter};
 
 // todo: batch write queries
 
+pub trait WriteField
+{
+	fn add_to_fields(self, tag : String, fields : &mut Vec<(String, String)>);
+}
+
+impl<T : Into<Type>> WriteField for T
+{
+	fn add_to_fields(self, tag : String, fields : &mut Vec<(String, String)>)
+	{
+		let val : Type = self.into();
+		fields.push((tag, val.to_string()));
+	}
+}
+
+impl<T : Into<Type>> WriteField for Option<T>
+{
+	fn add_to_fields(self, tag : String, fields : &mut Vec<(String, String)>)
+	{
+		if let Some(val) = self
+		{
+			val.add_to_fields(tag, fields);
+		}
+	}
+}
+
 /// Internal Representation of a Write query that has not yet been built
 pub struct WriteQuery {
     fields: Vec<(String, String)>,
@@ -39,13 +64,12 @@ impl WriteQuery {
     ///
     /// Query::write_query(Timestamp::NOW, "measurement").add_field("field1", 5).build();
     /// ```
-    pub fn add_field<S, I>(mut self, tag: S, value: I) -> Self
+    pub fn add_field<S, F>(mut self, tag: S, value: F) -> Self
     where
         S: Into<String>,
-        I: Into<Type>,
+        F: WriteField,
     {
-        let val: Type = value.into();
-        self.fields.push((tag.into(), val.to_string()));
+        value.add_to_fields(tag.into(), &mut self.fields);        
         self
     }
 
