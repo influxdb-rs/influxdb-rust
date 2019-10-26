@@ -29,7 +29,7 @@ use crate::{Error, ReadQuery, WriteQuery};
 #[cfg(feature = "derive")]
 pub use influxdb_derive::InfluxDbWriteable;
 
-#[derive(PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Timestamp {
     NOW,
     NANOSECONDS(usize),
