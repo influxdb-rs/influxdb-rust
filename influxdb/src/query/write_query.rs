@@ -238,7 +238,8 @@ mod tests {
 
     #[test]
     fn test_write_builder_optional_fields() {
-        let query = Query::write_query(Timestamp::HOURS(11), "weather")
+        let query = Timestamp::HOURS(11)
+            .into_query("weather".to_string())
             .add_field("temperature", Some(82u64))
             .add_field("wind_strength", <Option<u64>>::None)
             .build();
