@@ -26,7 +26,7 @@ pub fn expand_writeable(tokens: TokenStream) -> TokenStream {
                 let timestamp : ::influxdb::Timestamp = self.#time_field;
                 let mut query = timestamp.into_query(name);
                 #(
-                    query = query.add_field(stringify!(#fields), &self.#fields);
+                    query = query.add_field(stringify!(#fields), self.#fields);
                 )*
                 query
             }
