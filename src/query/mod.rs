@@ -43,7 +43,7 @@ impl fmt::Display for Timestamp {
         match self {
             Now => write!(f, ""),
             Nanoseconds(ts) | Microseconds(ts) | Milliseconds(ts) | Seconds(ts) | Minutes(ts)
-            |   Hours(ts) => write!(f, "{}", ts),
+            | Hours(ts) => write!(f, "{}", ts),
         }
     }
 }
