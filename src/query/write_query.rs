@@ -8,29 +8,23 @@ use std::fmt::{Display, Formatter};
 
 // todo: batch write queries
 
-pub trait WriteField
-{
-	fn add_to_fields(self, tag : String, fields : &mut Vec<(String, String)>);
+pub trait WriteField {
+    fn add_to_fields(self, tag: String, fields: &mut Vec<(String, String)>);
 }
 
-impl<T : Into<Type>> WriteField for T
-{
-	fn add_to_fields(self, tag : String, fields : &mut Vec<(String, String)>)
-	{
-		let val : Type = self.into();
-		fields.push((tag, val.to_string()));
-	}
+impl<T: Into<Type>> WriteField for T {
+    fn add_to_fields(self, tag: String, fields: &mut Vec<(String, String)>) {
+        let val: Type = self.into();
+        fields.push((tag, val.to_string()));
+    }
 }
 
-impl<T : Into<Type>> WriteField for Option<T>
-{
-	fn add_to_fields(self, tag : String, fields : &mut Vec<(String, String)>)
-	{
-		if let Some(val) = self
-		{
-			val.add_to_fields(tag, fields);
-		}
-	}
+impl<T: Into<Type>> WriteField for Option<T> {
+    fn add_to_fields(self, tag: String, fields: &mut Vec<(String, String)>) {
+        if let Some(val) = self {
+            val.add_to_fields(tag, fields);
+        }
+    }
 }
 
 /// Internal Representation of a Write query that has not yet been built
@@ -69,7 +63,7 @@ impl WriteQuery {
         S: Into<String>,
         F: WriteField,
     {
-        value.add_to_fields(tag.into(), &mut self.fields);        
+        value.add_to_fields(tag.into(), &mut self.fields);
         self
     }
 
