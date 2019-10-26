@@ -225,6 +225,17 @@ mod tests {
     }
 
     #[test]
+    fn test_write_builder_optional_fields() {
+        let query = Query::write_query(Timestamp::HOURS(11), "weather")
+            .add_field("temperature", Some(82u64))
+            .add_field("wind_strength", <Option<u64>>::None)
+            .build();
+
+        assert!(query.is_ok(), "Query was empty");
+        assert_eq!(query.unwrap(), "weather temperature=82 11");
+    }
+
+    #[test]
     fn test_write_builder_only_tags() {
         let query = Query::write_query(Timestamp::HOURS(11), "weather")
             .add_tag("season", "summer")
