@@ -525,7 +525,7 @@ fn test_derive_simple_write() {
     };
 
     let humidity = Humidity {
-        time: Timestamp::NOW,
+        time: Timestamp::Now,
         humidity: 30,
     };
     let query = humidity.into_query("humidity".to_string());

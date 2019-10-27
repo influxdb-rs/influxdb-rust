@@ -110,7 +110,7 @@ impl dyn Query {
     /// ```rust
     /// use influxdb::{InfluxDbWriteable, Timestamp};
     ///
-    /// Timestamp::NOW.into_query("measurement".to_string()); // Is of type [`WriteQuery`](crate::WriteQuery)
+    /// Timestamp::Now.into_query("measurement".to_string()); // Is of type [`WriteQuery`](crate::WriteQuery)
     /// ```
     ///
     /// # Examples
