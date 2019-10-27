@@ -38,7 +38,7 @@
 //! // Let's write something to InfluxDB. First we're creating a
 //! // WriteQuery to write some data.
 //! // This creates a query which writes a new measurement into a series called `weather`
-//! let write_query = Query::write_query(Timestamp::NOW, "weather")
+//! let write_query = Query::write_query(Timestamp::Now, "weather")
 //!     .add_field("temperature", 82);
 //!
 //! // Since this library is async by default, we're going to need a Runtime,

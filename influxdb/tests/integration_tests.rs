@@ -112,7 +112,7 @@ fn test_authed_write_and_read() {
     };
 
     let client = Client::new("http://localhost:9086", test_name).with_auth("admin", "password");
-    let write_query = Timestamp::HOURS(11)
+    let write_query = Timestamp::Hours(11)
         .into_query("weather".to_string())
         .add_field("temperature", 82);
     let write_result = get_runtime().block_on(client.query(&write_query));
@@ -153,7 +153,7 @@ fn test_wrong_authed_write_and_read() {
 
     let client =
         Client::new("http://localhost:9086", test_name).with_auth("wrong_user", "password");
-    let write_query = Timestamp::HOURS(11)
+    let write_query = Timestamp::Hours(11)
         .into_query("weather".to_string())
         .add_field("temperature", 82);
     let write_result = get_runtime().block_on(client.query(&write_query));
@@ -215,7 +215,7 @@ fn test_non_authed_write_and_read() {
         }),
     };
     let non_authed_client = Client::new("http://localhost:9086", test_name);
-    let write_query = Timestamp::HOURS(11)
+    let write_query = Timestamp::Hours(11)
         .into_query("weather".to_string())
         .add_field("temperature", 82);
     let write_result = get_runtime().block_on(non_authed_client.query(&write_query));
@@ -254,7 +254,7 @@ fn test_write_and_read_field() {
     };
 
     let client = create_client(test_name);
-    let write_query = Timestamp::HOURS(11)
+    let write_query = Timestamp::Hours(11)
         .into_query("weather".to_string())
         .add_field("temperature", 82);
     let write_result = get_runtime().block_on(client.query(&write_query));
@@ -288,7 +288,7 @@ fn test_write_and_read_option() {
 
     let client = create_client(test_name);
     // Todo: Convert this to derive based insert for easier comparison of structs
-    let write_query = Timestamp::HOURS(11)
+    let write_query = Timestamp::Hours(11)
         .into_query("weather".to_string())
         .add_field("temperature", 82)
         .add_field("wind_strength", <Option<u64>>::None);
@@ -339,7 +339,7 @@ fn test_json_query() {
 
     let client = create_client(test_name);
 
-    let write_query = Timestamp::HOURS(11)
+    let write_query = Timestamp::Hours(11)
         .into_query("weather".to_string())
         .add_field("temperature", 82);
     let write_result = get_runtime().block_on(client.query(&write_query));
@@ -387,13 +387,13 @@ fn test_json_query_vec() {
     };
 
     let client = create_client(test_name);
-    let write_query1 = Timestamp::HOURS(11)
+    let write_query1 = Timestamp::Hours(11)
         .into_query("temperature_vec".to_string())
         .add_field("temperature", 16);
-    let write_query2 = Timestamp::HOURS(12)
+    let write_query2 = Timestamp::Hours(12)
         .into_query("temperature_vec".to_string())
         .add_field("temperature", 17);
-    let write_query3 = Timestamp::HOURS(13)
+    let write_query3 = Timestamp::Hours(13)
         .into_query("temperature_vec".to_string())
         .add_field("temperature", 18);
 
@@ -447,10 +447,10 @@ fn test_serde_multi_query() {
     }
 
     let client = create_client(test_name);
-    let write_query = Timestamp::HOURS(11)
+    let write_query = Timestamp::Hours(11)
         .into_query("temperature".to_string())
         .add_field("temperature", 16);
-    let write_query2 = Timestamp::HOURS(11)
+    let write_query2 = Timestamp::Hours(11)
         .into_query("humidity".to_string())
         .add_field("humidity", 69);
 

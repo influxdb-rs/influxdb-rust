@@ -6,7 +6,7 @@
 //! ```rust
 //! use influxdb::{Query, Timestamp};
 //!
-//! let write_query = Query::write_query(Timestamp::NOW, "measurement")
+//! let write_query = Query::write_query(Timestamp::Now, "measurement")
 //!     .add_field("field1", 5)
 //!     .add_tag("author", "Gero")
 //!     .build();
@@ -31,22 +31,22 @@ pub use influxdb_derive::InfluxDbWriteable;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Timestamp {
-    NOW,
-    NANOSECONDS(usize),
-    MICROSECONDS(usize),
-    MILLISECONDS(usize),
-    SECONDS(usize),
-    MINUTES(usize),
-    HOURS(usize),
+    Now,
+    Nanoseconds(usize),
+    Microseconds(usize),
+    Milliseconds(usize),
+    Seconds(usize),
+    Minutes(usize),
+    Hours(usize),
 }
 
 impl fmt::Display for Timestamp {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         use Timestamp::*;
         match self {
-            NOW => write!(f, ""),
-            NANOSECONDS(ts) | MICROSECONDS(ts) | MILLISECONDS(ts) | SECONDS(ts) | MINUTES(ts)
-            | HOURS(ts) => write!(f, "{}", ts),
+            Now => write!(f, ""),
+            Nanoseconds(ts) | Microseconds(ts) | Milliseconds(ts) | Seconds(ts) | Minutes(ts)
+            | Hours(ts) => write!(f, "{}", ts),
         }
     }
 }
@@ -79,10 +79,10 @@ pub trait Query {
     /// ```rust
     /// use influxdb::{Query, Timestamp};
     ///
-    /// let invalid_query = Query::write_query(Timestamp::NOW, "measurement").build();
+    /// let invalid_query = Query::write_query(Timestamp::Now, "measurement").build();
     /// assert!(invalid_query.is_err());
     ///
-    /// let valid_query = Query::write_query(Timestamp::NOW, "measurement").add_field("myfield1", 11).build();
+    /// let valid_query = Query::write_query(Timestamp::Now, "measurement").add_field("myfield1", 11).build();
     /// assert!(valid_query.is_ok());
     /// ```
     fn build(&self) -> Result<ValidQuery, Error>;
@@ -118,7 +118,7 @@ impl dyn Query {
     /// ```rust
     /// use influxdb::{Query, Timestamp};
     ///
-    /// Query::write_query(Timestamp::NOW, "measurement"); // Is of type [`WriteQuery`](crate::WriteQuery)
+    /// Query::write_query(Timestamp::Now, "measurement"); // Is of type [`WriteQuery`](crate::WriteQuery)
     /// ```
     #[deprecated(since = "0.0.6")]
     pub fn write_query<S>(timestamp: Timestamp, measurement: S) -> WriteQuery
@@ -198,11 +198,11 @@ mod tests {
 
     #[test]
     fn test_format_for_timestamp_now() {
-        assert!(format!("{}", Timestamp::NOW) == "");
+        assert!(format!("{}", Timestamp::Now) == "");
     }
 
     #[test]
     fn test_format_for_timestamp_else() {
-        assert!(format!("{}", Timestamp::NANOSECONDS(100)) == "100");
+        assert!(format!("{}", Timestamp::Nanoseconds(100)) == "100");
     }
 }
