@@ -85,7 +85,7 @@ impl Into<DateTime<Utc>> for Timestamp {
 #[cfg(any(test, feature = "chrono_timestamps"))]
 impl From<DateTime<Utc>> for Timestamp {
     fn from(date_time: DateTime<Utc>) -> Self {
-        Timestamp::Seconds(date_time.timestamp() as usize)
+        Timestamp::Milliseconds(date_time.timestamp_millis() as usize)
     }
 }
 
@@ -202,6 +202,11 @@ mod tests {
     use crate::query::{Timestamp, ValidQuery};
     use chrono::prelude::{DateTime, TimeZone, Utc};
 
+    const MINUTES_PER_HOUR: i64 = 60;
+    const SECONDS_PER_MINUTE: i64 = 60;
+    const MILLIS_PER_SECOND: i64 = 1000;
+    const MICROS_PER_NANO: i64 = 1000;
+
     #[test]
     fn test_equality_str() {
         assert_eq!(ValidQuery::from("hello"), "hello");
@@ -232,26 +237,32 @@ mod tests {
     }
     #[test]
     fn test_chrono_datetime_from_timestamp_hours() {
-        let datetime_from_timestamp: DateTime<Utc> = Timestamp::Hours(1).into();
+        let datetime_from_timestamp: DateTime<Utc> = Timestamp::Hours(2).into();
         assert_eq!(
-            Utc.timestamp_millis(1 * 60 * 60 * 1000),
+            Utc.timestamp_millis(2 * MINUTES_PER_HOUR * SECONDS_PER_MINUTE * MILLIS_PER_SECOND),
             datetime_from_timestamp
         )
     }
     #[test]
     fn test_chrono_datetime_from_timestamp_minutes() {
-        let datetime_from_timestamp: DateTime<Utc> = Timestamp::Minutes(1).into();
-        assert_eq!(Utc.timestamp_millis(1 * 60 * 1000), datetime_from_timestamp)
+        let datetime_from_timestamp: DateTime<Utc> = Timestamp::Minutes(2).into();
+        assert_eq!(
+            Utc.timestamp_millis(2 * SECONDS_PER_MINUTE * MILLIS_PER_SECOND),
+            datetime_from_timestamp
+        )
     }
     #[test]
     fn test_chrono_datetime_from_timestamp_seconds() {
-        let datetime_from_timestamp: DateTime<Utc> = Timestamp::Seconds(1).into();
-        assert_eq!(Utc.timestamp_millis(1 * 1000), datetime_from_timestamp)
+        let datetime_from_timestamp: DateTime<Utc> = Timestamp::Seconds(2).into();
+        assert_eq!(
+            Utc.timestamp_millis(2 * MILLIS_PER_SECOND),
+            datetime_from_timestamp
+        )
     }
     #[test]
     fn test_chrono_datetime_from_timestamp_millis() {
-        let datetime_from_timestamp: DateTime<Utc> = Timestamp::Milliseconds(1).into();
-        assert_eq!(Utc.timestamp_millis(1), datetime_from_timestamp)
+        let datetime_from_timestamp: DateTime<Utc> = Timestamp::Milliseconds(2).into();
+        assert_eq!(Utc.timestamp_millis(2), datetime_from_timestamp)
     }
 
     #[test]
@@ -263,12 +274,15 @@ mod tests {
     #[test]
     fn test_chrono_datetime_from_timestamp_micros() {
         let datetime_from_timestamp: DateTime<Utc> = Timestamp::Microseconds(1).into();
-        assert_eq!(Utc.timestamp_nanos(1 / 1000), datetime_from_timestamp)
+        assert_eq!(
+            Utc.timestamp_nanos(1 / MICROS_PER_NANO),
+            datetime_from_timestamp
+        )
     }
 
     #[test]
     fn test_timestamp_from_chrono_date() {
-        let timestamp_from_datetime: Timestamp = Utc.ymd(1970, 1, 1).and_hms(0, 1, 1).into();
-        assert_eq!(Timestamp::Seconds(61), timestamp_from_datetime)
+        let timestamp_from_datetime: Timestamp = Utc.ymd(1970, 1, 1).and_hms(0, 0, 1).into();
+        assert_eq!(Timestamp::Milliseconds(1000), timestamp_from_datetime)
     }
 }
