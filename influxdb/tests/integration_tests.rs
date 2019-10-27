@@ -288,7 +288,8 @@ fn test_write_and_read_option() {
 
     let client = create_client(test_name);
     // Todo: Convert this to derive based insert for easier comparison of structs
-    let write_query = Query::write_query(Timestamp::HOURS(11), "weather")
+    let write_query = Timestamp::HOURS(11)
+        .into_query("weather".to_string())
         .add_field("temperature", 82)
         .add_field("wind_strength", <Option<u64>>::None);
     let write_result = get_runtime().block_on(client.query(&write_query));

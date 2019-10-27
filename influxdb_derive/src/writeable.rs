@@ -35,7 +35,7 @@ pub fn expand_writeable(tokens: TokenStream) -> TokenStream {
     let generics = input.generics;
 
     let time_field = format_ident!("time");
-	#[allow(clippy::cmp_owned)] // that's not how ident work clippy
+    #[allow(clippy::cmp_owned)] // that's not how ident work clippy
     let fields: Vec<TokenStream2> = match input.fields {
         Fields::Named(fields) => fields
             .named
@@ -44,7 +44,7 @@ pub fn expand_writeable(tokens: TokenStream) -> TokenStream {
             .filter(|field| field.ident.to_string() != time_field.to_string())
             .map(|field| {
                 let ident = field.ident;
-				#[allow(clippy::match_bool)]
+                #[allow(clippy::match_bool)]
                 match field.is_tag {
                     true => quote!(query.add_field(stringify!(#ident), self.#ident)),
                     false => quote!(query.add_field(stringify!(#ident), self.#ident)),
