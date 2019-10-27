@@ -83,8 +83,11 @@ impl Into<DateTime<Utc>> for Timestamp {
 }
 
 #[cfg(any(test, feature = "chrono_timestamps"))]
-impl From<DateTime<Utc>> for Timestamp {
-    fn from(date_time: DateTime<Utc>) -> Self {
+impl<T> From<DateTime<T>> for Timestamp
+where
+    T: TimeZone,
+{
+    fn from(date_time: DateTime<T>) -> Self {
         Timestamp::Milliseconds(date_time.timestamp_millis() as usize)
     }
 }
