@@ -170,7 +170,7 @@ impl Client {
     ///
     /// let client = Client::new("http://localhost:8086", "test");
     /// let _future = client.query(
-    ///     &Query::write_query(Timestamp::NOW, "weather")
+    ///     &Query::write_query(Timestamp::Now, "weather")
     ///         .add_field("temperature", 82)
     /// );
     /// ```
