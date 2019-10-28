@@ -28,7 +28,6 @@
 //!
 //! ```rust,no_run
 //! use influxdb::{Client, Query, Timestamp};
-//! use serde::Deserialize;
 //! use tokio::runtime::current_thread::Runtime;
 //!
 //! // Create a Client with URL `http://localhost:8086`
