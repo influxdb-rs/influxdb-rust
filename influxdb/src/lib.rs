@@ -37,7 +37,7 @@
 //! // Let's write something to InfluxDB. First we're creating a
 //! // WriteQuery to write some data.
 //! // This creates a query which writes a new measurement into a series called `weather`
-//! let write_query = Query::write_query(Timestamp::NOW, "weather")
+//! let write_query = Query::write_query(Timestamp::Now, "weather")
 //!     .add_field("temperature", 82);
 //!
 //! // Since this library is async by default, we're going to need a Runtime,
@@ -80,9 +80,11 @@ mod query;
 
 pub use client::Client;
 pub use error::Error;
-pub use query::read_query::ReadQuery;
-pub use query::write_query::WriteQuery;
-pub use query::{InfluxDbWriteable, Query, Timestamp};
+pub use query::{
+    read_query::ReadQuery,
+    write_query::{Type, WriteQuery},
+    InfluxDbWriteable, Query, QueryType, QueryTypes, Timestamp, ValidQuery,
+};
 
 #[cfg(feature = "use-serde")]
 pub mod integrations {

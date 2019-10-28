@@ -41,7 +41,7 @@ fn test_write_and_read_option() {
 
     run_influx_integration_test("test_write_and_read_option", |client| {
         let weather_reading = WeatherReading {
-            time: Timestamp::HOURS(11),
+            time: Timestamp::Hours(11),
             humidity: 30,
             wind_strength: None,
         };
