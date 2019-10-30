@@ -12,7 +12,6 @@ repository = "https://github.com/Empty2k12/influxdb-rust"
 
 [badges]
 travis-ci = { repository = "Empty2k12/influxdb-rust", branch = "master" }
-coveralls = { repository = "Empty2k12/influxdb-rust", branch = "master", service = "github" }
 
 [dependencies]
 reqwest = "0.9.17"

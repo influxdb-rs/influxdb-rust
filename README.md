@@ -16,9 +16,6 @@
     <a href="https://travis-ci.org/Empty2k12/influxdb-rust">
         <img src="https://travis-ci.org/Empty2k12/influxdb-rust.svg?branch=master" alt='Build Status' />
     </a>
-    <a href="https://coveralls.io/github/Empty2k12/influxdb-rust?branch=master">
-        <img src="https://coveralls.io/repos/github/Empty2k12/influxdb-rust/badge.svg?branch=master" alt='Coverage Status' />
-    </a>
     <a href="https://docs.rs/crate/influxdb">
         <img src="https://docs.rs/influxdb/badge.svg" alt='Documentation Status' />
     </a>
@@ -99,6 +96,5 @@ in the repository.
 ## License
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
 
 @ 2019 Gero Gerke, All rights reserved.
