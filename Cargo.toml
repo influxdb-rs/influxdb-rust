@@ -22,8 +22,6 @@ serde = { version = "1.0.92", optional = true }
 serde_json = { version = "1.0", optional = true }
 chrono = { version = "0.4.9", optional = true }
 
-chrono = { version = "0.4.9" }
-
 [features]
 use-serde = ["serde", "serde_json"]
 chrono_timestamps = ["chrono"]
