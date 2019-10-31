@@ -60,7 +60,7 @@ impl fmt::Display for Timestamp {
     }
 }
 
-#[cfg(any(test, feature = "chrono_timestamps"))]
+#[cfg(feature = "chrono_timestamps")]
 impl Into<DateTime<Utc>> for Timestamp {
     fn into(self) -> DateTime<Utc> {
         match self {
