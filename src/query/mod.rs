@@ -91,7 +91,7 @@ impl Into<DateTime<Utc>> for Timestamp {
     }
 }
 
-#[cfg(any(test, feature = "chrono_timestamps"))]
+#[cfg(feature = "chrono_timestamps")]
 impl<T> From<DateTime<T>> for Timestamp
 where
     T: TimeZone,
