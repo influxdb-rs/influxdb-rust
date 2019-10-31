@@ -97,5 +97,4 @@ in the repository.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-
 @ 2019 Gero Gerke, All rights reserved.

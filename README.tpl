@@ -25,5 +25,4 @@
 </p>
 
 {{readme}}
-
 @ 2019 Gero Gerke, All rights reserved.

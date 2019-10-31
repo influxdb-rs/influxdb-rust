@@ -46,9 +46,9 @@ matrix:
         - rust: stable
           env: NAME='readme-check'
           before_script:
-            - bash auxiliary/update_cargo-readme.sh
+              - bash auxiliary/update_cargo-readme.sh
           script:
-            - bash auxiliary/check_readme_consistency.sh
+              - bash auxiliary/check_readme_consistency.sh
 
 script: |
     export RUST_BACKTRACE=1 &&
