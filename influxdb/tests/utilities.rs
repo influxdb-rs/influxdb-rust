@@ -37,7 +37,7 @@ pub fn get_runtime() -> Runtime {
 
 /* Creates a Database in InfluxDb */
 #[allow(dead_code)]
-fn create_db<T>(name: T) -> Result<String, Error>
+pub fn create_db<T>(name: T) -> Result<String, Error>
 where
     T: Into<String>,
 {

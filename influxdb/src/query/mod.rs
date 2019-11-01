@@ -19,28 +19,19 @@
 //! assert!(read_query.is_ok());
 //! ```
 
-#[cfg(feature = "chrono_timestamps")]
-extern crate chrono;
-
-#[cfg(feature = "chrono_timestamps")]
 use chrono::prelude::{DateTime, TimeZone, Utc};
-#[cfg(feature = "chrono_timestamps")]
 use std::convert::TryInto;
 
-#[cfg(feature = "chrono_timestamps")]
 pub mod consts;
 pub mod read_query;
 pub mod write_query;
 use std::fmt;
 
 use crate::{Error, ReadQuery, WriteQuery};
+use consts::{MILLIS_PER_SECOND, MINUTES_PER_HOUR, NANOS_PER_MILLI, SECONDS_PER_MINUTE};
 
 #[cfg(feature = "derive")]
 pub use influxdb_derive::InfluxDbWriteable;
-
-#[derive(Debug, Clone, Copy, PartialEq)]
-#[cfg(feature = "chrono_timestamps")]
-use consts::{MILLIS_PER_SECOND, MINUTES_PER_HOUR, NANOS_PER_MILLI, SECONDS_PER_MINUTE};
 
 #[derive(PartialEq, Debug, Copy, Clone)]
 pub enum Timestamp {
@@ -64,7 +55,6 @@ impl fmt::Display for Timestamp {
     }
 }
 
-#[cfg(feature = "chrono_timestamps")]
 impl Into<DateTime<Utc>> for Timestamp {
     fn into(self) -> DateTime<Utc> {
         match self {
@@ -95,7 +85,6 @@ impl Into<DateTime<Utc>> for Timestamp {
     }
 }
 
-#[cfg(feature = "chrono_timestamps")]
 impl<T> From<DateTime<T>> for Timestamp
 where
     T: TimeZone,
@@ -235,22 +224,16 @@ pub enum QueryType {
 
 #[cfg(test)]
 mod tests {
-    #[cfg(feature = "chrono_timestamps")]
-    use std::convert::TryInto;
-    #[cfg(feature = "chrono_timestamps")]
-    extern crate chrono;
-    #[cfg(feature = "chrono_timestamps")]
     use super::consts::{
         MICROS_PER_NANO, MILLIS_PER_SECOND, MINUTES_PER_HOUR, NANOS_PER_MILLI, SECONDS_PER_MINUTE,
     };
     use crate::query::{Timestamp, ValidQuery};
-    #[cfg(feature = "chrono_timestamps")]
     use chrono::prelude::{DateTime, TimeZone, Utc};
+    use std::convert::TryInto;
     #[test]
     fn test_equality_str() {
         assert_eq!(ValidQuery::from("hello"), "hello");
     }
-
     #[test]
     fn test_equality_string() {
         assert_eq!(
@@ -258,24 +241,19 @@ mod tests {
             String::from("hello")
         );
     }
-
     #[test]
     fn test_format_for_timestamp_now() {
         assert!(format!("{}", Timestamp::Now) == "");
     }
-
     #[test]
     fn test_format_for_timestamp_else() {
         assert!(format!("{}", Timestamp::Nanoseconds(100)) == "100");
     }
-
-    #[cfg(feature = "chrono_timestamps")]
     #[test]
     fn test_chrono_datetime_from_timestamp_now() {
         let datetime_from_timestamp: DateTime<Utc> = Timestamp::Now.into();
         assert_eq!(Utc::now().date(), datetime_from_timestamp.date())
     }
-    #[cfg(feature = "chrono_timestamps")]
     #[test]
     fn test_chrono_datetime_from_timestamp_hours() {
         let datetime_from_timestamp: DateTime<Utc> = Timestamp::Hours(2).into();
@@ -288,7 +266,6 @@ mod tests {
             datetime_from_timestamp
         )
     }
-    #[cfg(feature = "chrono_timestamps")]
     #[test]
     fn test_chrono_datetime_from_timestamp_minutes() {
         let datetime_from_timestamp: DateTime<Utc> = Timestamp::Minutes(2).into();
@@ -301,7 +278,6 @@ mod tests {
             datetime_from_timestamp
         )
     }
-    #[cfg(feature = "chrono_timestamps")]
     #[test]
     fn test_chrono_datetime_from_timestamp_seconds() {
         let datetime_from_timestamp: DateTime<Utc> = Timestamp::Seconds(2).into();
@@ -314,7 +290,6 @@ mod tests {
             datetime_from_timestamp
         )
     }
-    #[cfg(feature = "chrono_timestamps")]
     #[test]
     fn test_chrono_datetime_from_timestamp_millis() {
         let datetime_from_timestamp: DateTime<Utc> = Timestamp::Milliseconds(2).into();
@@ -323,14 +298,11 @@ mod tests {
             datetime_from_timestamp
         )
     }
-
-    #[cfg(feature = "chrono_timestamps")]
     #[test]
     fn test_chrono_datetime_from_timestamp_nanos() {
         let datetime_from_timestamp: DateTime<Utc> = Timestamp::Nanoseconds(1).into();
         assert_eq!(Utc.timestamp_nanos(1), datetime_from_timestamp)
     }
-    #[cfg(feature = "chrono_timestamps")]
     #[test]
     fn test_chrono_datetime_from_timestamp_micros() {
         let datetime_from_timestamp: DateTime<Utc> = Timestamp::Microseconds(1).into();
@@ -339,8 +311,6 @@ mod tests {
             datetime_from_timestamp
         )
     }
-
-    #[cfg(feature = "chrono_timestamps")]
     #[test]
     fn test_timestamp_from_chrono_date() {
         let timestamp_from_datetime: Timestamp = Utc.ymd(1970, 1, 1).and_hms(0, 0, 1).into();

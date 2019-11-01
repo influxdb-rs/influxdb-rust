@@ -35,7 +35,7 @@ pub fn expand_writeable(tokens: TokenStream) -> TokenStream {
     let generics = input.generics;
 
     let time_field = format_ident!("time");
-    #[allow(clippy::cmp_owned)] // that's not how ident work clippy
+    #[allow(clippy::cmp_owned)] // that's not how idents work clippy
     let fields: Vec<TokenStream2> = match input.fields {
         Fields::Named(fields) => fields
             .named
@@ -59,7 +59,7 @@ pub fn expand_writeable(tokens: TokenStream) -> TokenStream {
         {
             fn into_query(self, name : String) -> ::influxdb::WriteQuery
             {
-                let timestamp : ::influxdb::Timestamp = self.#time_field;
+                let timestamp : ::influxdb::Timestamp = self.#time_field.into();
                 let mut query = timestamp.into_query(name);
                 #(
                     query = #fields;

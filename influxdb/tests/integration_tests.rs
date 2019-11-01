@@ -3,6 +3,7 @@ mod utilities;
 
 extern crate influxdb;
 
+use futures::prelude::*;
 use influxdb::{Client, Error, InfluxDbWriteable, Query, Timestamp};
 use utilities::{
     assert_result_err, assert_result_ok, get_runtime, run_influx_integration_test,
@@ -194,10 +195,10 @@ fn test_write_and_read_option() {
 /// This test case tests whether JSON can be decoded from a InfluxDB response and whether that JSON
 /// is equal to the data which was written to the database
 fn test_json_query() {
-    run_influx_integration_test_authed("test_json_query", |client| {
+    run_influx_integration_test("test_json_query", |client| {
         use serde::Deserialize;
         let write_query = Timestamp::Hours(11)
-            .into_query("weather".to_string())
+            .into_query("test_json_query".to_string())
             .add_field("temperature", 82);
         let write_result = get_runtime().block_on(client.query(&write_query));
         assert_result_ok(&write_result);
@@ -208,7 +209,7 @@ fn test_json_query() {
             temperature: i32,
         }
 
-        let query = Query::raw_read_query("SELECT * FROM weather");
+        let query = Query::raw_read_query("SELECT * FROM test_json_query");
         let future = client
             .json_query(query)
             .and_then(|mut db_result| db_result.deserialize_next::<Weather>());
@@ -232,17 +233,16 @@ fn test_json_query() {
 /// This test case tests whether JSON can be decoded from a InfluxDB response and wether that JSON
 /// is equal to the data which was written to the database
 fn test_json_query_vec() {
-    run_influx_integration_test_authed("test_json_query_vec", |client| {
+    run_influx_integration_test("test_json_query_vec", |client| {
         use serde::Deserialize;
-        let client = create_client(test_name);
         let write_query1 = Timestamp::Hours(11)
-            .into_query("temperature_vec".to_string())
+            .into_query("test_json_query_vec".to_string())
             .add_field("temperature", 16);
         let write_query2 = Timestamp::Hours(12)
-            .into_query("temperature_vec".to_string())
+            .into_query("test_json_query_vec".to_string())
             .add_field("temperature", 17);
         let write_query3 = Timestamp::Hours(13)
-            .into_query("temperature_vec".to_string())
+            .into_query("test_json_query_vec".to_string())
             .add_field("temperature", 18);
 
         let _write_result = get_runtime().block_on(client.query(&write_query1));
@@ -255,7 +255,7 @@ fn test_json_query_vec() {
             temperature: i32,
         }
 
-        let query = Query::raw_read_query("SELECT * FROM temperature_vec");
+        let query = Query::raw_read_query("SELECT * FROM test_json_query_vec");
         let future = client
             .json_query(query)
             .and_then(|mut db_result| db_result.deserialize_next::<Weather>());
@@ -271,23 +271,24 @@ fn test_json_query_vec() {
 ///
 /// This integration test tests whether using the wrong query method fails building the query
 fn test_serde_multi_query() {
-    run_influx_integration_test_authed("test_serde_multi_query", |client| {
+    run_influx_integration_test("test_serde_multi_query", |client| {
         use serde::Deserialize;
+        use utilities::create_db;
+
+        create_db("humidity").expect("could not setup second db");
 
         #[derive(Deserialize, Debug, PartialEq)]
         struct Temperature {
             time: String,
             temperature: i32,
         }
-
         #[derive(Deserialize, Debug, PartialEq)]
         struct Humidity {
             time: String,
             humidity: i32,
         }
-        let client = create_client(test_name);
         let write_query = Timestamp::Hours(11)
-            .into_query("temperature".to_string())
+            .into_query("test_serde_multi_query".to_string())
             .add_field("temperature", 16);
         let write_query2 = Timestamp::Hours(11)
             .into_query("humidity".to_string())
@@ -300,7 +301,7 @@ fn test_serde_multi_query() {
 
         let future = client
             .json_query(
-                Query::raw_read_query("SELECT * FROM temperature")
+                Query::raw_read_query("SELECT * FROM test_serde_multi_query")
                     .add_query("SELECT * FROM humidity"),
             )
             .and_then(|mut db_result| {
@@ -344,33 +345,4 @@ fn test_wrong_query_errors() {
             "Should only build SELECT and SHOW queries."
         );
     });
-}
-
-#[cfg(feature = "derive")]
-#[derive(InfluxDbWriteable)]
-struct Humidity {
-    time: Timestamp,
-    humidity: i32,
-}
-
-#[cfg(feature = "derive")]
-#[test]
-fn test_derive_simple_write() {
-    let test_name = "test_derive_simple_write";
-    create_db(test_name).expect("could not setup db");
-    let _run_on_drop = RunOnDrop {
-        closure: Box::new(|| {
-            delete_db("test_derive_simple_write").expect("could not clean up db");
-        }),
-    };
-
-    let humidity = Humidity {
-        time: Timestamp::Now,
-        humidity: 30,
-    };
-    let query = humidity.into_query("humidity".to_string());
-    let client = create_client(test_name);
-    let future = client.query(&query);
-    let result = get_runtime().block_on(future);
-    assert!(result.is_ok(), "unable to insert into db");
 }
