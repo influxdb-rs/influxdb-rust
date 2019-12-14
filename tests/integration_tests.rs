@@ -4,7 +4,7 @@ use futures::prelude::*;
 use influxdb::Client;
 use influxdb::Error;
 use influxdb::{Query, Timestamp};
-use tokio::runtime::current_thread::Runtime;
+use tokio::{self, runtime::Runtime};
 
 fn assert_result_err<A: std::fmt::Debug, B: std::fmt::Debug>(result: &Result<A, B>) {
     result.as_ref().expect_err("assert_result_err failed");
@@ -14,10 +14,6 @@ fn assert_result_ok<A: std::fmt::Debug, B: std::fmt::Debug>(result: &Result<A, B
     result.as_ref().expect("assert_result_ok failed");
 }
 
-fn get_runtime() -> Runtime {
-    Runtime::new().expect("Unable to create a runtime")
-}
-
 fn create_client<T>(db_name: T) -> Client
 where
     T: Into<String>,
@@ -25,41 +21,47 @@ where
     Client::new("http://localhost:8086", db_name)
 }
 
-struct RunOnDrop {
-    closure: Box<dyn Fn() -> ()>,
+struct RunOnDrop<F: Future, C: Fn() -> F> {
+    closure: Box<C>,
 }
 
-impl Drop for RunOnDrop {
+impl<F: Future, C: Fn() -> F> Drop for RunOnDrop<F, C> {
     fn drop(&mut self) {
-        (self.closure)();
+        Runtime::new()
+            .expect("failed to create runtime")
+            .block_on((self.closure)());
     }
 }
 
-fn create_db<T>(name: T) -> Result<String, Error>
+async fn create_db<T>(name: T) -> Result<String, Error>
 where
     T: Into<String>,
 {
     let test_name = name.into();
     let query = format!("CREATE DATABASE {}", test_name);
-    get_runtime().block_on(create_client(test_name).query(&Query::raw_read_query(query)))
+    create_client(test_name)
+        .query(&Query::raw_read_query(query))
+        .await
 }
 
-fn delete_db<T>(name: T) -> Result<String, Error>
+async fn delete_db<T>(name: T) -> Result<String, Error>
 where
     T: Into<String>,
 {
     let test_name = name.into();
     let query = format!("DROP DATABASE {}", test_name);
-    get_runtime().block_on(create_client(test_name).query(&Query::raw_read_query(query)))
+    create_client(test_name)
+        .query(&Query::raw_read_query(query))
+        .await
 }
 
-#[test]
 /// INTEGRATION TEST
 ///
 /// This test case tests whether the InfluxDB server can be connected to and gathers info about it
-fn test_ping_influx_db() {
+#[tokio::test]
+async fn test_ping_influx_db() {
     let client = create_client("notusedhere");
-    let result = get_runtime().block_on(client.ping());
+    let result = client.ping().await;
     assert_result_ok(&result);
 
     let (build, version) = result.unwrap();
@@ -69,16 +71,16 @@ fn test_ping_influx_db() {
     println!("build: {} version: {}", build, version);
 }
 
-#[test]
 /// INTEGRATION TEST
 ///
 /// This test case tests connection error
-fn test_connection_error() {
+#[tokio::test]
+async fn test_connection_error() {
     let test_name = "test_connection_error";
     let client =
         Client::new("http://localhost:10086", test_name).with_auth("nopriv_user", "password");
     let read_query = Query::raw_read_query("SELECT * FROM weather");
-    let read_result = get_runtime().block_on(client.query(&read_query));
+    let read_result = client.query(&read_query).await;
     assert_result_err(&read_result);
     match read_result {
         Err(Error::ConnectionError { .. }) => {}
@@ -89,16 +91,17 @@ fn test_connection_error() {
     }
 }
 
-#[test]
 /// INTEGRATION TEST
 ///
 /// This test case tests the Authentication
-fn test_authed_write_and_read() {
+#[tokio::test]
+async fn test_authed_write_and_read() {
     let test_name = "test_authed_write_and_read";
     let client = Client::new("http://localhost:9086", test_name).with_auth("admin", "password");
     let query = format!("CREATE DATABASE {}", test_name);
-    get_runtime()
-        .block_on(client.query(&Query::raw_read_query(query)))
+    client
+        .query(&Query::raw_read_query(query))
+        .await
         .expect("could not setup db");
 
     let _run_on_drop = RunOnDrop {
@@ -107,20 +110,24 @@ fn test_authed_write_and_read() {
             let client =
                 Client::new("http://localhost:9086", test_name).with_auth("admin", "password");
             let query = format!("DROP DATABASE {}", test_name);
-            get_runtime()
-                .block_on(client.query(&Query::raw_read_query(query)))
-                .expect("could not clean up db");
+
+            async move {
+                client
+                    .query(&Query::raw_read_query(query))
+                    .await
+                    .expect("could not clean up db");
+            }
         }),
     };
 
     let client = Client::new("http://localhost:9086", test_name).with_auth("admin", "password");
     let write_query =
         Query::write_query(Timestamp::Hours(11), "weather").add_field("temperature", 82);
-    let write_result = get_runtime().block_on(client.query(&write_query));
+    let write_result = client.query(&write_query).await;
     assert_result_ok(&write_result);
 
     let read_query = Query::raw_read_query("SELECT * FROM weather");
-    let read_result = get_runtime().block_on(client.query(&read_query));
+    let read_result = client.query(&read_query).await;
     assert_result_ok(&read_result);
     assert!(
         !read_result.unwrap().contains("error"),
@@ -128,16 +135,17 @@ fn test_authed_write_and_read() {
     );
 }
 
-#[test]
 /// INTEGRATION TEST
 ///
 /// This test case tests the Authentication
-fn test_wrong_authed_write_and_read() {
+#[tokio::test]
+async fn test_wrong_authed_write_and_read() {
     let test_name = "test_wrong_authed_write_and_read";
     let client = Client::new("http://localhost:9086", test_name).with_auth("admin", "password");
     let query = format!("CREATE DATABASE {}", test_name);
-    get_runtime()
-        .block_on(client.query(&Query::raw_read_query(query)))
+    client
+        .query(&Query::raw_read_query(query))
+        .await
         .expect("could not setup db");
 
     let _run_on_drop = RunOnDrop {
@@ -146,9 +154,12 @@ fn test_wrong_authed_write_and_read() {
             let client =
                 Client::new("http://localhost:9086", test_name).with_auth("admin", "password");
             let query = format!("DROP DATABASE {}", test_name);
-            get_runtime()
-                .block_on(client.query(&Query::raw_read_query(query)))
-                .expect("could not clean up db");
+            async move {
+                client
+                    .query(&Query::raw_read_query(query))
+                    .await
+                    .expect("could not clean up db");
+            }
         }),
     };
 
@@ -156,7 +167,7 @@ fn test_wrong_authed_write_and_read() {
         Client::new("http://localhost:9086", test_name).with_auth("wrong_user", "password");
     let write_query =
         Query::write_query(Timestamp::Hours(11), "weather").add_field("temperature", 82);
-    let write_result = get_runtime().block_on(client.query(&write_query));
+    let write_result = client.query(&write_query).await;
     assert_result_err(&write_result);
     match write_result {
         Err(Error::AuthorizationError) => {}
@@ -167,7 +178,7 @@ fn test_wrong_authed_write_and_read() {
     }
 
     let read_query = Query::raw_read_query("SELECT * FROM weather");
-    let read_result = get_runtime().block_on(client.query(&read_query));
+    let read_result = client.query(&read_query).await;
     assert_result_err(&read_result);
     match read_result {
         Err(Error::AuthorizationError) => {}
@@ -180,7 +191,7 @@ fn test_wrong_authed_write_and_read() {
     let client =
         Client::new("http://localhost:9086", test_name).with_auth("nopriv_user", "password");
     let read_query = Query::raw_read_query("SELECT * FROM weather");
-    let read_result = get_runtime().block_on(client.query(&read_query));
+    let read_result = client.query(&read_query).await;
     assert_result_err(&read_result);
     match read_result {
         Err(Error::AuthenticationError) => {}
@@ -191,16 +202,17 @@ fn test_wrong_authed_write_and_read() {
     }
 }
 
-#[test]
 /// INTEGRATION TEST
 ///
 /// This test case tests the Authentication
-fn test_non_authed_write_and_read() {
+#[tokio::test]
+async fn test_non_authed_write_and_read() {
     let test_name = "test_non_authed_write_and_read";
     let client = Client::new("http://localhost:9086", test_name).with_auth("admin", "password");
     let query = format!("CREATE DATABASE {}", test_name);
-    get_runtime()
-        .block_on(client.query(&Query::raw_read_query(query)))
+    client
+        .query(&Query::raw_read_query(query))
+        .await
         .expect("could not setup db");
 
     let _run_on_drop = RunOnDrop {
@@ -209,15 +221,18 @@ fn test_non_authed_write_and_read() {
             let client =
                 Client::new("http://localhost:9086", test_name).with_auth("admin", "password");
             let query = format!("DROP DATABASE {}", test_name);
-            get_runtime()
-                .block_on(client.query(&Query::raw_read_query(query)))
-                .expect("could not clean up db");
+            async move {
+                client
+                    .query(&Query::raw_read_query(query))
+                    .await
+                    .expect("could not clean up db");
+            }
         }),
     };
     let non_authed_client = Client::new("http://localhost:9086", test_name);
     let write_query =
         Query::write_query(Timestamp::Hours(11), "weather").add_field("temperature", 82);
-    let write_result = get_runtime().block_on(non_authed_client.query(&write_query));
+    let write_result = non_authed_client.query(&write_query).await;
     assert_result_err(&write_result);
     match write_result {
         Err(Error::AuthorizationError) => {}
@@ -228,7 +243,7 @@ fn test_non_authed_write_and_read() {
     }
 
     let read_query = Query::raw_read_query("SELECT * FROM weather");
-    let read_result = get_runtime().block_on(non_authed_client.query(&read_query));
+    let read_result = non_authed_client.query(&read_query).await;
     assert_result_err(&read_result);
     match read_result {
         Err(Error::AuthorizationError) => {}
@@ -239,48 +254,56 @@ fn test_non_authed_write_and_read() {
     }
 }
 
-#[test]
 /// INTEGRATION TEST
 ///
 /// This integration tests that writing data and retrieving the data again is working
-fn test_write_and_read_field() {
+#[tokio::test]
+async fn test_write_and_read_field() {
     let test_name = "test_write_field";
-    create_db(test_name).expect("could not setup db");
+    create_db(test_name).await.expect("could not setup db");
     let _run_on_drop = RunOnDrop {
         closure: Box::new(|| {
-            delete_db("test_write_field").expect("could not clean up db");
+            async {
+                delete_db("test_write_field")
+                    .await
+                    .expect("could not clean up db");
+            }
         }),
     };
 
     let client = create_client(test_name);
     let write_query =
         Query::write_query(Timestamp::Hours(11), "weather").add_field("temperature", 82);
-    let write_result = get_runtime().block_on(client.query(&write_query));
+    let write_result = client.query(&write_query).await;
     assert_result_ok(&write_result);
 
     let read_query = Query::raw_read_query("SELECT * FROM weather");
-    let read_result = get_runtime().block_on(client.query(&read_query));
+    let read_result = client.query(&read_query).await;
     assert_result_ok(&read_result);
     assert!(
         !read_result.unwrap().contains("error"),
         "Data contained a database error"
     );
 
-    delete_db(test_name).expect("could not clean up db");
+    delete_db(test_name).await.expect("could not clean up db");
 }
 
-#[test]
-#[cfg(feature = "use-serde")]
 /// INTEGRATION TEST
 ///
 /// This integration tests that writing data and retrieving the data again is working
-fn test_write_and_read_option() {
+#[tokio::test]
+#[cfg(feature = "use-serde")]
+async fn test_write_and_read_option() {
     use serde::Deserialize;
     let test_name = "test_write_and_read_option";
-    create_db(test_name).expect("could not setup db");
+    create_db(test_name).await.expect("could not setup db");
     let _run_on_drop = RunOnDrop {
         closure: Box::new(|| {
-            delete_db("test_write_and_read_option").expect("could not clean up db");
+            async {
+                delete_db("test_write_and_read_option")
+                    .await
+                    .expect("could not clean up db");
+            }
         }),
     };
 
@@ -289,7 +312,7 @@ fn test_write_and_read_option() {
     let write_query = Query::write_query(Timestamp::Hours(11), "weather")
         .add_field("temperature", 82)
         .add_field("wind_strength", <Option<u64>>::None);
-    let write_result = get_runtime().block_on(client.query(&write_query));
+    let write_result = client.query(&write_query).await;
     assert_result_ok(&write_result);
 
     #[derive(Deserialize, Debug, PartialEq)]
@@ -300,10 +323,10 @@ fn test_write_and_read_option() {
     }
 
     let query = Query::raw_read_query("SELECT time, temperature, wind_strength FROM weather");
-    let future = client
+    let result = client
         .json_query(query)
+        .await
         .and_then(|mut db_result| db_result.deserialize_next::<Weather>());
-    let result = get_runtime().block_on(future);
     assert_result_ok(&result);
 
     assert_eq!(
@@ -314,23 +337,27 @@ fn test_write_and_read_option() {
             wind_strength: None,
         }
     );
-    delete_db(test_name).expect("could not clean up db");
+    delete_db(test_name).await.expect("could not clean up db");
 }
 
-#[test]
-#[cfg(feature = "use-serde")]
 /// INTEGRATION TEST
 ///
 /// This test case tests whether JSON can be decoded from a InfluxDB response and whether that JSON
 /// is equal to the data which was written to the database
-fn test_json_query() {
+#[tokio::test]
+#[cfg(feature = "use-serde")]
+async fn test_json_query() {
     use serde::Deserialize;
 
     let test_name = "test_json_query";
-    create_db(test_name).expect("could not setup db");
+    create_db(test_name).await.expect("could not setup db");
     let _run_on_drop = RunOnDrop {
         closure: Box::new(|| {
-            delete_db("test_json_query").expect("could not clean up db");
+            async {
+                delete_db("test_json_query")
+                    .await
+                    .expect("could not clean up db");
+            }
         }),
     };
 
@@ -339,7 +366,7 @@ fn test_json_query() {
     // todo: implement deriving so objects can easily be placed in InfluxDB
     let write_query =
         Query::write_query(Timestamp::Hours(11), "weather").add_field("temperature", 82);
-    let write_result = get_runtime().block_on(client.query(&write_query));
+    let write_result = client.query(&write_query).await;
     assert_result_ok(&write_result);
 
     #[derive(Deserialize, Debug, PartialEq)]
@@ -349,10 +376,10 @@ fn test_json_query() {
     }
 
     let query = Query::raw_read_query("SELECT * FROM weather");
-    let future = client
+    let result = client
         .json_query(query)
+        .await
         .and_then(|mut db_result| db_result.deserialize_next::<Weather>());
-    let result = get_runtime().block_on(future);
     assert_result_ok(&result);
 
     assert_eq!(
@@ -363,23 +390,27 @@ fn test_json_query() {
         }
     );
 
-    delete_db(test_name).expect("could not clean up db");
+    delete_db(test_name).await.expect("could not clean up db");
 }
 
-#[test]
-#[cfg(feature = "use-serde")]
 /// INTEGRATION TEST
 ///
 /// This test case tests whether JSON can be decoded from a InfluxDB response and wether that JSON
 /// is equal to the data which was written to the database
-fn test_json_query_vec() {
+#[tokio::test]
+#[cfg(feature = "use-serde")]
+async fn test_json_query_vec() {
     use serde::Deserialize;
 
     let test_name = "test_json_query_vec";
-    create_db(test_name).expect("could not setup db");
+    create_db(test_name).await.expect("could not setup db");
     let _run_on_drop = RunOnDrop {
         closure: Box::new(|| {
-            delete_db("test_json_query_vec").expect("could not clean up db");
+            async {
+                delete_db("test_json_query_vec")
+                    .await
+                    .expect("could not clean up db");
+            }
         }),
     };
 
@@ -391,9 +422,9 @@ fn test_json_query_vec() {
     let write_query3 =
         Query::write_query(Timestamp::Hours(13), "temperature_vec").add_field("temperature", 18);
 
-    let _write_result = get_runtime().block_on(client.query(&write_query1));
-    let _write_result2 = get_runtime().block_on(client.query(&write_query2));
-    let _write_result2 = get_runtime().block_on(client.query(&write_query3));
+    let _write_result = client.query(&write_query1).await;
+    let _write_result2 = client.query(&write_query2).await;
+    let _write_result2 = client.query(&write_query3).await;
 
     #[derive(Deserialize, Debug, PartialEq)]
     struct Weather {
@@ -402,29 +433,33 @@ fn test_json_query_vec() {
     }
 
     let query = Query::raw_read_query("SELECT * FROM temperature_vec");
-    let future = client
+    let result = client
         .json_query(query)
+        .await
         .and_then(|mut db_result| db_result.deserialize_next::<Weather>());
-    let result = get_runtime().block_on(future);
     assert_result_ok(&result);
     assert_eq!(result.unwrap().series[0].values.len(), 3);
 
-    delete_db(test_name).expect("could not clean up db");
+    delete_db(test_name).await.expect("could not clean up db");
 }
 
-#[test]
-#[cfg(feature = "use-serde")]
 /// INTEGRATION TEST
 ///
 /// This integration test tests whether using the wrong query method fails building the query
-fn test_serde_multi_query() {
+#[tokio::test]
+#[cfg(feature = "use-serde")]
+async fn test_serde_multi_query() {
     use serde::Deserialize;
 
     let test_name = "test_serde_multi_query";
-    create_db(test_name).expect("could not setup db");
+    create_db(test_name).await.expect("could not setup db");
     let _run_on_drop = RunOnDrop {
         closure: Box::new(|| {
-            delete_db("test_serde_multi_query").expect("could not clean up db");
+            async {
+                delete_db("test_serde_multi_query")
+                    .await
+                    .expect("could not clean up db");
+            }
         }),
     };
 
@@ -446,22 +481,22 @@ fn test_serde_multi_query() {
     let write_query2 =
         Query::write_query(Timestamp::Hours(11), "humidity").add_field("humidity", 69);
 
-    let write_result = get_runtime().block_on(client.query(&write_query));
-    let write_result2 = get_runtime().block_on(client.query(&write_query2));
+    let write_result = client.query(&write_query).await;
+    let write_result2 = client.query(&write_query2).await;
     assert_result_ok(&write_result);
     assert_result_ok(&write_result2);
 
-    let future = client
+    let result = client
         .json_query(
             Query::raw_read_query("SELECT * FROM temperature").add_query("SELECT * FROM humidity"),
         )
+        .await
         .and_then(|mut db_result| {
-            let temp = db_result.deserialize_next::<Temperature>();
-            let humidity = db_result.deserialize_next::<Humidity>();
+            let temp = db_result.deserialize_next::<Temperature>()?;
+            let humidity = db_result.deserialize_next::<Humidity>()?;
 
-            (temp, humidity)
+            Ok((temp, humidity))
         });
-    let result = get_runtime().block_on(future);
     assert_result_ok(&result);
 
     let (temp, humidity) = result.unwrap();
@@ -480,18 +515,19 @@ fn test_serde_multi_query() {
         }
     );
 
-    delete_db(test_name).expect("could not clean up db");
+    delete_db(test_name).await.expect("could not clean up db");
 }
 
-#[test]
-#[cfg(feature = "use-serde")]
 /// INTEGRATION TEST
 ///
 /// This integration test tests whether using the wrong query method fails building the query
-fn test_wrong_query_errors() {
+#[tokio::test]
+#[cfg(feature = "use-serde")]
+async fn test_wrong_query_errors() {
     let client = create_client("test_name");
-    let future = client.json_query(Query::raw_read_query("CREATE DATABASE this_should_fail"));
-    let result = get_runtime().block_on(future);
+    let result = client
+        .json_query(Query::raw_read_query("CREATE DATABASE this_should_fail"))
+        .await;
     assert!(
         result.is_err(),
         "Should only build SELECT and SHOW queries."
