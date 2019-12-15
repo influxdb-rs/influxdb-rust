@@ -22,30 +22,27 @@
 //!     weather: WeatherWithoutCityName,
 //! }
 //!
-//! let mut rt = tokio::runtime::current_thread::Runtime::new().unwrap();
+//! # #[tokio::main]
+//! # async fn main() -> Box<dyn std::error::Error> {
 //! let client = Client::new("http://localhost:8086", "test");
 //! let query = Query::raw_read_query(
 //!     "SELECT temperature FROM /weather_[a-z]*$/ WHERE time > now() - 1m ORDER BY DESC",
 //! );
-//! let _result = rt
-//!     .block_on(client.json_query(query))
-//!     .map(|mut db_result| db_result.deserialize_next::<WeatherWithoutCityName>())
-//!     .map(|it| {
-//!         it.map(|series_vec| {
-//!             series_vec
-//!                 .series
-//!                 .into_iter()
-//!                 .map(|mut city_series| {
-//!                     let city_name =
-//!                         city_series.name.split("_").collect::<Vec<&str>>().remove(2);
-//!                     Weather {
-//!                         weather: city_series.values.remove(0),
-//!                         city_name: city_name.to_string(),
-//!                     }
-//!                 })
-//!                 .collect::<Vec<Weather>>()
-//!         })
-//!     });
+//! let db_result = client.json_query(query).await?;
+//! let _result = db_result
+//!     .deserialize_next::<WeatherWithoutCityName>()?
+//!     .series
+//!     .into_iter()
+//!     .map(|mut city_series| {
+//!         let city_name =
+//!             city_series.name.split("_").collect::<Vec<&str>>().remove(2);
+//!         Weather {
+//!             weather: city_series.values.remove(0),
+//!             city_name: city_name.to_string(),
+//!         }
+//!     })
+//!     .collect::<Vec<Weather>>();
+//! # }
 //! ```
 
 use reqwest::{Client as ReqwestClient, StatusCode, Url};
