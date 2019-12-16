@@ -22,6 +22,9 @@
     <a href="https://www.rust-lang.org/en-US/">
         <img src="https://img.shields.io/badge/Made%20with-Rust-orange.svg" alt='Build with Rust' />
     </a>
+    <a href="https://blog.rust-lang.org/2019/11/07/Rust-1.39.0.html">
+        <img src="https://img.shields.io/badge/rustc-1.39+-yellow.svg" alt='Minimum Rust Version' />
+    </a>
 </p>
 
 This library is a work in progress. Although we've been using it in production at [OpenVelo](https://openvelo.org/),
