@@ -128,8 +128,10 @@ impl Client {
             .await
             .map_err(|err| Error::ConnectionError { error: err })?;
 
-        if res.status() == StatusCode::UNAUTHORIZED || res.status() == StatusCode::FORBIDDEN {
-            return Err(Error::AuthorizationError);
+        match res.status() {
+            StatusCode::UNAUTHORIZED => return Err(Error::AuthorizationError),
+            StatusCode::FORBIDDEN => return Err(Error::AuthenticationError),
+            _ => {}
         }
 
         let body = res.bytes().await.map_err(|err| Error::ProtocolError {
