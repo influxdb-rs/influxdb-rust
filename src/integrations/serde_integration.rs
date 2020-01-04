@@ -23,12 +23,12 @@
 //! }
 //!
 //! # #[tokio::main]
-//! # async fn main() -> Box<dyn std::error::Error> {
+//! # async fn main() -> Result<(), failure::Error> {
 //! let client = Client::new("http://localhost:8086", "test");
 //! let query = Query::raw_read_query(
 //!     "SELECT temperature FROM /weather_[a-z]*$/ WHERE time > now() - 1m ORDER BY DESC",
 //! );
-//! let db_result = client.json_query(query).await?;
+//! let mut db_result = client.json_query(query).await?;
 //! let _result = db_result
 //!     .deserialize_next::<WeatherWithoutCityName>()?
 //!     .series
@@ -42,6 +42,7 @@
 //!         }
 //!     })
 //!     .collect::<Vec<Weather>>();
+//! # Ok(())
 //! # }
 //! ```
 
