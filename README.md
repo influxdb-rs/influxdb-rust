@@ -22,6 +22,9 @@
     <a href="https://www.rust-lang.org/en-US/">
         <img src="https://img.shields.io/badge/Made%20with-Rust-orange.svg" alt='Build with Rust' />
     </a>
+    <a href="https://blog.rust-lang.org/2019/11/07/Rust-1.39.0.html">
+        <img src="https://img.shields.io/badge/rustc-1.39+-yellow.svg" alt='Minimum Rust Version' />
+    </a>
 </p>
 
 This library is a work in progress. Although we've been using it in production at [OpenVelo](https://openvelo.org/),
@@ -54,8 +57,6 @@ For an example with using Serde deserialization, please refer to [serde_integrat
 
 ```rust
 use influxdb::{Client, Query, Timestamp};
-use serde::Deserialize;
-use tokio::runtime::current_thread::Runtime;
 
 // Create a Client with URL `http://localhost:8086`
 // and database name `test`
@@ -67,21 +68,15 @@ let client = Client::new("http://localhost:8086", "test");
 let write_query = Query::write_query(Timestamp::Now, "weather")
     .add_field("temperature", 82);
 
-// Since this library is async by default, we're going to need a Runtime,
-// which can asynchonously run our query.
-// The [tokio](https://crates.io/crates/tokio) crate lets us easily create a new Runtime.
-let mut rt = Runtime::new().expect("Unable to create a runtime");
-
-// To actually submit the data to InfluxDB, the `block_on` method can be used to
-// halt execution of our program until it has been completed.
-let write_result = rt.block_on(client.query(&write_query));
+// Submit the query to InfluxDB.
+let write_result = client.query(&write_query).await;
 assert!(write_result.is_ok(), "Write result was not okay");
 
 // Reading data is as simple as writing. First we need to create a query
 let read_query = Query::raw_read_query("SELECT * FROM weather");
 
-// Again, we're blocking until the request is done
-let read_result = rt.block_on(client.query(&read_query));
+// submit the request and wait until it's done
+let read_result = client.query(&read_query).await;
 
 assert!(read_result.is_ok(), "Read result was not ok");
 

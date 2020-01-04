@@ -28,9 +28,9 @@
 //!
 //! ```rust,no_run
 //! use influxdb::{Client, Query, Timestamp};
-//! use serde::Deserialize;
-//! use tokio::runtime::current_thread::Runtime;
 //!
+//! # #[tokio::main]
+//! # async fn main() {
 //! // Create a Client with URL `http://localhost:8086`
 //! // and database name `test`
 //! let client = Client::new("http://localhost:8086", "test");
@@ -41,27 +41,22 @@
 //! let write_query = Query::write_query(Timestamp::Now, "weather")
 //!     .add_field("temperature", 82);
 //!
-//! // Since this library is async by default, we're going to need a Runtime,
-//! // which can asynchonously run our query.
-//! // The [tokio](https://crates.io/crates/tokio) crate lets us easily create a new Runtime.
-//! let mut rt = Runtime::new().expect("Unable to create a runtime");
-//!
-//! // To actually submit the data to InfluxDB, the `block_on` method can be used to
-//! // halt execution of our program until it has been completed.
-//! let write_result = rt.block_on(client.query(&write_query));
+//! // Submit the query to InfluxDB.
+//! let write_result = client.query(&write_query).await;
 //! assert!(write_result.is_ok(), "Write result was not okay");
 //!
 //! // Reading data is as simple as writing. First we need to create a query
 //! let read_query = Query::raw_read_query("SELECT * FROM weather");
 //!
-//! // Again, we're blocking until the request is done
-//! let read_result = rt.block_on(client.query(&read_query));
+//! // submit the request and wait until it's done
+//! let read_result = client.query(&read_query).await;
 //!
 //! assert!(read_result.is_ok(), "Read result was not ok");
 //!
 //! // We can be sure the result was successful, so we can unwrap the result to get
 //! // the response String from InfluxDB
 //! println!("{}", read_result.unwrap());
+//! # }
 //! ```
 //!
 //! For further examples, check out the Integration Tests in `tests/integration_tests.rs`
@@ -71,6 +66,8 @@
 //!
 //! [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 //!
+
+#![allow(clippy::needless_doctest_main)]
 
 #[macro_use]
 extern crate failure;
