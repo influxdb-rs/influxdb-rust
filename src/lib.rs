@@ -67,6 +67,8 @@
 //! [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 //!
 
+#![allow(clippy::needless_doctest_main)]
+
 #[macro_use]
 extern crate failure;
 
