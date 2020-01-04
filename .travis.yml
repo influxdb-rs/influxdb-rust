@@ -29,6 +29,7 @@ rust:
     - stable
     - beta
     - nightly
+    - 1.39.0
 
 matrix:
     fast_finish: true
