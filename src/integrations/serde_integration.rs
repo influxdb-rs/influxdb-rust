@@ -141,9 +141,7 @@ impl Client {
 
         // Try parsing InfluxDBs { "error": "error message here" }
         if let Ok(error) = serde_json::from_slice::<_DatabaseError>(&body) {
-            return Err(Error::DatabaseError {
-                error: error.error,
-            });
+            return Err(Error::DatabaseError { error: error.error });
         }
 
         // Json has another structure, let's try actually parsing it to the type we're deserializing
