@@ -11,6 +11,8 @@
 //! -   Running multiple queries in one request (e.g. `SELECT * FROM weather_berlin; SELECT * FROM weather_london`)
 //! -   Authenticated and Unauthenticated Connections
 //! -   Optional conversion between `Timestamp` and `Chrono::DateTime<Utc>` via `chrono_timestamps` compilation feature
+//! -   `async`/`await` support
+//!
 //! ## Planned Features
 //!
 //! -   Read Query Builder instead of supplying raw queries
@@ -21,7 +23,7 @@
 //! Add the following to your `Cargo.toml`
 //!
 //! ```toml
-//! influxdb = "0.0.5"
+//! influxdb = "0.0.6"
 //! ```
 //!
 //! For an example with using Serde deserialization, please refer to [serde_integration](crate::integrations::serde_integration)

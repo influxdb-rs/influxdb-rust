@@ -7,9 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.6] - 2020-02-07
+
 ### Changed
 
-- Rewrite to `async` / `await`. Rust 1.39 is now the minimum required Rust version.
+-   Rewrite to `async` / `await`. Rust 1.39 is now the minimum required Rust version.
 
 ## [0.0.5] - 2019-08-16
 
@@ -58,7 +60,8 @@ This release removes the prefix `InfluxDb` of most types in this library and ree
 -   Improved Test Coverage: There's now even more tests verifying correctness of the crate (#5)
 -   It's no longer necessary to supply a wildcard generic when working with serde*integration: `client.json_query::<Weather>(query)` instead of `client.json_query::<Weather, *>(query)`
 
-[unreleased]: https://github.com/Empty2k12/influxdb-rust/compare/v0.0.5...HEAD
+[unreleased]: https://github.com/Empty2k12/influxdb-rust/compare/v0.0.6...HEAD
+[0.0.5]: https://github.com/Empty2k12/influxdb-rust/compare/v0.0.5...v0.0.6
 [0.0.5]: https://github.com/Empty2k12/influxdb-rust/compare/v0.0.5...v0.0.5
 [0.0.4]: https://github.com/Empty2k12/influxdb-rust/compare/v0.0.3...v0.0.4
 [0.0.3]: https://github.com/Empty2k12/influxdb-rust/compare/v0.0.2...v0.0.3

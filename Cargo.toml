@@ -1,6 +1,6 @@
 [package]
 name = "influxdb"
-version = "0.0.5"
+version = "0.0.6"
 authors = ["Gero Gerke <11deutron11@gmail.com>"]
 edition = "2018"
 description = "InfluxDB Driver for Rust"
@@ -14,12 +14,12 @@ repository = "https://github.com/Empty2k12/influxdb-rust"
 travis-ci = { repository = "Empty2k12/influxdb-rust", branch = "master" }
 
 [dependencies]
-chrono = { version = "0.4.9", optional = true }
-failure = "0.1.5"
-futures = "0.3.1"
-reqwest = { version = "0.10", features = ["json"] }
-serde = { version = "1.0.92", features = ["derive"], optional = true }
-serde_json = { version = "1.0", optional = true }
+chrono = { version = "0.4.10", optional = true }
+failure = "0.1.6"
+futures = "0.3.4"
+reqwest = { version = "0.10.1", features = ["json"] }
+serde = { version = "1.0.104", features = ["derive"], optional = true }
+serde_json = { version = "1.0.46", optional = true }
 
 [features]
 use-serde = ["serde", "serde_json"]
@@ -27,4 +27,4 @@ chrono_timestamps = ["chrono"]
 default = ["use-serde"]
 
 [dev-dependencies]
-tokio = { version =  "0.2", features = ["macros"] }
+tokio = { version =  "0.2.11", features = ["macros"] }

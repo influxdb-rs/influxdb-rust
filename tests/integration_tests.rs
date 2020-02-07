@@ -101,43 +101,39 @@ async fn test_authed_write_and_read() {
     const TEST_NAME: &str = "test_authed_write_and_read";
 
     run_test(
-        || {
-            async move {
-                let client =
-                    Client::new("http://localhost:9086", TEST_NAME).with_auth("admin", "password");
-                let query = format!("CREATE DATABASE {}", TEST_NAME);
-                client
-                    .query(&Query::raw_read_query(query))
-                    .await
-                    .expect("could not setup db");
+        || async move {
+            let client =
+                Client::new("http://localhost:9086", TEST_NAME).with_auth("admin", "password");
+            let query = format!("CREATE DATABASE {}", TEST_NAME);
+            client
+                .query(&Query::raw_read_query(query))
+                .await
+                .expect("could not setup db");
 
-                let client =
-                    Client::new("http://localhost:9086", TEST_NAME).with_auth("admin", "password");
-                let write_query = Query::write_query(Timestamp::Hours(11), "weather")
-                    .add_field("temperature", 82);
-                let write_result = client.query(&write_query).await;
-                assert_result_ok(&write_result);
+            let client =
+                Client::new("http://localhost:9086", TEST_NAME).with_auth("admin", "password");
+            let write_query =
+                Query::write_query(Timestamp::Hours(11), "weather").add_field("temperature", 82);
+            let write_result = client.query(&write_query).await;
+            assert_result_ok(&write_result);
 
-                let read_query = Query::raw_read_query("SELECT * FROM weather");
-                let read_result = client.query(&read_query).await;
-                assert_result_ok(&read_result);
-                assert!(
-                    !read_result.unwrap().contains("error"),
-                    "Data contained a database error"
-                );
-            }
+            let read_query = Query::raw_read_query("SELECT * FROM weather");
+            let read_result = client.query(&read_query).await;
+            assert_result_ok(&read_result);
+            assert!(
+                !read_result.unwrap().contains("error"),
+                "Data contained a database error"
+            );
         },
-        || {
-            async move {
-                let client =
-                    Client::new("http://localhost:9086", TEST_NAME).with_auth("admin", "password");
-                let query = format!("DROP DATABASE {}", TEST_NAME);
+        || async move {
+            let client =
+                Client::new("http://localhost:9086", TEST_NAME).with_auth("admin", "password");
+            let query = format!("DROP DATABASE {}", TEST_NAME);
 
-                client
-                    .query(&Query::raw_read_query(query))
-                    .await
-                    .expect("could not clean up db");
-            }
+            client
+                .query(&Query::raw_read_query(query))
+                .await
+                .expect("could not clean up db");
         },
     )
     .await;
@@ -151,65 +147,61 @@ async fn test_wrong_authed_write_and_read() {
     const TEST_NAME: &str = "test_wrong_authed_write_and_read";
 
     run_test(
-        || {
-            async move {
-                let client =
-                    Client::new("http://localhost:9086", TEST_NAME).with_auth("admin", "password");
-                let query = format!("CREATE DATABASE {}", TEST_NAME);
-                client
-                    .query(&Query::raw_read_query(query))
-                    .await
-                    .expect("could not setup db");
+        || async move {
+            let client =
+                Client::new("http://localhost:9086", TEST_NAME).with_auth("admin", "password");
+            let query = format!("CREATE DATABASE {}", TEST_NAME);
+            client
+                .query(&Query::raw_read_query(query))
+                .await
+                .expect("could not setup db");
 
-                let client = Client::new("http://localhost:9086", TEST_NAME)
-                    .with_auth("wrong_user", "password");
-                let write_query = Query::write_query(Timestamp::Hours(11), "weather")
-                    .add_field("temperature", 82);
-                let write_result = client.query(&write_query).await;
-                assert_result_err(&write_result);
-                match write_result {
-                    Err(Error::AuthorizationError) => {}
-                    _ => panic!(format!(
-                        "Should be an AuthorizationError: {}",
-                        write_result.unwrap_err()
-                    )),
-                }
+            let client =
+                Client::new("http://localhost:9086", TEST_NAME).with_auth("wrong_user", "password");
+            let write_query =
+                Query::write_query(Timestamp::Hours(11), "weather").add_field("temperature", 82);
+            let write_result = client.query(&write_query).await;
+            assert_result_err(&write_result);
+            match write_result {
+                Err(Error::AuthorizationError) => {}
+                _ => panic!(format!(
+                    "Should be an AuthorizationError: {}",
+                    write_result.unwrap_err()
+                )),
+            }
 
-                let read_query = Query::raw_read_query("SELECT * FROM weather");
-                let read_result = client.query(&read_query).await;
-                assert_result_err(&read_result);
-                match read_result {
-                    Err(Error::AuthorizationError) => {}
-                    _ => panic!(format!(
-                        "Should be an AuthorizationError: {}",
-                        read_result.unwrap_err()
-                    )),
-                }
+            let read_query = Query::raw_read_query("SELECT * FROM weather");
+            let read_result = client.query(&read_query).await;
+            assert_result_err(&read_result);
+            match read_result {
+                Err(Error::AuthorizationError) => {}
+                _ => panic!(format!(
+                    "Should be an AuthorizationError: {}",
+                    read_result.unwrap_err()
+                )),
+            }
 
-                let client = Client::new("http://localhost:9086", TEST_NAME)
-                    .with_auth("nopriv_user", "password");
-                let read_query = Query::raw_read_query("SELECT * FROM weather");
-                let read_result = client.query(&read_query).await;
-                assert_result_err(&read_result);
-                match read_result {
-                    Err(Error::AuthenticationError) => {}
-                    _ => panic!(format!(
-                        "Should be an AuthenticationError: {}",
-                        read_result.unwrap_err()
-                    )),
-                }
+            let client = Client::new("http://localhost:9086", TEST_NAME)
+                .with_auth("nopriv_user", "password");
+            let read_query = Query::raw_read_query("SELECT * FROM weather");
+            let read_result = client.query(&read_query).await;
+            assert_result_err(&read_result);
+            match read_result {
+                Err(Error::AuthenticationError) => {}
+                _ => panic!(format!(
+                    "Should be an AuthenticationError: {}",
+                    read_result.unwrap_err()
+                )),
             }
         },
-        || {
-            async move {
-                let client =
-                    Client::new("http://localhost:9086", TEST_NAME).with_auth("admin", "password");
-                let query = format!("DROP DATABASE {}", TEST_NAME);
-                client
-                    .query(&Query::raw_read_query(query))
-                    .await
-                    .expect("could not clean up db");
-            }
+        || async move {
+            let client =
+                Client::new("http://localhost:9086", TEST_NAME).with_auth("admin", "password");
+            let query = format!("DROP DATABASE {}", TEST_NAME);
+            client
+                .query(&Query::raw_read_query(query))
+                .await
+                .expect("could not clean up db");
         },
     )
     .await;
@@ -223,50 +215,46 @@ async fn test_non_authed_write_and_read() {
     const TEST_NAME: &str = "test_non_authed_write_and_read";
 
     run_test(
-        || {
-            async move {
-                let client =
-                    Client::new("http://localhost:9086", TEST_NAME).with_auth("admin", "password");
-                let query = format!("CREATE DATABASE {}", TEST_NAME);
-                client
-                    .query(&Query::raw_read_query(query))
-                    .await
-                    .expect("could not setup db");
-                let non_authed_client = Client::new("http://localhost:9086", TEST_NAME);
-                let write_query = Query::write_query(Timestamp::Hours(11), "weather")
-                    .add_field("temperature", 82);
-                let write_result = non_authed_client.query(&write_query).await;
-                assert_result_err(&write_result);
-                match write_result {
-                    Err(Error::AuthorizationError) => {}
-                    _ => panic!(format!(
-                        "Should be an AuthorizationError: {}",
-                        write_result.unwrap_err()
-                    )),
-                }
+        || async move {
+            let client =
+                Client::new("http://localhost:9086", TEST_NAME).with_auth("admin", "password");
+            let query = format!("CREATE DATABASE {}", TEST_NAME);
+            client
+                .query(&Query::raw_read_query(query))
+                .await
+                .expect("could not setup db");
+            let non_authed_client = Client::new("http://localhost:9086", TEST_NAME);
+            let write_query =
+                Query::write_query(Timestamp::Hours(11), "weather").add_field("temperature", 82);
+            let write_result = non_authed_client.query(&write_query).await;
+            assert_result_err(&write_result);
+            match write_result {
+                Err(Error::AuthorizationError) => {}
+                _ => panic!(format!(
+                    "Should be an AuthorizationError: {}",
+                    write_result.unwrap_err()
+                )),
+            }
 
-                let read_query = Query::raw_read_query("SELECT * FROM weather");
-                let read_result = non_authed_client.query(&read_query).await;
-                assert_result_err(&read_result);
-                match read_result {
-                    Err(Error::AuthorizationError) => {}
-                    _ => panic!(format!(
-                        "Should be an AuthorizationError: {}",
-                        read_result.unwrap_err()
-                    )),
-                }
+            let read_query = Query::raw_read_query("SELECT * FROM weather");
+            let read_result = non_authed_client.query(&read_query).await;
+            assert_result_err(&read_result);
+            match read_result {
+                Err(Error::AuthorizationError) => {}
+                _ => panic!(format!(
+                    "Should be an AuthorizationError: {}",
+                    read_result.unwrap_err()
+                )),
             }
         },
-        || {
-            async move {
-                let client =
-                    Client::new("http://localhost:9086", TEST_NAME).with_auth("admin", "password");
-                let query = format!("DROP DATABASE {}", TEST_NAME);
-                client
-                    .query(&Query::raw_read_query(query))
-                    .await
-                    .expect("could not clean up db");
-            }
+        || async move {
+            let client =
+                Client::new("http://localhost:9086", TEST_NAME).with_auth("admin", "password");
+            let query = format!("DROP DATABASE {}", TEST_NAME);
+            client
+                .query(&Query::raw_read_query(query))
+                .await
+                .expect("could not clean up db");
         },
     )
     .await;
@@ -280,28 +268,24 @@ async fn test_write_and_read_field() {
     const TEST_NAME: &str = "test_write_field";
 
     run_test(
-        || {
-            async move {
-                create_db(TEST_NAME).await.expect("could not setup db");
-                let client = create_client(TEST_NAME);
-                let write_query = Query::write_query(Timestamp::Hours(11), "weather")
-                    .add_field("temperature", 82);
-                let write_result = client.query(&write_query).await;
-                assert_result_ok(&write_result);
+        || async move {
+            create_db(TEST_NAME).await.expect("could not setup db");
+            let client = create_client(TEST_NAME);
+            let write_query =
+                Query::write_query(Timestamp::Hours(11), "weather").add_field("temperature", 82);
+            let write_result = client.query(&write_query).await;
+            assert_result_ok(&write_result);
 
-                let read_query = Query::raw_read_query("SELECT * FROM weather");
-                let read_result = client.query(&read_query).await;
-                assert_result_ok(&read_result);
-                assert!(
-                    !read_result.unwrap().contains("error"),
-                    "Data contained a database error"
-                );
-            }
+            let read_query = Query::raw_read_query("SELECT * FROM weather");
+            let read_result = client.query(&read_query).await;
+            assert_result_ok(&read_result);
+            assert!(
+                !read_result.unwrap().contains("error"),
+                "Data contained a database error"
+            );
         },
-        || {
-            async move {
-                delete_db(TEST_NAME).await.expect("could not clean up db");
-            }
+        || async move {
+            delete_db(TEST_NAME).await.expect("could not clean up db");
         },
     )
     .await;
@@ -355,12 +339,10 @@ async fn test_write_and_read_option() {
                 );
             }
         },
-        || {
-            async move {
-                delete_db("test_write_and_read_option")
-                    .await
-                    .expect("could not clean up db");
-            }
+        || async move {
+            delete_db("test_write_and_read_option")
+                .await
+                .expect("could not clean up db");
         },
     )
     .await;
@@ -412,10 +394,8 @@ async fn test_json_query() {
                 );
             }
         },
-        || {
-            async move {
-                delete_db(TEST_NAME).await.expect("could not clean up db");
-            }
+        || async move {
+            delete_db(TEST_NAME).await.expect("could not clean up db");
         },
     )
     .await;
@@ -433,41 +413,37 @@ async fn test_json_query_vec() {
     const TEST_NAME: &str = "test_json_query_vec";
 
     run_test(
-        || {
-            async move {
-                create_db(TEST_NAME).await.expect("could not setup db");
+        || async move {
+            create_db(TEST_NAME).await.expect("could not setup db");
 
-                let client = create_client(TEST_NAME);
-                let write_query1 = Query::write_query(Timestamp::Hours(11), "temperature_vec")
-                    .add_field("temperature", 16);
-                let write_query2 = Query::write_query(Timestamp::Hours(12), "temperature_vec")
-                    .add_field("temperature", 17);
-                let write_query3 = Query::write_query(Timestamp::Hours(13), "temperature_vec")
-                    .add_field("temperature", 18);
+            let client = create_client(TEST_NAME);
+            let write_query1 = Query::write_query(Timestamp::Hours(11), "temperature_vec")
+                .add_field("temperature", 16);
+            let write_query2 = Query::write_query(Timestamp::Hours(12), "temperature_vec")
+                .add_field("temperature", 17);
+            let write_query3 = Query::write_query(Timestamp::Hours(13), "temperature_vec")
+                .add_field("temperature", 18);
 
-                let _write_result = client.query(&write_query1).await;
-                let _write_result2 = client.query(&write_query2).await;
-                let _write_result2 = client.query(&write_query3).await;
+            let _write_result = client.query(&write_query1).await;
+            let _write_result2 = client.query(&write_query2).await;
+            let _write_result2 = client.query(&write_query3).await;
 
-                #[derive(Deserialize, Debug, PartialEq)]
-                struct Weather {
-                    time: String,
-                    temperature: i32,
-                }
-
-                let query = Query::raw_read_query("SELECT * FROM temperature_vec");
-                let result = client
-                    .json_query(query)
-                    .await
-                    .and_then(|mut db_result| db_result.deserialize_next::<Weather>());
-                assert_result_ok(&result);
-                assert_eq!(result.unwrap().series[0].values.len(), 3);
+            #[derive(Deserialize, Debug, PartialEq)]
+            struct Weather {
+                time: String,
+                temperature: i32,
             }
+
+            let query = Query::raw_read_query("SELECT * FROM temperature_vec");
+            let result = client
+                .json_query(query)
+                .await
+                .and_then(|mut db_result| db_result.deserialize_next::<Weather>());
+            assert_result_ok(&result);
+            assert_eq!(result.unwrap().series[0].values.len(), 3);
         },
-        || {
-            async move {
-                delete_db(TEST_NAME).await.expect("could not clean up db");
-            }
+        || async move {
+            delete_db(TEST_NAME).await.expect("could not clean up db");
         },
     )
     .await;
@@ -484,68 +460,64 @@ async fn test_serde_multi_query() {
     const TEST_NAME: &str = "test_serde_multi_query";
 
     run_test(
-        || {
-            async move {
-                create_db(TEST_NAME).await.expect("could not setup db");
+        || async move {
+            create_db(TEST_NAME).await.expect("could not setup db");
 
-                #[derive(Deserialize, Debug, PartialEq)]
-                struct Temperature {
-                    time: String,
-                    temperature: i32,
-                }
-
-                #[derive(Deserialize, Debug, PartialEq)]
-                struct Humidity {
-                    time: String,
-                    humidity: i32,
-                }
-
-                let client = create_client(TEST_NAME);
-                let write_query = Query::write_query(Timestamp::Hours(11), "temperature")
-                    .add_field("temperature", 16);
-                let write_query2 =
-                    Query::write_query(Timestamp::Hours(11), "humidity").add_field("humidity", 69);
-
-                let write_result = client.query(&write_query).await;
-                let write_result2 = client.query(&write_query2).await;
-                assert_result_ok(&write_result);
-                assert_result_ok(&write_result2);
-
-                let result = client
-                    .json_query(
-                        Query::raw_read_query("SELECT * FROM temperature")
-                            .add_query("SELECT * FROM humidity"),
-                    )
-                    .await
-                    .and_then(|mut db_result| {
-                        let temp = db_result.deserialize_next::<Temperature>()?;
-                        let humidity = db_result.deserialize_next::<Humidity>()?;
-
-                        Ok((temp, humidity))
-                    });
-                assert_result_ok(&result);
-
-                let (temp, humidity) = result.unwrap();
-                assert_eq!(
-                    temp.series[0].values[0],
-                    Temperature {
-                        time: "1970-01-01T11:00:00Z".to_string(),
-                        temperature: 16
-                    },
-                );
-                assert_eq!(
-                    humidity.series[0].values[0],
-                    Humidity {
-                        time: "1970-01-01T11:00:00Z".to_string(),
-                        humidity: 69
-                    }
-                );
+            #[derive(Deserialize, Debug, PartialEq)]
+            struct Temperature {
+                time: String,
+                temperature: i32,
             }
+
+            #[derive(Deserialize, Debug, PartialEq)]
+            struct Humidity {
+                time: String,
+                humidity: i32,
+            }
+
+            let client = create_client(TEST_NAME);
+            let write_query = Query::write_query(Timestamp::Hours(11), "temperature")
+                .add_field("temperature", 16);
+            let write_query2 =
+                Query::write_query(Timestamp::Hours(11), "humidity").add_field("humidity", 69);
+
+            let write_result = client.query(&write_query).await;
+            let write_result2 = client.query(&write_query2).await;
+            assert_result_ok(&write_result);
+            assert_result_ok(&write_result2);
+
+            let result = client
+                .json_query(
+                    Query::raw_read_query("SELECT * FROM temperature")
+                        .add_query("SELECT * FROM humidity"),
+                )
+                .await
+                .and_then(|mut db_result| {
+                    let temp = db_result.deserialize_next::<Temperature>()?;
+                    let humidity = db_result.deserialize_next::<Humidity>()?;
+
+                    Ok((temp, humidity))
+                });
+            assert_result_ok(&result);
+
+            let (temp, humidity) = result.unwrap();
+            assert_eq!(
+                temp.series[0].values[0],
+                Temperature {
+                    time: "1970-01-01T11:00:00Z".to_string(),
+                    temperature: 16
+                },
+            );
+            assert_eq!(
+                humidity.series[0].values[0],
+                Humidity {
+                    time: "1970-01-01T11:00:00Z".to_string(),
+                    humidity: 69
+                }
+            );
         },
-        || {
-            async move {
-                delete_db(TEST_NAME).await.expect("could not clean up db");
-            }
+        || async move {
+            delete_db(TEST_NAME).await.expect("could not clean up db");
         },
     )
     .await;
