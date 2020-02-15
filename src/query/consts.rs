@@ -1,7 +1,7 @@
-pub const MINUTES_PER_HOUR: usize = 60;
-pub const SECONDS_PER_MINUTE: usize = 60;
-pub const MILLIS_PER_SECOND: usize = 1000;
-pub const NANOS_PER_MILLI: usize = 1_000_000;
+pub const MINUTES_PER_HOUR: u128 = 60;
+pub const SECONDS_PER_MINUTE: u128 = 60;
+pub const MILLIS_PER_SECOND: u128 = 1000;
+pub const NANOS_PER_MILLI: u128 = 1_000_000;
 
 #[cfg(test)]
-pub const MICROS_PER_NANO: usize = 1000;
+pub const MICROS_PER_NANO: u128 = 1000;
