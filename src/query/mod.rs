@@ -41,12 +41,12 @@ use consts::{MILLIS_PER_SECOND, MINUTES_PER_HOUR, NANOS_PER_MILLI, SECONDS_PER_M
 #[derive(PartialEq, Debug, Copy, Clone)]
 pub enum Timestamp {
     Now,
-    Nanoseconds(usize),
-    Microseconds(usize),
-    Milliseconds(usize),
-    Seconds(usize),
-    Minutes(usize),
-    Hours(usize),
+    Nanoseconds(u128),
+    Microseconds(u128),
+    Milliseconds(u128),
+    Seconds(u128),
+    Minutes(u128),
+    Hours(u128),
 }
 
 impl fmt::Display for Timestamp {
@@ -97,7 +97,7 @@ where
     T: TimeZone,
 {
     fn from(date_time: DateTime<T>) -> Self {
-        Timestamp::Nanoseconds(date_time.timestamp_nanos() as usize)
+        Timestamp::Nanoseconds(date_time.timestamp_nanos() as u128)
     }
 }
 
