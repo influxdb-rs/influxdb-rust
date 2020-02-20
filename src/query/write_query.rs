@@ -92,7 +92,7 @@ impl WriteQuery {
 
     pub fn get_precision(&self) -> String {
         let modifier = match self.timestamp {
-            Timestamp::Now => return String::from(""),
+            Timestamp::Now => "rfc3339",
             Timestamp::Nanoseconds(_) => "ns",
             Timestamp::Microseconds(_) => "u",
             Timestamp::Milliseconds(_) => "ms",
