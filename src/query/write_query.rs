@@ -121,7 +121,7 @@ impl Display for Type {
             Float(x) => write!(f, "{}", x),
             SignedInteger(x) => write!(f, "{}", x),
             UnsignedInteger(x) => write!(f, "{}", x),
-            Text(text) => write!(f, "\"{text}\"", text = text),
+            Text(text) => write!(f, "{text}", text = text.replace(" ", "\\ ")),
         }
     }
 }
