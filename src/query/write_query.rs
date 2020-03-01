@@ -250,12 +250,13 @@ mod tests {
             .add_field("temperature", 82)
             .add_tag("location", "us-midwest")
             .add_tag("season", "summer")
+            .add_tag("space", "escape test")
             .build();
 
         assert!(query.is_ok(), "Query was empty");
         assert_eq!(
             query.unwrap(),
-            "weather,location=\"us-midwest\",season=\"summer\" temperature=82 11"
+            "weather,location=us-midwest,season=summer,space=escape\\ test temperature=82 11"
         );
     }
 
