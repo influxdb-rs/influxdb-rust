@@ -1,6 +1,5 @@
 /// InfluxDB Line Protocol escaping helper module.
 /// https://docs.influxdata.com/influxdb/v1.7/write_protocols/line_protocol_tutorial/
-
 use crate::Type;
 use lazy_static::lazy_static;
 use regex::Regex;
