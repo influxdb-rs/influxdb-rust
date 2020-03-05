@@ -2,6 +2,7 @@
 //!
 //! Can only be instantiated by using Query::write_query
 
+use crate::query::line_proto_term::LineProtoTerm;
 use crate::query::{QueryType, ValidQuery};
 use crate::{Error, Query, Timestamp};
 use std::fmt::{Display, Formatter};
@@ -9,18 +10,18 @@ use std::fmt::{Display, Formatter};
 // todo: batch write queries
 
 pub trait WriteField {
-    fn add_to_fields(self, tag: String, fields: &mut Vec<(String, String)>);
+    fn add_to_fields(self, tag: String, fields: &mut Vec<(String, Type)>);
 }
 
 impl<T: Into<Type>> WriteField for T {
-    fn add_to_fields(self, tag: String, fields: &mut Vec<(String, String)>) {
+    fn add_to_fields(self, tag: String, fields: &mut Vec<(String, Type)>) {
         let val: Type = self.into();
-        fields.push((tag, val.to_string()));
+        fields.push((tag, val));
     }
 }
 
 impl<T: Into<Type>> WriteField for Option<T> {
-    fn add_to_fields(self, tag: String, fields: &mut Vec<(String, String)>) {
+    fn add_to_fields(self, tag: String, fields: &mut Vec<(String, Type)>) {
         if let Some(val) = self {
             val.add_to_fields(tag, fields);
         }
@@ -29,7 +30,7 @@ impl<T: Into<Type>> WriteField for Option<T> {
 
 /// Internal Representation of a Write query that has not yet been built
 pub struct WriteQuery {
-    fields: Vec<(String, String)>,
+    fields: Vec<(String, Type)>,
     tags: Vec<(String, String)>,
     measurement: String,
     timestamp: Timestamp,
@@ -121,7 +122,7 @@ impl Display for Type {
             Float(x) => write!(f, "{}", x),
             SignedInteger(x) => write!(f, "{}", x),
             UnsignedInteger(x) => write!(f, "{}", x),
-            Text(text) => write!(f, "\"{text}\"", text = text),
+            Text(text) => write!(f, "{text}", text = text),
         }
     }
 }
@@ -159,22 +160,35 @@ impl Query for WriteQuery {
         let mut tags = self
             .tags
             .iter()
-            .map(|(tag, value)| format!("{tag}={value}", tag = tag, value = value))
+            .map(|(tag, value)| {
+                format!(
+                    "{tag}={value}",
+                    tag = LineProtoTerm::TagKey(tag).escape(),
+                    value = LineProtoTerm::TagValue(value).escape(),
+                )
+            })
             .collect::<Vec<String>>()
             .join(",");
+
         if !tags.is_empty() {
             tags.insert_str(0, ",");
         }
         let fields = self
             .fields
             .iter()
-            .map(|(field, value)| format!("{field}={value}", field = field, value = value))
+            .map(|(field, value)| {
+                format!(
+                    "{field}={value}",
+                    field = LineProtoTerm::FieldKey(field).escape(),
+                    value = LineProtoTerm::FieldValue(value).escape(),
+                )
+            })
             .collect::<Vec<String>>()
             .join(",");
 
         Ok(ValidQuery(format!(
             "{measurement}{tags} {fields}{time}",
-            measurement = self.measurement,
+            measurement = LineProtoTerm::Measurement(&self.measurement).escape(),
             tags = tags,
             fields = fields,
             time = match self.timestamp {
@@ -207,7 +221,7 @@ mod tests {
             .build();
 
         assert!(query.is_ok(), "Query was empty");
-        assert_eq!(query.unwrap(), "weather temperature=82 11");
+        assert_eq!(query.unwrap(), "weather temperature=82i 11");
     }
 
     #[test]
@@ -220,7 +234,7 @@ mod tests {
         assert!(query.is_ok(), "Query was empty");
         assert_eq!(
             query.unwrap(),
-            "weather temperature=82,wind_strength=3.7 11"
+            "weather temperature=82i,wind_strength=3.7 11"
         );
     }
 
@@ -232,7 +246,7 @@ mod tests {
             .build();
 
         assert!(query.is_ok(), "Query was empty");
-        assert_eq!(query.unwrap(), "weather temperature=82 11");
+        assert_eq!(query.unwrap(), "weather temperature=82i 11");
     }
 
     #[test]
@@ -255,7 +269,7 @@ mod tests {
         assert!(query.is_ok(), "Query was empty");
         assert_eq!(
             query.unwrap(),
-            "weather,location=\"us-midwest\",season=\"summer\" temperature=82 11"
+            "weather,location=us-midwest,season=summer temperature=82i 11"
         );
     }
 
@@ -269,5 +283,22 @@ mod tests {
             .add_tag("season", "summer");
 
         assert_eq!(query.get_type(), QueryType::WriteQuery);
+    }
+
+    #[test]
+    fn test_escaping() {
+        let query = Query::write_query(Timestamp::Hours(11), "wea, ther=")
+            .add_field("temperature", 82)
+            .add_field("\"temp=era,t ure\"", r#"too"\\hot"#)
+            .add_field("float", 82.0)
+            .add_tag("location", "us-midwest")
+            .add_tag("loc, =\"ation", "us, \"mid=west\"")
+            .build();
+
+        assert!(query.is_ok(), "Query was empty");
+        assert_eq!(
+            query.unwrap().get(),
+            r#"wea\,\ ther=,location=us-midwest,loc\,\ \="ation=us\,\ "mid\=west" temperature=82i,"temp\=era\,t\ ure"="too\"\\\\hot",float=82 11"#
+        );
     }
 }

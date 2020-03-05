@@ -29,6 +29,7 @@ use std::convert::TryInto;
 
 #[cfg(feature = "chrono_timestamps")]
 pub mod consts;
+mod line_proto_term;
 pub mod read_query;
 pub mod write_query;
 use std::fmt;
