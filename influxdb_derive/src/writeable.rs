@@ -25,6 +25,8 @@ impl From<Field> for WriteableField {
 }
 
 pub fn expand_writeable(tokens: TokenStream) -> TokenStream {
+    let krate = super::krate();
+
     let input = parse_macro_input!(tokens as ItemStruct);
     let ident = input.ident;
     let generics = input.generics;
@@ -50,11 +52,11 @@ pub fn expand_writeable(tokens: TokenStream) -> TokenStream {
     };
 
     let output = quote! {
-        impl #generics ::influxdb::InfluxDbWriteable for #ident #generics
+        impl #generics #krate::InfluxDbWriteable for #ident #generics
         {
-            fn into_query<I: Into<String>>(self, name : I) -> ::influxdb::WriteQuery
+            fn into_query<I: Into<String>>(self, name : I) -> #krate::WriteQuery
             {
-                let timestamp : ::influxdb::Timestamp = self.#time_field.into();
+                let timestamp : #krate::Timestamp = self.#time_field.into();
                 let mut query = timestamp.into_query(name);
                 #(
                     query = #fields;
