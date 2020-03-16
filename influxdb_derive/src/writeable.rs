@@ -41,7 +41,7 @@ pub fn expand_writeable(tokens: TokenStream) -> TokenStream {
                 let ident = field.ident;
                 #[allow(clippy::match_bool)]
                 match field.is_tag {
-                    true => quote!(query.add_field(stringify!(#ident), self.#ident)),
+                    true => quote!(query.add_tag(stringify!(#ident), self.#ident)),
                     false => quote!(query.add_field(stringify!(#ident), self.#ident)),
                 }
             })
