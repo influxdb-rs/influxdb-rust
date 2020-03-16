@@ -23,7 +23,7 @@ impl From<Field> for WriteableField {
                     .unwrap_or_default()
                     == "tag"
             })
-            .nth(0)
+            .next()
             .is_some();
         WriteableField { ident, is_tag }
     }
