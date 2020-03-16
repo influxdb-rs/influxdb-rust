@@ -11,20 +11,15 @@ struct WriteableField {
 impl From<Field> for WriteableField {
     fn from(field: Field) -> WriteableField {
         let ident = field.ident.expect("fields without ident are not supported");
-        let is_tag = field
-            .attrs
-            .iter()
-            .filter(|attr| {
-                attr.path
-                    .segments
-                    .iter()
-                    .last()
-                    .map(|seg| seg.ident.to_string())
-                    .unwrap_or_default()
-                    == "tag"
-            })
-            .next()
-            .is_some();
+        let is_tag = field.attrs.iter().any(|attr| {
+            attr.path
+                .segments
+                .iter()
+                .last()
+                .map(|seg| seg.ident.to_string())
+                .unwrap_or_default()
+                == "tag"
+        });
         WriteableField { ident, is_tag }
     }
 }

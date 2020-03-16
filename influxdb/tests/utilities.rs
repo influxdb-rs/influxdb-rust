@@ -2,6 +2,7 @@ use futures::prelude::*;
 use influxdb::{Client, Error, Query};
 use std::panic::{AssertUnwindSafe, UnwindSafe};
 
+#[allow(dead_code)]
 pub fn assert_result_err<A: std::fmt::Debug, B: std::fmt::Debug>(result: &Result<A, B>) {
     result.as_ref().expect_err("assert_result_err failed");
 }

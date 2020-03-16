@@ -1,15 +1,14 @@
 extern crate influxdb;
 
-use influxdb::{Client, Error, Query, Timestamp};
-use tokio;
-
 #[path = "./utilities.rs"]
 mod utilities;
-
-use influxdb::InfluxDbWriteable;
 use utilities::{
     assert_result_err, assert_result_ok, create_client, create_db, delete_db, run_test,
 };
+
+use influxdb::InfluxDbWriteable;
+use influxdb::{Client, Error, Query, Timestamp};
+use tokio;
 
 /// INTEGRATION TEST
 ///
