@@ -12,7 +12,8 @@ use serde::Deserialize;
 
 use utilities::{assert_result_ok, create_client, create_db, delete_db, run_test};
 
-#[derive(InfluxDbWriteable, Debug, PartialEq)]
+#[derive(Debug, PartialEq)]
+#[cfg_attr(feature = "derive", derive(InfluxDbWriteable))]
 #[cfg_attr(feature = "use-serde", derive(Deserialize))]
 struct WeatherReading {
     time: DateTime<Utc>,
