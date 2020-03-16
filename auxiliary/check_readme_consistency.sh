@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/bin/bash
 
 cargo readme -r influxdb -t ../README.tpl > README.md.expected
 
@@ -9,6 +9,6 @@ then
     echo 'README.md is up to date!'
     exit 0
 else
-    echo 'README.md out of date. Run "cargo readme > README.md" and commit again.'
+    echo 'README.md out of date. Run "cargo readme -r influxdb -t ../README.tpl > README.md" and commit again.'
     exit 1
 fi

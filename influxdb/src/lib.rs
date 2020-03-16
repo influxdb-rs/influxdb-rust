@@ -10,13 +10,12 @@
 //! -   Optional Serde Support for Deserialization
 //! -   Running multiple queries in one request (e.g. `SELECT * FROM weather_berlin; SELECT * FROM weather_london`)
 //! -   Authenticated and Unauthenticated Connections
-//! -   Optional conversion between `Timestamp` and `Chrono::DateTime<Utc>` via `chrono_timestamps` compilation feature
 //! -   `async`/`await` support
+//! -   `#[derive(InfluxDbWriteable)]` Derive Macro for Writing / Reading into Structs
 //!
 //! ## Planned Features
 //!
 //! -   Read Query Builder instead of supplying raw queries
-//! -   `#[derive(InfluxDbReadable)]` and `#[derive(InfluxDbWriteable)]` proc macros
 //!
 //! # Quickstart
 //!
