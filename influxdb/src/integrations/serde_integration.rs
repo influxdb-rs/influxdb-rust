@@ -22,45 +22,36 @@
 //!     weather: WeatherWithoutCityName,
 //! }
 //!
-//! let mut rt = tokio::runtime::current_thread::Runtime::new().unwrap();
+//! # #[tokio::main]
+//! # async fn main() -> Result<(), failure::Error> {
 //! let client = Client::new("http://localhost:8086", "test");
 //! let query = Query::raw_read_query(
 //!     "SELECT temperature FROM /weather_[a-z]*$/ WHERE time > now() - 1m ORDER BY DESC",
 //! );
-//! let _result = rt
-//!     .block_on(client.json_query(query))
-//!     .map(|mut db_result| db_result.deserialize_next::<WeatherWithoutCityName>())
-//!     .map(|it| {
-//!         it.map(|series_vec| {
-//!             series_vec
-//!                 .series
-//!                 .into_iter()
-//!                 .map(|mut city_series| {
-//!                     let city_name =
-//!                         city_series.name.split("_").collect::<Vec<&str>>().remove(2);
-//!                     Weather {
-//!                         weather: city_series.values.remove(0),
-//!                         city_name: city_name.to_string(),
-//!                     }
-//!                 })
-//!                 .collect::<Vec<Weather>>()
-//!         })
-//!     });
+//! let mut db_result = client.json_query(query).await?;
+//! let _result = db_result
+//!     .deserialize_next::<WeatherWithoutCityName>()?
+//!     .series
+//!     .into_iter()
+//!     .map(|mut city_series| {
+//!         let city_name =
+//!             city_series.name.split("_").collect::<Vec<&str>>().remove(2);
+//!         Weather {
+//!             weather: city_series.values.remove(0),
+//!             city_name: city_name.to_string(),
+//!         }
+//!     })
+//!     .collect::<Vec<Weather>>();
+//! # Ok(())
+//! # }
 //! ```
 
-use serde::de::DeserializeOwned;
+use reqwest::{Client as ReqwestClient, StatusCode, Url};
 
-use futures::{Future, Stream};
-use reqwest::r#async::{Client as ReqwestClient, Decoder};
-use reqwest::{StatusCode, Url};
-use std::mem;
-
-use serde::Deserialize;
+use serde::{de::DeserializeOwned, Deserialize};
 use serde_json;
 
 use crate::{Client, Error, Query, ReadQuery};
-
-use futures::future::Either;
 
 #[derive(Deserialize)]
 #[doc(hidden)]
@@ -75,18 +66,15 @@ pub struct DatabaseQueryResult {
 }
 
 impl DatabaseQueryResult {
-    pub fn deserialize_next<T: 'static>(
-        &mut self,
-    ) -> impl Future<Item = Return<T>, Error = Error> + Send
+    pub fn deserialize_next<T: 'static>(&mut self) -> Result<Return<T>, Error>
     where
         T: DeserializeOwned + Send,
     {
-        match serde_json::from_value::<Return<T>>(self.results.remove(0)) {
-            Ok(item) => futures::future::result(Ok(item)),
-            Err(err) => futures::future::err(Error::DeserializationError {
+        serde_json::from_value::<Return<T>>(self.results.remove(0)).map_err(|err| {
+            Error::DeserializationError {
                 error: format!("could not deserialize: {}", err),
-            }),
-        }
+            }
+        })
     }
 }
 
@@ -104,12 +92,7 @@ pub struct Series<T> {
 }
 
 impl Client {
-    pub fn json_query(
-        &self,
-        q: ReadQuery,
-    ) -> impl Future<Item = DatabaseQueryResult, Error = Error> + Send {
-        use futures::future;
-
+    pub async fn json_query(&self, q: ReadQuery) -> Result<DatabaseQueryResult, Error> {
         let query = q.build().unwrap();
         let basic_parameters: Vec<(String, String)> = self.into();
         let client = {
@@ -124,68 +107,48 @@ impl Client {
                     let error = Error::UrlConstructionError {
                         error: format!("{}", err),
                     };
-                    return Either::B(future::err::<DatabaseQueryResult, Error>(error));
+                    return Err(error);
                 }
             };
             url.query_pairs_mut().append_pair("q", &read_query.clone());
 
-            if read_query.contains("SELECT") || read_query.contains("SHOW") {
-                ReqwestClient::new().get(url.as_str())
-            } else {
+            if !read_query.contains("SELECT") && !read_query.contains("SHOW") {
                 let error = Error::InvalidQueryError {
                     error: String::from(
                         "Only SELECT and SHOW queries supported with JSON deserialization",
                     ),
                 };
-                return Either::B(future::err::<DatabaseQueryResult, Error>(error));
+                return Err(error);
             }
+
+            ReqwestClient::new().get(url.as_str())
         };
 
-        Either::A(
-            client
-                .send()
-                .map_err(|err| Error::ConnectionError { error: err })
-                .and_then(
-                    |res| -> future::FutureResult<reqwest::r#async::Response, Error> {
-                        match res.status() {
-                            StatusCode::UNAUTHORIZED => {
-                                futures::future::err(Error::AuthorizationError)
-                            }
-                            StatusCode::FORBIDDEN => {
-                                futures::future::err(Error::AuthenticationError)
-                            }
-                            _ => futures::future::ok(res),
-                        }
-                    },
-                )
-                .and_then(|mut res| {
-                    let body = mem::replace(res.body_mut(), Decoder::empty());
-                    body.concat2().map_err(|err| Error::ProtocolError {
-                        error: format!("{}", err),
-                    })
-                })
-                .and_then(|body| {
-                    // Try parsing InfluxDBs { "error": "error message here" }
-                    if let Ok(error) = serde_json::from_slice::<_DatabaseError>(&body) {
-                        futures::future::err(Error::DatabaseError {
-                            error: error.error.to_string(),
-                        })
-                    } else {
-                        // Json has another structure, let's try actually parsing it to the type we're deserializing
-                        let from_slice = serde_json::from_slice::<DatabaseQueryResult>(&body);
+        let res = client
+            .send()
+            .await
+            .map_err(|err| Error::ConnectionError { error: err })?;
 
-                        let deserialized = match from_slice {
-                            Ok(deserialized) => deserialized,
-                            Err(err) => {
-                                return futures::future::err(Error::DeserializationError {
-                                    error: format!("serde error: {}", err),
-                                })
-                            }
-                        };
+        match res.status() {
+            StatusCode::UNAUTHORIZED => return Err(Error::AuthorizationError),
+            StatusCode::FORBIDDEN => return Err(Error::AuthenticationError),
+            _ => {}
+        }
 
-                        futures::future::result(Ok(deserialized))
-                    }
-                }),
-        )
+        let body = res.bytes().await.map_err(|err| Error::ProtocolError {
+            error: format!("{}", err),
+        })?;
+
+        // Try parsing InfluxDBs { "error": "error message here" }
+        if let Ok(error) = serde_json::from_slice::<_DatabaseError>(&body) {
+            return Err(Error::DatabaseError { error: error.error });
+        }
+
+        // Json has another structure, let's try actually parsing it to the type we're deserializing
+        serde_json::from_slice::<DatabaseQueryResult>(&body).map_err(|err| {
+            Error::DeserializationError {
+                error: format!("serde error: {}", err),
+            }
+        })
     }
 }

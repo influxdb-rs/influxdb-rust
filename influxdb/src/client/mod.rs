@@ -15,11 +15,8 @@
 //! assert_eq!(client.database_name(), "test");
 //! ```
 
-use futures::{Future, Stream};
-use reqwest::r#async::{Client as ReqwestClient, Decoder};
-use reqwest::{StatusCode, Url};
-
-use std::mem;
+use futures::prelude::*;
+use reqwest::{self, Client as ReqwestClient, StatusCode, Url};
 
 use crate::query::QueryTypes;
 use crate::Error;
@@ -130,29 +127,27 @@ impl Client {
     /// Pings the InfluxDB Server
     ///
     /// Returns a tuple of build type and version number
-    pub fn ping(&self) -> impl Future<Item = (String, String), Error = Error> + Send {
-        ReqwestClient::new()
-            .get(format!("{}/ping", self.url).as_str())
-            .send()
-            .map(|res| {
-                let build = res
-                    .headers()
-                    .get("X-Influxdb-Build")
-                    .unwrap()
-                    .to_str()
-                    .unwrap();
-                let version = res
-                    .headers()
-                    .get("X-Influxdb-Version")
-                    .unwrap()
-                    .to_str()
-                    .unwrap();
-
-                (String::from(build), String::from(version))
-            })
+    pub async fn ping(&self) -> Result<(String, String), Error> {
+        let res = reqwest::get(format!("{}/ping", self.url).as_str())
+            .await
             .map_err(|err| Error::ProtocolError {
                 error: format!("{}", err),
-            })
+            })?;
+
+        let build = res
+            .headers()
+            .get("X-Influxdb-Build")
+            .unwrap()
+            .to_str()
+            .unwrap();
+        let version = res
+            .headers()
+            .get("X-Influxdb-Version")
+            .unwrap()
+            .to_str()
+            .unwrap();
+
+        Ok((build.to_owned(), version.to_owned()))
     }
 
     /// Sends a [`ReadQuery`](crate::ReadQuery) or [`WriteQuery`](crate::WriteQuery) to the InfluxDB Server.
@@ -165,14 +160,19 @@ impl Client {
     ///
     /// # Examples
     ///
-    /// ```rust
+    /// ```rust,no_run
     /// use influxdb::{Client, Query, Timestamp};
+    /// use influxdb::InfluxDbWriteable;
     ///
+    /// # #[tokio::main]
+    /// # async fn main() -> Result<(), failure::Error> {
     /// let client = Client::new("http://localhost:8086", "test");
-    /// let _future = client.query(
-    ///     &Query::write_query(Timestamp::Now, "weather")
-    ///         .add_field("temperature", 82)
-    /// );
+    /// let query = Timestamp::Now
+    ///     .into_query("weather")
+    ///     .add_field("temperature", 82);
+    /// let results = client.query(&query).await?;
+    /// # Ok(())
+    /// # }
     /// ```
     /// # Errors
     ///
@@ -180,41 +180,29 @@ impl Client {
     /// a [`Error`] variant will be returned.
     ///
     /// [`Error`]: enum.Error.html
-    pub fn query<'q, Q>(&self, q: &'q Q) -> Box<dyn Future<Item = String, Error = Error> + Send>
+    pub async fn query<'q, Q>(&self, q: &'q Q) -> Result<String, Error>
     where
         Q: Query,
         &'q Q: Into<QueryTypes<'q>>,
     {
-        use futures::future;
-
-        let query = match q.build() {
-            Err(err) => {
-                let error = Error::InvalidQueryError {
-                    error: format!("{}", err),
-                };
-                return Box::new(future::err::<String, Error>(error));
-            }
-            Ok(query) => query,
-        };
+        let query = q.build().map_err(|err| Error::InvalidQueryError {
+            error: format!("{}", err),
+        })?;
 
         let basic_parameters: Vec<(String, String)> = self.into();
 
         let client = match q.into() {
             QueryTypes::Read(_) => {
                 let read_query = query.get();
-                let mut url = match Url::parse_with_params(
+                let mut url = Url::parse_with_params(
                     format!("{url}/query", url = self.database_url()).as_str(),
                     basic_parameters,
-                ) {
-                    Ok(url) => url,
-                    Err(err) => {
-                        let error = Error::UrlConstructionError {
-                            error: format!("{}", err),
-                        };
-                        return Box::new(future::err::<String, Error>(error));
-                    }
-                };
-                url.query_pairs_mut().append_pair("q", &read_query.clone());
+                )
+                .map_err(|err| Error::UrlConstructionError {
+                    error: format!("{}", err),
+                })?;
+
+                url.query_pairs_mut().append_pair("q", &read_query);
 
                 if read_query.contains("SELECT") || read_query.contains("SHOW") {
                     ReqwestClient::new().get(url)
@@ -223,65 +211,44 @@ impl Client {
                 }
             }
             QueryTypes::Write(write_query) => {
-                let mut url = match Url::parse_with_params(
+                let mut url = Url::parse_with_params(
                     format!("{url}/write", url = self.database_url()).as_str(),
                     basic_parameters,
-                ) {
-                    Ok(url) => url,
-                    Err(err) => {
-                        let error = Error::InvalidQueryError {
-                            error: format!("{}", err),
-                        };
-                        return Box::new(future::err::<String, Error>(error));
-                    }
-                };
+                )
+                .map_err(|err| Error::InvalidQueryError {
+                    error: format!("{}", err),
+                })?;
+
                 url.query_pairs_mut()
                     .append_pair("precision", &write_query.get_precision());
+
                 ReqwestClient::new().post(url).body(query.get())
             }
         };
-        Box::new(
-            client
-                .send()
-                .map_err(|err| Error::ConnectionError { error: err })
-                .and_then(
-                    |res| -> future::FutureResult<reqwest::r#async::Response, Error> {
-                        match res.status() {
-                            StatusCode::UNAUTHORIZED => {
-                                futures::future::err(Error::AuthorizationError)
-                            }
-                            StatusCode::FORBIDDEN => {
-                                futures::future::err(Error::AuthenticationError)
-                            }
-                            _ => futures::future::ok(res),
-                        }
-                    },
-                )
-                .and_then(|mut res| {
-                    let body = mem::replace(res.body_mut(), Decoder::empty());
-                    body.concat2().map_err(|err| Error::ProtocolError {
-                        error: format!("{}", err),
-                    })
-                })
-                .and_then(|body| {
-                    if let Ok(utf8) = std::str::from_utf8(&body) {
-                        let s = utf8.to_owned();
 
-                        // todo: improve error parsing without serde
-                        if s.contains("\"error\"") {
-                            return futures::future::err(Error::DatabaseError {
-                                error: format!("influxdb error: \"{}\"", s),
-                            });
-                        }
+        let res = client
+            .send()
+            .map_err(|err| Error::ConnectionError { error: err })
+            .await?;
 
-                        return futures::future::ok(s);
-                    }
+        match res.status() {
+            StatusCode::UNAUTHORIZED => return Err(Error::AuthorizationError),
+            StatusCode::FORBIDDEN => return Err(Error::AuthenticationError),
+            _ => {}
+        }
 
-                    futures::future::err(Error::DeserializationError {
-                        error: "response could not be converted to UTF-8".to_string(),
-                    })
-                }),
-        )
+        let s = res.text().await.map_err(|_| Error::DeserializationError {
+            error: "response could not be converted to UTF-8".to_string(),
+        })?;
+
+        // todo: improve error parsing without serde
+        if s.contains("\"error\"") {
+            return Err(Error::DatabaseError {
+                error: format!("influxdb error: \"{}\"", s),
+            });
+        }
+
+        Ok(s)
     }
 }
 

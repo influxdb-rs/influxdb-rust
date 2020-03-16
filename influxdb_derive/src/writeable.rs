@@ -57,7 +57,7 @@ pub fn expand_writeable(tokens: TokenStream) -> TokenStream {
     let output = quote! {
         impl #generics ::influxdb::InfluxDbWriteable for #ident #generics
         {
-            fn into_query(self, name : String) -> ::influxdb::WriteQuery
+            fn into_query<I: Into<String>>(self, name : I) -> ::influxdb::WriteQuery
             {
                 let timestamp : ::influxdb::Timestamp = self.#time_field.into();
                 let mut query = timestamp.into_query(name);

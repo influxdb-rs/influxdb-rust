@@ -5,8 +5,9 @@
 //!
 //! ```rust
 //! use influxdb::{Query, Timestamp};
+//! use influxdb::InfluxDbWriteable;
 //!
-//! let write_query = Query::write_query(Timestamp::Now, "measurement")
+//! let write_query = Timestamp::Now.into_query("measurement")
 //!     .add_field("field1", 5)
 //!     .add_tag("author", "Gero")
 //!     .build();
@@ -23,6 +24,7 @@ use chrono::prelude::{DateTime, TimeZone, Utc};
 use std::convert::TryInto;
 
 pub mod consts;
+mod line_proto_term;
 pub mod read_query;
 pub mod write_query;
 use std::fmt;
@@ -36,12 +38,12 @@ pub use influxdb_derive::InfluxDbWriteable;
 #[derive(PartialEq, Debug, Copy, Clone)]
 pub enum Timestamp {
     Now,
-    Nanoseconds(usize),
-    Microseconds(usize),
-    Milliseconds(usize),
-    Seconds(usize),
-    Minutes(usize),
-    Hours(usize),
+    Nanoseconds(u128),
+    Microseconds(u128),
+    Milliseconds(u128),
+    Seconds(u128),
+    Minutes(u128),
+    Hours(u128),
 }
 
 impl fmt::Display for Timestamp {
@@ -90,7 +92,7 @@ where
     T: TimeZone,
 {
     fn from(date_time: DateTime<T>) -> Self {
-        Timestamp::Nanoseconds(date_time.timestamp_nanos() as usize)
+        Timestamp::Nanoseconds(date_time.timestamp_nanos() as u128)
     }
 }
 
@@ -121,11 +123,12 @@ pub trait Query {
     ///
     /// ```rust
     /// use influxdb::{Query, Timestamp};
+    /// use influxdb::InfluxDbWriteable;
     ///
-    /// let invalid_query = Query::write_query(Timestamp::Now, "measurement").build();
+    /// let invalid_query = Timestamp::Now.into_query("measurement").build();
     /// assert!(invalid_query.is_err());
     ///
-    /// let valid_query = Query::write_query(Timestamp::Now, "measurement").add_field("myfield1", 11).build();
+    /// let valid_query = Timestamp::Now.into_query("measurement").add_field("myfield1", 11).build();
     /// assert!(valid_query.is_ok());
     /// ```
     fn build(&self) -> Result<ValidQuery, Error>;
@@ -134,12 +137,12 @@ pub trait Query {
 }
 
 pub trait InfluxDbWriteable {
-    fn into_query(self, name: String) -> WriteQuery;
+    fn into_query<I: Into<String>>(self, name: I) -> WriteQuery;
 }
 
 impl InfluxDbWriteable for Timestamp {
-    fn into_query(self, name: String) -> WriteQuery {
-        WriteQuery::new(self, name)
+    fn into_query<I: Into<String>>(self, name: I) -> WriteQuery {
+        WriteQuery::new(self, name.into())
     }
 }
 
@@ -153,7 +156,8 @@ impl dyn Query {
     /// ```rust
     /// use influxdb::{InfluxDbWriteable, Timestamp};
     ///
-    /// Timestamp::Now.into_query("measurement".to_string()); // Is of type [`WriteQuery`](crate::WriteQuery)
+    /// Timestamp::Now
+    ///     .into_query("measurement".to_string()); // Is of type [`WriteQuery`](crate::WriteQuery)
     /// ```
     ///
     /// # Examples

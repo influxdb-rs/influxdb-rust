@@ -29,6 +29,7 @@ rust:
     - stable
     - beta
     - nightly
+    - 1.39.0
 
 matrix:
     fast_finish: true
@@ -37,8 +38,8 @@ matrix:
         - rust: stable
           env: NAME='linting'
           before_script:
-              - rustup component add rustfmt-preview
-              - rustup component add clippy-preview
+              - rustup component add rustfmt
+              - rustup component add clippy
           script:
               - cargo fmt --all -- --check
               - cargo clippy --all-targets --all-features -- -D warnings
