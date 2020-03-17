@@ -51,8 +51,13 @@ matrix:
           script:
               - bash auxiliary/check_readme_consistency.sh
 
-script: |
-    export RUST_BACKTRACE=1 &&
-    cargo build &&
-    cargo test --all-features &&
-    cargo doc --no-deps
+script:
+    - export RUST_BACKTRACE=1
+    - cd influxdb
+    - cargo build
+    - cargo test --all --all-features
+    - cargo doc --no-deps
+    - cd ../influxdb_derive
+    - cargo build
+    - cargo test --all --all-features
+    - cargo doc --no-deps

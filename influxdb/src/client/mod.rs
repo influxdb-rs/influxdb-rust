@@ -162,11 +162,13 @@ impl Client {
     ///
     /// ```rust,no_run
     /// use influxdb::{Client, Query, Timestamp};
+    /// use influxdb::InfluxDbWriteable;
     ///
     /// # #[tokio::main]
     /// # async fn main() -> Result<(), failure::Error> {
     /// let client = Client::new("http://localhost:8086", "test");
-    /// let query = Query::write_query(Timestamp::Now, "weather")
+    /// let query = Timestamp::Now
+    ///     .into_query("weather")
     ///     .add_field("temperature", 82);
     /// let results = client.query(&query).await?;
     /// # Ok(())

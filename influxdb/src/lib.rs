@@ -10,13 +10,12 @@
 //! -   Optional Serde Support for Deserialization
 //! -   Running multiple queries in one request (e.g. `SELECT * FROM weather_berlin; SELECT * FROM weather_london`)
 //! -   Authenticated and Unauthenticated Connections
-//! -   Optional conversion between `Timestamp` and `Chrono::DateTime<Utc>` via `chrono_timestamps` compilation feature
 //! -   `async`/`await` support
+//! -   `#[derive(InfluxDbWriteable)]` Derive Macro for Writing / Reading into Structs
 //!
 //! ## Planned Features
 //!
 //! -   Read Query Builder instead of supplying raw queries
-//! -   `#[derive(InfluxDbReadable)]` and `#[derive(InfluxDbWriteable)]` proc macros
 //!
 //! # Quickstart
 //!
@@ -30,6 +29,7 @@
 //!
 //! ```rust,no_run
 //! use influxdb::{Client, Query, Timestamp};
+//! use influxdb::InfluxDbWriteable;
 //!
 //! # #[tokio::main]
 //! # async fn main() {
@@ -40,7 +40,7 @@
 //! // Let's write something to InfluxDB. First we're creating a
 //! // WriteQuery to write some data.
 //! // This creates a query which writes a new measurement into a series called `weather`
-//! let write_query = Query::write_query(Timestamp::Now, "weather")
+//! let write_query = Timestamp::Now.into_query("weather")
 //!     .add_field("temperature", 82);
 //!
 //! // Submit the query to InfluxDB.
@@ -83,7 +83,7 @@ pub use error::Error;
 pub use query::{
     read_query::ReadQuery,
     write_query::{Type, WriteQuery},
-    Query, QueryType, QueryTypes, Timestamp, ValidQuery,
+    InfluxDbWriteable, Query, QueryType, QueryTypes, Timestamp, ValidQuery,
 };
 
 #[cfg(feature = "use-serde")]

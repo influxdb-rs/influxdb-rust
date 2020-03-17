@@ -1,36 +1,8 @@
-[package]
-name = "influxdb"
-version = "0.0.6"
-authors = ["Gero Gerke <11deutron11@gmail.com>"]
-edition = "2018"
-description = "InfluxDB Driver for Rust"
-keywords = ["influxdb", "database", "influx"]
-license = "MIT"
-readme = "README.md"
-include = ["src/**/*", "tests/**/*", "Cargo.toml", "LICENSE"]
-repository = "https://github.com/Empty2k12/influxdb-rust"
+# -*- eval: (cargo-minor-mode 1) -*-
 
-[badges]
-travis-ci = { repository = "Empty2k12/influxdb-rust", branch = "master" }
+[workspace]
+members = ["influxdb", "influxdb_derive"]
 
-[dependencies]
-chrono = { version = "0.4.10", optional = true }
-failure = "0.1.6"
-futures = "0.3.4"
-reqwest = { version = "0.10.1", features = ["json"] }
-serde = { version = "1.0.104", features = ["derive"], optional = true }
-serde_json = { version = "1.0.46", optional = true }
-regex = "1.3.4"
-lazy_static = "1.4.0"
-
-# This is a temporary work around to fix a Failure-derive compilation error
-# Should be removed when https://github.com/Empty2k12/influxdb-rust/issues/48 is being done
-quote = "=1.0.2"
-
-[features]
-use-serde = ["serde", "serde_json"]
-chrono_timestamps = ["chrono"]
-default = ["use-serde"]
-
-[dev-dependencies]
-tokio = { version =  "0.2.11", features = ["macros"] }
+[patch.crates-io]
+influxdb = { path = "./influxdb" }
+influxdb_derive = { path = "./influxdb_derive" }
