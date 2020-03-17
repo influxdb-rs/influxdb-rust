@@ -16,8 +16,21 @@ use utilities::{assert_result_ok, create_client, create_db, delete_db, run_test}
 #[cfg_attr(feature = "use-serde", derive(Deserialize))]
 struct WeatherReading {
     time: DateTime<Utc>,
+    #[tag]
     humidity: i32,
     wind_strength: Option<u64>,
+}
+
+#[test]
+fn test_build_query() {
+    let weather_reading = WeatherReading {
+        time: Timestamp::Hours(1).into(),
+        humidity: 30,
+        wind_strength: Some(5),
+    };
+    let query = weather_reading.into_query("weather_reading").build();
+    println!("{:?}", query);
+    assert_eq!(format!("{:?}", query), "peter");
 }
 
 #[cfg(feature = "derive")]
@@ -37,7 +50,7 @@ async fn test_derive_simple_write() {
                 humidity: 30,
                 wind_strength: Some(5),
             };
-            let query = weather_reading.into_query("weather_reading".to_string());
+            let query = weather_reading.into_query("weather_reading");
             let result = client.query(&query).await;
             assert!(result.is_ok(), "unable to insert into db");
         },
