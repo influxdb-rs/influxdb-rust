@@ -314,11 +314,7 @@ mod tests {
 
         assert!(query.is_ok(), "Query was empty");
         let query_res = query.unwrap().get();
-        println!(
-            "{}\n{}",
-            query_res,
-            r#"wea\,\ ther=,location="us-midwest",loc\,\ \="ation="us\,\ "mid\=west\"" temperature=82i,"temp\=era\,t\ ure"="too\"\\\\hot",float=82 11"#
-        );
+        #[allow(clippy::print_literal)]
         assert_eq!(
             query_res,
             r#"wea\,\ ther=,location="us-midwest",loc\,\ \="ation="us\,\ \"mid\=west\"" temperature=82i,"temp\=era\,t\ ure"="too\"\\\\hot",float=82 11"#
