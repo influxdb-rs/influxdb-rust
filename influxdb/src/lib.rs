@@ -22,7 +22,7 @@
 //! Add the following to your `Cargo.toml`
 //!
 //! ```toml
-//! influxdb = "0.0.6"
+//! influxdb = { version = "0.1.0", features = ["derive"] }
 //! ```
 //!
 //! For an example with using Serde deserialization, please refer to [serde_integration](crate::integrations::serde_integration)
@@ -30,35 +30,38 @@
 //! ```rust,no_run
 //! use influxdb::{Client, Query, Timestamp};
 //! use influxdb::InfluxDbWriteable;
+//! use chrono::{DateTime, Utc};
 //!
 //! # #[tokio::main]
 //! # async fn main() {
-//! // Create a Client with URL `http://localhost:8086`
-//! // and database name `test`
+//! // Connect to db `test` on `http://localhost:8086`
 //! let client = Client::new("http://localhost:8086", "test");
 //!
-//! // Let's write something to InfluxDB. First we're creating a
-//! // WriteQuery to write some data.
-//! // This creates a query which writes a new measurement into a series called `weather`
-//! let write_query = Timestamp::Now.into_query("weather")
-//!     .add_field("temperature", 82);
+//! #[derive(InfluxDbWriteable)]
+//! struct WeatherReading {
+//!     time: DateTime<Utc>,
+//!     humidity: i32,
+//!     #[tag] wind_direction: String,
+//! }
 //!
-//! // Submit the query to InfluxDB.
-//! let write_result = client.query(&write_query).await;
+//! // Let's write some data into a measurement called `weather`
+//! let weather_reading = WeatherReading {
+//!     time: Timestamp::Hours(1).into(),
+//!     humidity: 30,
+//!     wind_direction: String::from("north"),
+//! };
+//!
+//! let write_result = client
+//!     .query(&weather_reading.into_query("weather"))
+//!     .await;
 //! assert!(write_result.is_ok(), "Write result was not okay");
 //!
-//! // Reading data is as simple as writing. First we need to create a query
+//! // Let's see if the data we wrote is there
 //! let read_query = Query::raw_read_query("SELECT * FROM weather");
 //!
-//! // submit the request and wait until it's done
 //! let read_result = client.query(&read_query).await;
-//!
 //! assert!(read_result.is_ok(), "Read result was not ok");
-//!
-//! // We can be sure the result was successful, so we can unwrap the result to get
-//! // the response String from InfluxDB
 //! println!("{}", read_result.unwrap());
-//! # }
 //! ```
 //!
 //! For further examples, check out the Integration Tests in `tests/integration_tests.rs`

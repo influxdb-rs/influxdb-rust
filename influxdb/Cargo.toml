@@ -2,7 +2,7 @@
 
 [package]
 name = "influxdb"
-version = "0.0.6"
+version = "0.1.0"
 authors = ["Gero Gerke <11deutron11@gmail.com>"]
 edition = "2018"
 description = "InfluxDB Driver for Rust"
@@ -16,14 +16,14 @@ repository = "https://github.com/Empty2k12/influxdb-rust"
 travis-ci = { repository = "Empty2k12/influxdb-rust", branch = "master" }
 
 [dependencies]
-chrono = { version = "0.4.10", features = ["serde"] } 
-failure = "0.1.6"
+chrono = { version = "0.4.11", features = ["serde"] } 
+failure = "0.1.7"
 futures = "0.3.4"
-influxdb_derive = { version = "0.0.1", optional = true }
-reqwest = { version = "0.10.1", features = ["json"] }
+influxdb_derive = { version = "0.1.0", optional = true }
+reqwest = { version = "0.10.4", features = ["json"] }
 serde = { version = "1.0.104", features = ["derive"], optional = true }
-serde_json = { version = "1.0.46", optional = true }
-regex = "1.3.4"
+serde_json = { version = "1.0.48", optional = true }
+regex = "1.3.5"
 lazy_static = "1.4.0"
 
 [features]
