@@ -8,12 +8,13 @@ lazy_static! {
     pub static ref COMMAS_SPACES: Regex = Regex::new("[, ]").unwrap();
     pub static ref COMMAS_SPACES_EQUALS: Regex = Regex::new("[, =]").unwrap();
     pub static ref QUOTES_SLASHES: Regex = Regex::new(r#"["\\]"#).unwrap();
+    pub static ref SLASHES: Regex = Regex::new(r#"(\\|,| |=|")"#).unwrap();
 }
 
 pub enum LineProtoTerm<'a> {
     Measurement(&'a str), // escape commas, spaces
     TagKey(&'a str),      // escape commas, equals, spaces
-    TagValue(&'a str),    // escape commas, equals, spaces
+    TagValue(&'a Type),   // escape commas, equals, spaces
     FieldKey(&'a str),    // escape commas, equals, spaces
     FieldValue(&'a Type), // escape quotes, backslashes + quote
 }
@@ -23,8 +24,9 @@ impl LineProtoTerm<'_> {
         use LineProtoTerm::*;
         match self {
             Measurement(x) => Self::escape_any(x, &*COMMAS_SPACES),
-            TagKey(x) | TagValue(x) | FieldKey(x) => Self::escape_any(x, &*COMMAS_SPACES_EQUALS),
+            TagKey(x) | FieldKey(x) => Self::escape_any(x, &*COMMAS_SPACES_EQUALS),
             FieldValue(x) => Self::escape_field_value(x),
+            TagValue(x) => Self::escape_tag_value(x),
         }
     }
 
@@ -42,7 +44,25 @@ impl LineProtoTerm<'_> {
             Float(v) => v.to_string(),
             SignedInteger(v) => format!("{}i", v),
             UnsignedInteger(v) => format!("{}i", v),
-            Text(v) => format!("\"{}\"", Self::escape_any(v, &*QUOTES_SLASHES)),
+            Text(v) => format!(r#""{}""#, Self::escape_any(v, &*SLASHES)),
+        }
+    }
+
+    fn escape_tag_value(v: &Type) -> String {
+        use Type::*;
+        match v {
+            Boolean(v) => {
+                if *v {
+                    "true"
+                } else {
+                    "false"
+                }
+            }
+            .to_string(),
+            Float(v) => format!(r#""{}""#, v.to_string()),
+            SignedInteger(v) => format!(r#""{}""#, v),
+            UnsignedInteger(v) => format!(r#""{}""#, v),
+            Text(v) => format!(r#""{}""#, Self::escape_any(v, &*SLASHES)),
         }
     }
 
@@ -58,6 +78,23 @@ mod test {
 
     #[test]
     fn test() {
+        assert_eq!(
+            TagValue(&Type::Text("this is my special string".into())).escape(),
+            r#""this\ is\ my\ special\ string""#
+        );
+        assert_eq!(
+            TagValue(&Type::Text("a tag w=i th == tons of escapes".into())).escape(),
+            r#""a\ tag\ w\=i\ th\ \=\=\ tons\ of\ escapes""#
+        );
+        assert_eq!(
+            TagValue(&Type::Text("no_escapes".into())).escape(),
+            r#""no_escapes""#
+        );
+        assert_eq!(
+            TagValue(&Type::Text("some,commas,here".into())).escape(),
+            r#""some\,commas\,here""#
+        );
+
         assert_eq!(Measurement(r#"wea", ther"#).escape(), r#"wea"\,\ ther"#);
         assert_eq!(TagKey(r#"locat\ ,=ion"#).escape(), r#"locat\\ \,\=ion"#);
 
@@ -75,7 +112,7 @@ mod test {
         assert_eq!(FieldValue(&Type::Text("\"".into())).escape(), r#""\"""#);
         assert_eq!(
             FieldValue(&Type::Text(r#"locat"\ ,=ion"#.into())).escape(),
-            r#""locat\"\\ ,=ion""#
+            r#""locat\"\\\ \,\=ion""#
         );
     }
 
@@ -83,6 +120,6 @@ mod test {
     fn test_empty_tag_value() {
         // InfluxDB doesn't support empty tag values. But that's a job
         // of a calling site to validate an entire write request.
-        assert_eq!(TagValue("").escape(), "");
+        assert_eq!(TagValue(&Type::Text("".into())).escape(), r#""""#);
     }
 }

@@ -1,4 +1,5 @@
 # -*- eval: (cargo-minor-mode 1) -*-
+
 [workspace]
 members = ["influxdb", "influxdb_derive"]
 

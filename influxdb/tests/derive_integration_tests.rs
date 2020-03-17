@@ -17,8 +17,8 @@ use utilities::{assert_result_ok, create_client, create_db, delete_db, run_test}
 #[cfg_attr(feature = "use-serde", derive(Deserialize))]
 struct WeatherReading {
     time: DateTime<Utc>,
-    #[tag]
     humidity: i32,
+    #[tag]
     wind_strength: Option<u64>,
 }
 
@@ -29,10 +29,13 @@ fn test_build_query() {
         humidity: 30,
         wind_strength: Some(5),
     };
-    let query = weather_reading.into_query("weather_reading").build();
+    let query = weather_reading
+        .into_query("weather_reading")
+        .build()
+        .unwrap();
     assert_eq!(
-        format!("{:?}", query),
-        "weather_reading,humidity=30 wind_strength=5i 3600000000000"
+        query.get(),
+        "weather_reading,wind_strength=\"5\" humidity=30i 3600000000000"
     );
 }
 

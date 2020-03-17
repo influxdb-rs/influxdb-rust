@@ -7,23 +7,21 @@ use crate::query::{QueryType, ValidQuery};
 use crate::{Error, Query, Timestamp};
 use std::fmt::{Display, Formatter};
 
-// todo: batch write queries
-
-pub trait WriteField {
-    fn add_to_fields(self, tag: String, fields: &mut Vec<(String, Type)>);
+pub trait WriteType {
+    fn add_to(self, tag: String, fields_or_tags: &mut Vec<(String, Type)>);
 }
 
-impl<T: Into<Type>> WriteField for T {
-    fn add_to_fields(self, tag: String, fields: &mut Vec<(String, Type)>) {
+impl<T: Into<Type>> WriteType for T {
+    fn add_to(self, tag: String, fields_or_tags: &mut Vec<(String, Type)>) {
         let val: Type = self.into();
-        fields.push((tag, val));
+        fields_or_tags.push((tag, val));
     }
 }
 
-impl<T: Into<Type>> WriteField for Option<T> {
-    fn add_to_fields(self, tag: String, fields: &mut Vec<(String, Type)>) {
+impl<T: Into<Type>> WriteType for Option<T> {
+    fn add_to(self, tag: String, fields_or_tags: &mut Vec<(String, Type)>) {
         if let Some(val) = self {
-            val.add_to_fields(tag, fields);
+            val.add_to(tag, fields_or_tags);
         }
     }
 }
@@ -31,7 +29,7 @@ impl<T: Into<Type>> WriteField for Option<T> {
 /// Internal Representation of a Write query that has not yet been built
 pub struct WriteQuery {
     fields: Vec<(String, Type)>,
-    tags: Vec<(String, String)>,
+    tags: Vec<(String, Type)>,
     measurement: String,
     timestamp: Timestamp,
 }
@@ -60,12 +58,12 @@ impl WriteQuery {
     ///
     /// Timestamp::Now.into_query("measurement").add_field("field1", 5).build();
     /// ```
-    pub fn add_field<S, F>(mut self, tag: S, value: F) -> Self
+    pub fn add_field<S, F>(mut self, field: S, value: F) -> Self
     where
         S: Into<String>,
-        F: WriteField,
+        F: WriteType,
     {
-        value.add_to_fields(tag.into(), &mut self.fields);
+        value.add_to(field.into(), &mut self.fields);
         self
     }
 
@@ -87,10 +85,9 @@ impl WriteQuery {
     pub fn add_tag<S, I>(mut self, tag: S, value: I) -> Self
     where
         S: Into<String>,
-        I: Into<Type>,
+        I: WriteType,
     {
-        let val: Type = value.into();
-        self.tags.push((tag.into(), val.to_string()));
+        value.add_to(tag.into(), &mut self.tags);
         self
     }
 
@@ -257,8 +254,8 @@ mod tests {
     fn test_write_builder_optional_fields() {
         let query = Timestamp::Hours(11)
             .into_query("weather".to_string())
-            .add_field("temperature", Some(82u64))
-            .add_field("wind_strength", <Option<u64>>::None)
+            .add_field("temperature", 82u64)
+            .add_tag("wind_strength", <Option<u64>>::None)
             .build();
 
         assert!(query.is_ok(), "Query was empty");
@@ -287,7 +284,7 @@ mod tests {
         assert!(query.is_ok(), "Query was empty");
         assert_eq!(
             query.unwrap(),
-            "weather,location=us-midwest,season=summer temperature=82i 11"
+            r#"weather,location="us-midwest",season="summer" temperature=82i 11"#
         );
     }
 
@@ -312,13 +309,19 @@ mod tests {
             .add_field("\"temp=era,t ure\"", r#"too"\\hot"#)
             .add_field("float", 82.0)
             .add_tag("location", "us-midwest")
-            .add_tag("loc, =\"ation", "us, \"mid=west\"")
+            .add_tag("loc, =\"ation", r#"us, "mid=west""#)
             .build();
 
         assert!(query.is_ok(), "Query was empty");
+        let query_res = query.unwrap().get();
+        println!(
+            "{}\n{}",
+            query_res,
+            r#"wea\,\ ther=,location="us-midwest",loc\,\ \="ation="us\,\ "mid\=west\"" temperature=82i,"temp\=era\,t\ ure"="too\"\\\\hot",float=82 11"#
+        );
         assert_eq!(
-            query.unwrap().get(),
-            r#"wea\,\ ther=,location=us-midwest,loc\,\ \="ation=us\,\ "mid\=west" temperature=82i,"temp\=era\,t\ ure"="too\"\\\\hot",float=82 11"#
+            query_res,
+            r#"wea\,\ ther=,location="us-midwest",loc\,\ \="ation="us\,\ \"mid\=west\"" temperature=82i,"temp\=era\,t\ ure"="too\"\\\\hot",float=82 11"#
         );
     }
 }
