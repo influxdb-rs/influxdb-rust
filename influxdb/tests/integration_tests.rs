@@ -318,40 +318,37 @@ async fn test_json_query() {
     const TEST_NAME: &str = "test_json_query";
 
     run_test(
-        || {
-            async move {
-                create_db(TEST_NAME).await.expect("could not setup db");
+        || async move {
+            create_db(TEST_NAME).await.expect("could not setup db");
 
-                let client = create_client(TEST_NAME);
+            let client = create_client(TEST_NAME);
 
-                // todo: implement deriving so objects can easily be placed in InfluxDB
-                let write_query = Timestamp::Hours(11)
-                    .into_query("weather")
-                    .add_field("temperature", 82);
-                let write_result = client.query(&write_query).await;
-                assert_result_ok(&write_result);
+            let write_query = Timestamp::Hours(11)
+                .into_query("weather")
+                .add_field("temperature", 82);
+            let write_result = client.query(&write_query).await;
+            assert_result_ok(&write_result);
 
-                #[derive(Deserialize, Debug, PartialEq)]
-                struct Weather {
-                    time: String,
-                    temperature: i32,
-                }
-
-                let query = Query::raw_read_query("SELECT * FROM weather");
-                let result = client
-                    .json_query(query)
-                    .await
-                    .and_then(|mut db_result| db_result.deserialize_next::<Weather>());
-                assert_result_ok(&result);
-
-                assert_eq!(
-                    result.unwrap().series[0].values[0],
-                    Weather {
-                        time: "1970-01-01T11:00:00Z".to_string(),
-                        temperature: 82
-                    }
-                );
+            #[derive(Deserialize, Debug, PartialEq)]
+            struct Weather {
+                time: String,
+                temperature: i32,
             }
+
+            let query = Query::raw_read_query("SELECT * FROM weather");
+            let result = client
+                .json_query(query)
+                .await
+                .and_then(|mut db_result| db_result.deserialize_next::<Weather>());
+            assert_result_ok(&result);
+
+            assert_eq!(
+                result.unwrap().series[0].values[0],
+                Weather {
+                    time: "1970-01-01T11:00:00Z".to_string(),
+                    temperature: 82
+                }
+            );
         },
         || async move {
             delete_db(TEST_NAME).await.expect("could not clean up db");

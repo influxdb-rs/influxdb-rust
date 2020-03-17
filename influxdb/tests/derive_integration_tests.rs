@@ -30,7 +30,6 @@ fn test_build_query() {
         wind_strength: Some(5),
     };
     let query = weather_reading.into_query("weather_reading").build();
-    println!("{:?}", query);
     assert_eq!(
         format!("{:?}", query),
         "weather_reading,humidity=30 wind_strength=5i 3600000000000"
