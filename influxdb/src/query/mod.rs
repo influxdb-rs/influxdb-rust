@@ -147,34 +147,6 @@ impl InfluxDbWriteable for Timestamp {
 }
 
 impl dyn Query {
-    /// Returns a [`WriteQuery`](crate::WriteQuery) builder.
-    ///
-    /// # Deprecated
-    ///
-    /// Use `InfluxDbWriteable` instead:
-    ///
-    /// ```rust
-    /// use influxdb::{InfluxDbWriteable, Timestamp};
-    ///
-    /// Timestamp::Now
-    ///     .into_query("measurement".to_string()); // Is of type [`WriteQuery`](crate::WriteQuery)
-    /// ```
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use influxdb::{Query, Timestamp};
-    ///
-    /// Query::write_query(Timestamp::Now, "measurement"); // Is of type [`WriteQuery`](crate::WriteQuery)
-    /// ```
-    #[deprecated(since = "0.0.6")]
-    pub fn write_query<S>(timestamp: Timestamp, measurement: S) -> WriteQuery
-    where
-        S: Into<String>,
-    {
-        timestamp.into_query(measurement.into())
-    }
-
     /// Returns a [`ReadQuery`](crate::ReadQuery) builder.
     ///
     /// # Examples
