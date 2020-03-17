@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0] - 2020-03-17
+
+This adds `#[derive(InfluxDbWriteable)]` for Structs, fixes escaping for the line-protocol and improves timestamp handling.
+
+### Added
+
+-   `#[derive(InfluxDbWriteable)]` for deriving struct writing ([@msrd0](https://github.com/msrd0))
+
+### Changed
+
+-   Change type of timestamp-variants to `u128` ([@mario-kr](https://github.com/mario-kr))
+
+### Fixed
+
+-   Use `rfc3339` as default timestamp precision ([@zjhmale](https://github.com/zjhmale))
+
 ## [0.0.6] - 2020-02-07
 
 ### Changed
@@ -60,9 +76,10 @@ This release removes the prefix `InfluxDb` of most types in this library and ree
 -   Improved Test Coverage: There's now even more tests verifying correctness of the crate (#5)
 -   It's no longer necessary to supply a wildcard generic when working with serde*integration: `client.json_query::<Weather>(query)` instead of `client.json_query::<Weather, *>(query)`
 
-[unreleased]: https://github.com/Empty2k12/influxdb-rust/compare/v0.0.6...HEAD
+[unreleased]: https://github.com/Empty2k12/influxdb-rust/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/Empty2k12/influxdb-rust/compare/v0.0.6...v0.1.0
 [0.0.5]: https://github.com/Empty2k12/influxdb-rust/compare/v0.0.5...v0.0.6
-[0.0.5]: https://github.com/Empty2k12/influxdb-rust/compare/v0.0.5...v0.0.5
+[0.0.5]: https://github.com/Empty2k12/influxdb-rust/compare/v0.0.4...v0.0.5
 [0.0.4]: https://github.com/Empty2k12/influxdb-rust/compare/v0.0.3...v0.0.4
 [0.0.3]: https://github.com/Empty2k12/influxdb-rust/compare/v0.0.2...v0.0.3
 [0.0.2]: https://github.com/Empty2k12/influxdb-rust/releases/tag/v0.0.2
