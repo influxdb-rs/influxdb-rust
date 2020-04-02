@@ -1,6 +1,3 @@
-//! Errors that might happen in the crate
-use reqwest;
-
 #[derive(Debug, Fail)]
 pub enum Error {
     #[fail(display = "query is invalid: {}", error)]
@@ -32,9 +29,9 @@ pub enum Error {
     AuthorizationError,
 
     #[fail(display = "connection error: {}", error)]
-    /// Error happens when reqwest fails
+    /// Error happens when isahc fails
     ConnectionError {
         #[fail(cause)]
-        error: reqwest::Error,
+        error: isahc::Error,
     },
 }

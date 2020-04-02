@@ -15,8 +15,9 @@
 //! assert_eq!(client.database_name(), "test");
 //! ```
 
-use futures::prelude::*;
-use reqwest::{self, Client as ReqwestClient, StatusCode, Url};
+use http::StatusCode;
+use isahc::prelude::*;
+use url::Url;
 
 use crate::query::QueryTypes;
 use crate::Error;
@@ -128,7 +129,7 @@ impl Client {
     ///
     /// Returns a tuple of build type and version number
     pub async fn ping(&self) -> Result<(String, String), Error> {
-        let res = reqwest::get(format!("{}/ping", self.url).as_str())
+        let res = isahc::get_async(format!("{}/ping", self.url).as_str())
             .await
             .map_err(|err| Error::ProtocolError {
                 error: format!("{}", err),
@@ -191,7 +192,7 @@ impl Client {
 
         let basic_parameters: Vec<(String, String)> = self.into();
 
-        let client = match q.into() {
+        let res = match q.into() {
             QueryTypes::Read(_) => {
                 let read_query = query.get();
                 let mut url = Url::parse_with_params(
@@ -205,9 +206,9 @@ impl Client {
                 url.query_pairs_mut().append_pair("q", &read_query);
 
                 if read_query.contains("SELECT") || read_query.contains("SHOW") {
-                    ReqwestClient::new().get(url)
+                    isahc::get_async(url.as_str()).await
                 } else {
-                    ReqwestClient::new().post(url)
+                    isahc::post_async("", url.as_str().to_owned()).await
                 }
             }
             QueryTypes::Write(write_query) => {
@@ -222,14 +223,11 @@ impl Client {
                 url.query_pairs_mut()
                     .append_pair("precision", &write_query.get_precision());
 
-                ReqwestClient::new().post(url).body(query.get())
+                isahc::post_async(query.get(), url.as_str().to_owned()).await
             }
         };
 
-        let res = client
-            .send()
-            .map_err(|err| Error::ConnectionError { error: err })
-            .await?;
+        let mut res = res.map_err(|err| Error::ConnectionError { error: err })?;
 
         match res.status() {
             StatusCode::UNAUTHORIZED => return Err(Error::AuthorizationError),
@@ -237,9 +235,12 @@ impl Client {
             _ => {}
         }
 
-        let s = res.text().await.map_err(|_| Error::DeserializationError {
-            error: "response could not be converted to UTF-8".to_string(),
-        })?;
+        let s = res
+            .text_async()
+            .await
+            .map_err(|_| Error::DeserializationError {
+                error: "response could not be converted to UTF-8".to_string(),
+            })?;
 
         // todo: improve error parsing without serde
         if s.contains("\"error\"") {

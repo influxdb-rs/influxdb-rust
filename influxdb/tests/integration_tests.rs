@@ -499,3 +499,17 @@ async fn test_wrong_query_errors() {
         "Should only build SELECT and SHOW queries."
     );
 }
+
+/// INTEGRATION TEST
+///
+/// Test if async-std is available when asynchronous
+#[test]
+fn test_async_std_runtime() {
+    async_std::task::block_on(async {
+        let test_name = "mydb";
+        let client = Client::new("http://localhost:8086", test_name);
+        let read_query = Query::raw_read_query("SELECT * FROM \"weather\"");
+        let read_result = client.query(&read_query).await;
+        assert!(read_result.is_ok());
+    });
+}

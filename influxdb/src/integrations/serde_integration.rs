@@ -46,7 +46,9 @@
 //! # }
 //! ```
 
-use reqwest::{Client as ReqwestClient, StatusCode, Url};
+use http::StatusCode;
+use isahc::prelude::*;
+use url::Url;
 
 use serde::{de::DeserializeOwned, Deserialize};
 use serde_json;
@@ -95,7 +97,7 @@ impl Client {
     pub async fn json_query(&self, q: ReadQuery) -> Result<DatabaseQueryResult, Error> {
         let query = q.build().unwrap();
         let basic_parameters: Vec<(String, String)> = self.into();
-        let client = {
+        let url = {
             let read_query = query.get();
 
             let mut url = match Url::parse_with_params(
@@ -121,11 +123,10 @@ impl Client {
                 return Err(error);
             }
 
-            ReqwestClient::new().get(url.as_str())
+            url.as_str().to_owned()
         };
 
-        let res = client
-            .send()
+        let mut res = isahc::get_async(url)
             .await
             .map_err(|err| Error::ConnectionError { error: err })?;
 
@@ -135,17 +136,17 @@ impl Client {
             _ => {}
         }
 
-        let body = res.bytes().await.map_err(|err| Error::ProtocolError {
+        let body = res.text_async().await.map_err(|err| Error::ProtocolError {
             error: format!("{}", err),
         })?;
 
         // Try parsing InfluxDBs { "error": "error message here" }
-        if let Ok(error) = serde_json::from_slice::<_DatabaseError>(&body) {
+        if let Ok(error) = serde_json::from_str::<_DatabaseError>(&body) {
             return Err(Error::DatabaseError { error: error.error });
         }
 
         // Json has another structure, let's try actually parsing it to the type we're deserializing
-        serde_json::from_slice::<DatabaseQueryResult>(&body).map_err(|err| {
+        serde_json::from_str::<DatabaseQueryResult>(&body).map_err(|err| {
             Error::DeserializationError {
                 error: format!("serde error: {}", err),
             }
