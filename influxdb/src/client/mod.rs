@@ -208,7 +208,7 @@ impl Client {
                 if read_query.contains("SELECT") || read_query.contains("SHOW") {
                     isahc::get_async(url.as_str()).await
                 } else {
-                    isahc::post_async("", url.as_str().to_owned()).await
+                    isahc::post_async(url.as_str().to_owned(), "").await
                 }
             }
             QueryTypes::Write(write_query) => {
@@ -223,7 +223,7 @@ impl Client {
                 url.query_pairs_mut()
                     .append_pair("precision", &write_query.get_precision());
 
-                isahc::post_async(query.get(), url.as_str().to_owned()).await
+                isahc::post_async(url.as_str().to_owned(), query.get()).await
             }
         };
 

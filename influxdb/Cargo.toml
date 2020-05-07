@@ -35,6 +35,7 @@ derive = ["influxdb_derive"]
 [dev-dependencies]
 tokio = { version =  "0.2.11", features = ["rt-threaded", "macros"] }
 async-std = "1.5"
+futures = "*"
 
 [[test]]
 name = "derive_integration_tests"
