@@ -274,8 +274,10 @@ async fn test_write_and_read_option() {
                 #[derive(Deserialize, Debug, PartialEq)]
                 struct Weather {
                     time: String,
-                    temperature: i32,
+                    // different order to verify field names
+                    // are being used instead of just order
                     wind_strength: Option<u64>,
+                    temperature: i32,
                 }
 
                 let query =

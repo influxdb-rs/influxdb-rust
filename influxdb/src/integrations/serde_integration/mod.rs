@@ -46,6 +46,8 @@
 //! # }
 //! ```
 
+mod de;
+
 use reqwest::{Client as ReqwestClient, StatusCode, Url};
 
 use serde::{de::DeserializeOwned, Deserialize};
@@ -84,7 +86,7 @@ pub struct Return<T> {
     pub series: Vec<Series<T>>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Debug)]
 /// Represents a returned series from InfluxDB
 pub struct Series<T> {
     pub name: String,
