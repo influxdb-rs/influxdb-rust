@@ -5,6 +5,7 @@
 use crate::query::{QueryType, ValidQuery};
 use crate::{Error, Query};
 
+#[derive(Debug, Clone)]
 pub struct ReadQuery {
     queries: Vec<String>,
 }
