@@ -80,6 +80,7 @@ impl DatabaseQueryResult {
 #[derive(Deserialize, Debug)]
 #[doc(hidden)]
 pub struct Return<T> {
+    #[serde(default = "Vec::new")]
     pub series: Vec<Series<T>>,
 }
 
