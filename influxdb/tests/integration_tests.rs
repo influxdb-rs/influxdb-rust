@@ -360,6 +360,69 @@ async fn test_json_query() {
 
 /// INTEGRATION TEST
 ///
+/// This test case tests whether the response to a GROUP BY can be parsed by
+// deserialize_next_tagged into a tags struct
+#[tokio::test]
+#[cfg(feature = "use-serde")]
+async fn test_json_query_tagged() {
+    use serde::Deserialize;
+
+    const TEST_NAME: &str = "test_json_query_tagged";
+
+    run_test(
+        || async move {
+            create_db(TEST_NAME).await.expect("could not setup db");
+
+            let client = create_client(TEST_NAME);
+
+            let write_query = Timestamp::Hours(11)
+                .into_query("weather")
+                .add_tag("location", "London")
+                .add_field("temperature", 82);
+            let write_result = client.query(&write_query).await;
+            assert_result_ok(&write_result);
+
+            #[derive(Deserialize, Debug, PartialEq)]
+            struct WeatherMeta {
+                location: String,
+            }
+
+            #[derive(Deserialize, Debug, PartialEq)]
+            struct Weather {
+                time: String,
+                temperature: i32,
+            }
+
+            let query = Query::raw_read_query("SELECT * FROM weather GROUP BY location");
+            let result = client.json_query(query).await.and_then(|mut db_result| {
+                db_result.deserialize_next_tagged::<WeatherMeta, Weather>()
+            });
+            assert_result_ok(&result);
+            let result = result.unwrap();
+
+            assert_eq!(
+                result.series[0].tags,
+                WeatherMeta {
+                    location: "London".to_string(),
+                }
+            );
+            assert_eq!(
+                result.series[0].values[0],
+                Weather {
+                    time: "1970-01-01T11:00:00Z".to_string(),
+                    temperature: 82
+                }
+            );
+        },
+        || async move {
+            delete_db(TEST_NAME).await.expect("could not clean up db");
+        },
+    )
+    .await;
+}
+
+/// INTEGRATION TEST
+///
 /// This test case tests whether JSON can be decoded from a InfluxDB response and wether that JSON
 /// is equal to the data which was written to the database
 #[tokio::test]
