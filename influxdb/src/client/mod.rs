@@ -172,13 +172,13 @@ impl Client {
     ///   .duration_since(UNIX_EPOCH)
     ///   .expect("Time went backwards")
     ///   .as_millis();
-    /// 
+    ///
     /// let client = Client::new("http://localhost:8086", "test");
     /// let query = Timestamp::Milliseconds(since_the_epoch)
     ///     .into_query("weather")
     ///     .add_field("temperature", 82);
     /// let results = client.query(&query).await?;
-    /// 
+    ///
     /// # Ok(())
     /// # }
     /// ```
