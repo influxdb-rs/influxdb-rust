@@ -165,16 +165,21 @@ impl Client {
     /// use influxdb::InfluxDbWriteable;
     /// use std::time::{SystemTime, UNIX_EPOCH};
     ///
+    /// # #[tokio::main]
+    /// # async fn main() -> Result<(), failure::Error> {
     /// let start = SystemTime::now();
     /// let since_the_epoch = start
     ///   .duration_since(UNIX_EPOCH)
-    //    .expect("Time went backwards");
-    ///
+    ///   .expect("Time went backwards");
+    /// 
     /// let client = Client::new("http://localhost:8086", "test");
     /// let query = Timestamp::Milliseconds(since_the_epoch)
     ///     .into_query("weather")
     ///     .add_field("temperature", 82);
     /// let results = client.query(&query).await?;
+    /// 
+    /// # Ok(())
+    /// # }
     /// ```
     /// # Errors
     ///
