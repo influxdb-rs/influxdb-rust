@@ -1,6 +1,10 @@
 name: Rust
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - master
+  pull_request:
 
 jobs:
     readmecheck:
@@ -12,8 +16,9 @@ jobs:
               with:
                 toolchain: nightly
                 override: true
-            - run: ./auxiliary/update_cargo-readme.sh
-            - run: ./auxiliary/check_readme_consistency.sh
+            - run: bash ./auxiliary/update_cargo-readme.sh
+            - run: bash ./auxiliary/check_readme_consistency.sh
+
     style:
         name: Style Checks (stable/ubuntu-latest)
         runs-on: ubuntu-latest
