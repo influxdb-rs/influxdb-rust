@@ -1,0 +1,66 @@
+name: Rust
+
+on: [push]
+
+jobs:
+    style:
+        name: Style Checks (stable/ubuntu-latest)
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@master
+            - uses: hecrj/setup-rust-action@v1
+              with:
+                  components: "rustfmt,clippy"
+            - uses: actions/checkout@v1
+            - name: Check code formatting
+              run: cargo fmt --all -- --check
+            - name: Check Clippy lints
+              run: cargo clippy --all-targets --all-features -- -D warnings
+
+    compile:
+        name: Compile (${{ matrix.rust_release }}/${{ matrix.os }})
+        runs-on: ${{ matrix.os }}
+        strategy:
+            matrix:
+                rust_release: [nightly, stable]
+                os: [ubuntu-latest, windows-latest, macOS-latest]
+
+        steps:
+            - uses: actions/checkout@master
+            - uses: hecrj/setup-rust-action@v1
+              with:
+                  rust-version: ${{ matrix.rust_release }}
+            - name: Build
+              run: cargo build --verbose
+
+    integration_test:
+        name: Integration Tests (stable/ubuntu-latest)
+        runs-on: ubuntu-latest
+        needs: [style, compile]
+        services:
+            influxdb:
+                image: influxdb
+                ports:
+                    - 8086:8086
+            authed_influxdb:
+                image: influxdb
+                ports:
+                    - 9086:8086
+                env:
+                    INFLUXDB_HTTP_AUTH_ENABLED: true
+                    INFLUXDB_ADMIN_USER: admin
+                    INFLUXDB_ADMIN_PASSWORD: password
+                    INFLUXDB_USER: nopriv_user
+                    INFLUXDB_USER_PASSWORD: password
+
+        steps:
+            - uses: actions/checkout@v1
+            - uses: actions-rs/toolchain@v1
+              with:
+                toolchain: nightly
+                override: true
+            - uses: actions-rs/cargo@v1
+              with:
+                command: test
+                args: --package influxdb --package influxdb_derive --all-features --no-fail-fast
