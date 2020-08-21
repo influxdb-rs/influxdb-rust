@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+-  Due to InfluxDb inconsistencies between versions and ambiguities, `Timestamp::Now` has been removed. Please calculate the current timestamp since the epoch yourself and use the other available `Timestamp` values like so:
+
+    ```
+    use influxdb::{Timestamp};
+    use std::time::{SystemTime, UNIX_EPOCH};
+    let start = SystemTime::now();
+    let since_the_epoch = start
+      .duration_since(UNIX_EPOCH)
+      .expect("Time went backwards");
+    let query = Timestamp::Milliseconds(since_the_epoch)
+        .into_query("weather")
+        .add_field("temperature", 82);
+    ```
+
+- `WriteQuery` and `ReadQuery` now derive `Debug` and `Clone` ([@jaredwolff](https://github.com/jaredwolff) in [#63](https://github.com/Empty2k12/influxdb-rust/pull/63))
+
 ## [0.1.0] - 2020-03-17
 
 This adds `#[derive(InfluxDbWriteable)]` for Structs, fixes escaping for the line-protocol and improves timestamp handling.

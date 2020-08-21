@@ -57,7 +57,7 @@ impl WriteQuery {
     /// use influxdb::{Query, Timestamp};
     /// use influxdb::InfluxDbWriteable;
     ///
-    /// Timestamp::Now.into_query("measurement").add_field("field1", 5).build();
+    /// Timestamp::Nanoseconds(0).into_query("measurement").add_field("field1", 5).build();
     /// ```
     pub fn add_field<S, F>(mut self, field: S, value: F) -> Self
     where
@@ -79,7 +79,7 @@ impl WriteQuery {
     /// use influxdb::{Query, Timestamp};
     /// use influxdb::InfluxDbWriteable;
     ///
-    /// Timestamp::Now
+    /// Timestamp::Nanoseconds(0)
     ///     .into_query("measurement")
     ///     .add_tag("field1", 5); // calling `.build()` now would result in a `Err(Error::InvalidQueryError)`
     /// ```
@@ -94,7 +94,6 @@ impl WriteQuery {
 
     pub fn get_precision(&self) -> String {
         let modifier = match self.timestamp {
-            Timestamp::Now => "rfc3339",
             Timestamp::Nanoseconds(_) => "ns",
             Timestamp::Microseconds(_) => "u",
             Timestamp::Milliseconds(_) => "ms",
@@ -201,10 +200,7 @@ impl Query for WriteQuery {
             measurement = LineProtoTerm::Measurement(&self.measurement).escape(),
             tags = tags,
             fields = fields,
-            time = match self.timestamp {
-                Timestamp::Now => String::from(""),
-                _ => format!(" {}", self.timestamp),
-            }
+            time = format!(" {}", self.timestamp)
         )))
     }
 
