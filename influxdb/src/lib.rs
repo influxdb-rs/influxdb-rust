@@ -1,5 +1,4 @@
-//! This library is a work in progress. Although we've been using it in production at [OpenVelo](https://openvelo.org/),
-//! we've prioritized features that fit our use cases. This means a feature you might need is not implemented
+//! This library is a work in progress. This means a feature you might need is not implemented
 //! yet or could be handled better.
 //!
 //! Pull requests are always welcome. See [Contributing](https://github.com/Empty2k12/influxdb-rust/blob/master/CONTRIBUTING.md) and [Code of Conduct](https://github.com/Empty2k12/influxdb-rust/blob/master/CODE_OF_CONDUCT.md).
@@ -71,7 +70,6 @@
 //! # License
 //!
 //! [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-//!
 
 #![allow(clippy::needless_doctest_main)]
 

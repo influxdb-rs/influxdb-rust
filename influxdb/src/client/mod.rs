@@ -164,7 +164,7 @@ impl Client {
     /// use influxdb::{Client, Query, Timestamp};
     /// use influxdb::InfluxDbWriteable;
     /// use std::time::{SystemTime, UNIX_EPOCH};
-    /// 
+    ///
     /// let start = SystemTime::now();
     /// let since_the_epoch = start
     ///   .duration_since(UNIX_EPOCH)
