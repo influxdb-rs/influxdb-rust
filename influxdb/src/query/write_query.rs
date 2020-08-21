@@ -27,6 +27,7 @@ impl<T: Into<Type>> WriteType for Option<T> {
 }
 
 /// Internal Representation of a Write query that has not yet been built
+#[derive(Debug, Clone)]
 pub struct WriteQuery {
     fields: Vec<(String, Type)>,
     tags: Vec<(String, Type)>,
@@ -105,6 +106,7 @@ impl WriteQuery {
     }
 }
 
+#[derive(Debug, Clone)]
 pub enum Type {
     Boolean(bool),
     Float(f64),
