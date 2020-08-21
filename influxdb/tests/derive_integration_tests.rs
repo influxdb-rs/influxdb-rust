@@ -52,7 +52,7 @@ async fn test_derive_simple_write() {
             create_db(TEST_NAME).await.expect("could not setup db");
             let client = create_client(TEST_NAME);
             let weather_reading = WeatherReading {
-                time: Timestamp::Now.into(),
+                time: Timestamp::Nanoseconds(0).into(),
                 humidity: 30,
                 wind_strength: Some(5),
             };

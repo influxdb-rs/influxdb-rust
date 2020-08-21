@@ -7,7 +7,7 @@
 //! use influxdb::{Query, Timestamp};
 //! use influxdb::InfluxDbWriteable;
 //!
-//! let write_query = Timestamp::Now.into_query("measurement")
+//! let write_query = Timestamp::Nanoseconds(0).into_query("measurement")
 //!     .add_field("field1", 5)
 //!     .add_tag("author", "Gero")
 //!     .build();
@@ -37,7 +37,6 @@ pub use influxdb_derive::InfluxDbWriteable;
 
 #[derive(PartialEq, Debug, Copy, Clone)]
 pub enum Timestamp {
-    Now,
     Nanoseconds(u128),
     Microseconds(u128),
     Milliseconds(u128),
@@ -50,7 +49,6 @@ impl fmt::Display for Timestamp {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         use Timestamp::*;
         match self {
-            Now => write!(f, ""),
             Nanoseconds(ts) | Microseconds(ts) | Milliseconds(ts) | Seconds(ts) | Minutes(ts)
             | Hours(ts) => write!(f, "{}", ts),
         }
@@ -60,7 +58,6 @@ impl fmt::Display for Timestamp {
 impl Into<DateTime<Utc>> for Timestamp {
     fn into(self) -> DateTime<Utc> {
         match self {
-            Timestamp::Now => Utc::now(),
             Timestamp::Hours(h) => {
                 let nanos =
                     h * MINUTES_PER_HOUR * SECONDS_PER_MINUTE * MILLIS_PER_SECOND * NANOS_PER_MILLI;
@@ -125,10 +122,10 @@ pub trait Query {
     /// use influxdb::{Query, Timestamp};
     /// use influxdb::InfluxDbWriteable;
     ///
-    /// let invalid_query = Timestamp::Now.into_query("measurement").build();
+    /// let invalid_query = Timestamp::Nanoseconds(0).into_query("measurement").build();
     /// assert!(invalid_query.is_err());
     ///
-    /// let valid_query = Timestamp::Now.into_query("measurement").add_field("myfield1", 11).build();
+    /// let valid_query = Timestamp::Nanoseconds(0).into_query("measurement").add_field("myfield1", 11).build();
     /// assert!(valid_query.is_ok());
     /// ```
     fn build(&self) -> Result<ValidQuery, Error>;
@@ -218,17 +215,8 @@ mod tests {
         );
     }
     #[test]
-    fn test_format_for_timestamp_now() {
-        assert!(format!("{}", Timestamp::Now) == "");
-    }
-    #[test]
     fn test_format_for_timestamp_else() {
         assert!(format!("{}", Timestamp::Nanoseconds(100)) == "100");
-    }
-    #[test]
-    fn test_chrono_datetime_from_timestamp_now() {
-        let datetime_from_timestamp: DateTime<Utc> = Timestamp::Now.into();
-        assert_eq!(Utc::now().date(), datetime_from_timestamp.date())
     }
     #[test]
     fn test_chrono_datetime_from_timestamp_hours() {
