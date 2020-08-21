@@ -47,7 +47,11 @@ pub enum Timestamp {
 
 impl fmt::Display for Timestamp {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self)
+        use Timestamp::*;
+        match self {
+            Nanoseconds(ts) | Microseconds(ts) | Milliseconds(ts) | Seconds(ts) | Minutes(ts)
+            | Hours(ts) => write!(f, "{}", ts),
+        }
     }
 }
 
