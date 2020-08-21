@@ -170,7 +170,8 @@ impl Client {
     /// let start = SystemTime::now();
     /// let since_the_epoch = start
     ///   .duration_since(UNIX_EPOCH)
-    ///   .expect("Time went backwards");
+    ///   .expect("Time went backwards")
+    ///   .as_millis();
     /// 
     /// let client = Client::new("http://localhost:8086", "test");
     /// let query = Timestamp::Milliseconds(since_the_epoch)

@@ -15,7 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     let start = SystemTime::now();
     let since_the_epoch = start
       .duration_since(UNIX_EPOCH)
-      .expect("Time went backwards");
+      .expect("Time went backwards")
+      .as_millis();
     let query = Timestamp::Milliseconds(since_the_epoch)
         .into_query("weather")
         .add_field("temperature", 82);
