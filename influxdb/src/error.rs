@@ -1,5 +1,4 @@
 //! Errors that might happen in the crate
-use reqwest;
 
 #[derive(Debug, Fail)]
 pub enum Error {

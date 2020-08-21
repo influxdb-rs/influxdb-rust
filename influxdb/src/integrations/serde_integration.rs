@@ -49,7 +49,6 @@
 use reqwest::{Client as ReqwestClient, StatusCode, Url};
 
 use serde::{de::DeserializeOwned, Deserialize};
-use serde_json;
 
 use crate::{Client, Error, Query, ReadQuery};
 
@@ -110,7 +109,7 @@ impl Client {
                     return Err(error);
                 }
             };
-            url.query_pairs_mut().append_pair("q", &read_query.clone());
+            url.query_pairs_mut().append_pair("q", &read_query);
 
             if !read_query.contains("SELECT") && !read_query.contains("SHOW") {
                 let error = Error::InvalidQueryError {

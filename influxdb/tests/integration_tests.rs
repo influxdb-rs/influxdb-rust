@@ -8,7 +8,6 @@ use utilities::{
 
 use influxdb::InfluxDbWriteable;
 use influxdb::{Client, Error, Query, Timestamp};
-use tokio;
 
 /// INTEGRATION TEST
 ///
