@@ -282,7 +282,7 @@ mod tests {
         assert!(query.is_ok(), "Query was empty");
         assert_eq!(
             query.unwrap(),
-            r#"weather,location="us-midwest",season="summer" temperature=82i 11"#
+            r#"weather,location=us-midwest,season=summer temperature=82i 11"#
         );
     }
 
@@ -307,7 +307,7 @@ mod tests {
             .add_field("\"temp=era,t ure\"", r#"too"\\hot"#)
             .add_field("float", 82.0)
             .add_tag("location", "us-midwest")
-            .add_tag("loc, =\"ation", r#"us, "mid=west""#)
+            .add_tag("loc, =\"ation", r#"us, "mid=west"#)
             .build();
 
         assert!(query.is_ok(), "Query was empty");
@@ -315,7 +315,7 @@ mod tests {
         #[allow(clippy::print_literal)]
         assert_eq!(
             query_res,
-            r#"wea\,\ ther=,location="us-midwest",loc\,\ \="ation="us\,\ \"mid\=west\"" temperature=82i,"temp\=era\,t\ ure"="too\"\\\\hot",float=82 11"#
+            r#"wea\,\ ther=,location=us-midwest,loc\,\ \="ation=us\,\ \"mid\=west temperature=82i,"temp\=era\,t\ ure"="too\"\\\\hot",float=82 11"#
         );
     }
 }

@@ -62,7 +62,7 @@ impl LineProtoTerm<'_> {
             Float(v) => format!(r#""{}""#, v.to_string()),
             SignedInteger(v) => format!(r#""{}""#, v),
             UnsignedInteger(v) => format!(r#""{}""#, v),
-            Text(v) => format!(r#""{}""#, Self::escape_any(v, &*SLASHES)),
+            Text(v) => Self::escape_any(v, &*SLASHES),
         }
     }
 
@@ -80,19 +80,19 @@ mod test {
     fn test() {
         assert_eq!(
             TagValue(&Type::Text("this is my special string".into())).escape(),
-            r#""this\ is\ my\ special\ string""#
+            r#"this\ is\ my\ special\ string"#
         );
         assert_eq!(
             TagValue(&Type::Text("a tag w=i th == tons of escapes".into())).escape(),
-            r#""a\ tag\ w\=i\ th\ \=\=\ tons\ of\ escapes""#
+            r#"a\ tag\ w\=i\ th\ \=\=\ tons\ of\ escapes"#
         );
         assert_eq!(
             TagValue(&Type::Text("no_escapes".into())).escape(),
-            r#""no_escapes""#
+            r#"no_escapes"#
         );
         assert_eq!(
             TagValue(&Type::Text("some,commas,here".into())).escape(),
-            r#""some\,commas\,here""#
+            r#"some\,commas\,here"#
         );
 
         assert_eq!(Measurement(r#"wea", ther"#).escape(), r#"wea"\,\ ther"#);
@@ -120,6 +120,6 @@ mod test {
     fn test_empty_tag_value() {
         // InfluxDB doesn't support empty tag values. But that's a job
         // of a calling site to validate an entire write request.
-        assert_eq!(TagValue(&Type::Text("".into())).escape(), r#""""#);
+        assert_eq!(TagValue(&Type::Text("".into())).escape(), r#""#);
     }
 }
