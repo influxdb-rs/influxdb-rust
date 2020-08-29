@@ -59,9 +59,9 @@ impl LineProtoTerm<'_> {
                 }
             }
             .to_string(),
-            Float(v) => format!(r#""{}""#, v.to_string()),
-            SignedInteger(v) => format!(r#""{}""#, v),
-            UnsignedInteger(v) => format!(r#""{}""#, v),
+            Float(v) => format!(r#"{}"#, v),
+            SignedInteger(v) => format!(r#"{}"#, v),
+            UnsignedInteger(v) => format!(r#"{}"#, v),
             Text(v) => Self::escape_any(v, &*SLASHES),
         }
     }
@@ -78,6 +78,11 @@ mod test {
 
     #[test]
     fn test() {
+        assert_eq!(TagValue(&Type::Boolean(true)).escape(), r#"true"#);
+        assert_eq!(TagValue(&Type::Float(1.8324f64)).escape(), r#"1.8324"#);
+        assert_eq!(TagValue(&Type::SignedInteger(-1i64)).escape(), r#"-1"#);
+        assert_eq!(TagValue(&Type::UnsignedInteger(1u64)).escape(), r#"1"#);
+
         assert_eq!(
             TagValue(&Type::Text("this is my special string".into())).escape(),
             r#"this\ is\ my\ special\ string"#
