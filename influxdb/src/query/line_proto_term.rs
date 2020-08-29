@@ -44,7 +44,7 @@ impl LineProtoTerm<'_> {
             Float(v) => v.to_string(),
             SignedInteger(v) => format!("{}i", v),
             UnsignedInteger(v) => format!("{}i", v),
-            Text(v) => format!(r#""{}""#, Self::escape_any(v, &*SLASHES)),
+            Text(v) => format!(r#""{}""#, Self::escape_any(v, &*QUOTES_SLASHES)),
         }
     }
 
@@ -117,7 +117,7 @@ mod test {
         assert_eq!(FieldValue(&Type::Text("\"".into())).escape(), r#""\"""#);
         assert_eq!(
             FieldValue(&Type::Text(r#"locat"\ ,=ion"#.into())).escape(),
-            r#""locat\"\\\ \,\=ion""#
+            r#""locat\"\\ ,=ion""#
         );
     }
 
