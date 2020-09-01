@@ -35,7 +35,7 @@ fn test_build_query() {
         .unwrap();
     assert_eq!(
         query.get(),
-        "weather_reading,wind_strength=\"5\" humidity=30i 3600000000000"
+        "weather_reading,wind_strength=5 humidity=30i 3600000000000"
     );
 }
 
