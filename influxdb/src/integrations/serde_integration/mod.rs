@@ -23,7 +23,7 @@
 //! }
 //!
 //! # #[tokio::main]
-//! # async fn main() -> Result<(), failure::Error> {
+//! # async fn main() -> Result<(), influxdb::Error> {
 //! let client = Client::new("http://localhost:8086", "test");
 //! let query = Query::raw_read_query(
 //!     "SELECT temperature FROM /weather_[a-z]*$/ WHERE time > now() - 1m ORDER BY DESC",

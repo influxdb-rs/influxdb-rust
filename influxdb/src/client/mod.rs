@@ -166,7 +166,7 @@ impl Client {
     /// use std::time::{SystemTime, UNIX_EPOCH};
     ///
     /// # #[tokio::main]
-    /// # async fn main() -> Result<(), failure::Error> {
+    /// # async fn main() -> Result<(), influxdb::Error> {
     /// let start = SystemTime::now();
     /// let since_the_epoch = start
     ///   .duration_since(UNIX_EPOCH)
