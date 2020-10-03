@@ -1,4 +1,4 @@
-use super::Series;
+use super::{Series, TaggedSeries};
 use serde::de::{
     value, DeserializeSeed, Deserializer, Error, IntoDeserializer, MapAccess, SeqAccess, Visitor,
 };
@@ -91,6 +91,109 @@ where
             FIELDS,
             SeriesVisitor::<T> {
                 _inner_type: PhantomData,
+            },
+        )
+    }
+}
+
+// Based on https://serde.rs/deserialize-struct.html
+impl<'de, TAG, T> Deserialize<'de> for TaggedSeries<TAG, T>
+where
+    TAG: Deserialize<'de>,
+    T: Deserialize<'de>,
+{
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        // Field name deserializer
+        #[derive(Deserialize)]
+        #[serde(field_identifier, rename_all = "lowercase")]
+        enum Field {
+            Name,
+            Tags,
+            Columns,
+            Values,
+        };
+
+        struct SeriesVisitor<TAG, T> {
+            _tag_type: PhantomData<TAG>,
+            _value_type: PhantomData<T>,
+        };
+
+        impl<'de, TAG, T> Visitor<'de> for SeriesVisitor<TAG, T>
+        where
+            TAG: Deserialize<'de>,
+            T: Deserialize<'de>,
+        {
+            type Value = TaggedSeries<TAG, T>;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                formatter.write_str("struct TaggedSeries")
+            }
+
+            fn visit_map<V>(self, mut map: V) -> Result<TaggedSeries<TAG, T>, V::Error>
+            where
+                V: MapAccess<'de>,
+            {
+                let mut name = None;
+                let mut tags: Option<TAG> = None;
+                let mut columns: Option<Vec<String>> = None;
+                let mut values: Option<Vec<T>> = None;
+                while let Some(key) = map.next_key()? {
+                    match key {
+                        Field::Name => {
+                            if name.is_some() {
+                                return Err(Error::duplicate_field("name"));
+                            }
+                            name = Some(map.next_value()?);
+                        }
+                        Field::Tags => {
+                            if tags.is_some() {
+                                return Err(Error::duplicate_field("tags"));
+                            }
+                            tags = Some(map.next_value()?);
+                        }
+                        Field::Columns => {
+                            if columns.is_some() {
+                                return Err(Error::duplicate_field("columns"));
+                            }
+                            columns = Some(map.next_value()?);
+                        }
+                        Field::Values => {
+                            if values.is_some() {
+                                return Err(Error::duplicate_field("values"));
+                            }
+                            // Error out if "values" is encountered before "columns"
+                            // Hopefully, InfluxDB never does this.
+                            if columns.is_none() {
+                                return Err(Error::custom(
+                                    "series values encountered before columns",
+                                ));
+                            }
+                            // Deserialize using a HeaderVec deserializer
+                            // seeded with the headers from the "columns" field
+                            values = Some(map.next_value_seed(HeaderVec::<T> {
+                                header: columns.as_ref().unwrap(),
+                                _inner_type: PhantomData,
+                            })?);
+                        }
+                    }
+                }
+                let name = name.ok_or_else(|| Error::missing_field("name"))?;
+                let tags = tags.ok_or_else(|| Error::missing_field("tags"))?;
+                let values = values.ok_or_else(|| Error::missing_field("values"))?;
+                Ok(TaggedSeries { name, tags, values })
+            }
+        }
+
+        const FIELDS: &[&str] = &["name", "tags", "values"];
+        deserializer.deserialize_struct(
+            "TaggedSeries",
+            FIELDS,
+            SeriesVisitor::<TAG, T> {
+                _tag_type: PhantomData,
+                _value_type: PhantomData,
             },
         )
     }

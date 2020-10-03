@@ -77,6 +77,20 @@ impl DatabaseQueryResult {
             }
         })
     }
+
+    pub fn deserialize_next_tagged<TAG, T: 'static>(
+        &mut self,
+    ) -> Result<TaggedReturn<TAG, T>, Error>
+    where
+        TAG: DeserializeOwned + Send,
+        T: DeserializeOwned + Send,
+    {
+        serde_json::from_value::<TaggedReturn<TAG, T>>(self.results.remove(0)).map_err(|err| {
+            Error::DeserializationError {
+                error: format!("could not deserialize: {}", err),
+            }
+        })
+    }
 }
 
 #[derive(Deserialize, Debug)]
@@ -90,6 +104,21 @@ pub struct Return<T> {
 /// Represents a returned series from InfluxDB
 pub struct Series<T> {
     pub name: String,
+    pub values: Vec<T>,
+}
+
+#[derive(Deserialize, Debug)]
+#[doc(hidden)]
+pub struct TaggedReturn<TAG, T> {
+    #[serde(default = "Vec::new")]
+    pub series: Vec<TaggedSeries<TAG, T>>,
+}
+
+#[derive(Debug)]
+/// Represents a returned series from InfluxDB
+pub struct TaggedSeries<TAG, T> {
+    pub name: String,
+    pub tags: TAG,
     pub values: Vec<T>,
 }
 
