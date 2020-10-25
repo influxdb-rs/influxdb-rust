@@ -28,4 +28,5 @@
 </p>
 
 {{readme}}
-@ 2019 Gero Gerke, All rights reserved.
+
+@ 2020 Gero Gerke and [contributors](https://github.com/Empty2k12/influxdb-rust/graphs/contributors).

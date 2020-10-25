@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2020-10-25
+
+### Added
+
+-  Allow `GROUP BY` queries by providing `deserialize_next_tagged` to deserialize the group fields ([@SafariMonkey](https://github.com/SafariMonkey) in [#69](https://github.com/Empty2k12/influxdb-rust/pull/69))
+-  Added `Default` for `series` in InfluxDb Response ([@SafariMonkey](https://github.com/SafariMonkey) in [#67](https://github.com/Empty2k12/influxdb-rust/pull/67))
+- `WriteQuery` and `ReadQuery` now derive `Debug` and `Clone` ([@jaredwolff](https://github.com/jaredwolff) in [#63](https://github.com/Empty2k12/influxdb-rust/pull/63))
+
+### Changed
+
+-  Replaced `failure` crate with `thiserror` crate ([@msrd0](https://github.com/msrd0) in [#70](https://github.com/Empty2k12/influxdb-rust/pull/70))
+-  Deserialize series are now deserialized using field names not field order ([@SafariMonkey](https://github.com/SafariMonkey) in [#62](https://github.com/Empty2k12/influxdb-rust/pull/62))
 -  Due to InfluxDb inconsistencies between versions and ambiguities, `Timestamp::Now` has been removed. Please calculate the current timestamp since the epoch yourself and use the other available `Timestamp` values like so:
 
     ```
@@ -22,7 +34,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
         .add_field("temperature", 82);
     ```
 
-- `WriteQuery` and `ReadQuery` now derive `Debug` and `Clone` ([@jaredwolff](https://github.com/jaredwolff) in [#63](https://github.com/Empty2k12/influxdb-rust/pull/63))
+### Fixed
+
+-  Fixed quotation marks of tag values and escaping of field values ([@Robert-Steiner](https://github.com/Robert-Steiner) in [#68](https://github.com/Empty2k12/influxdb-rust/pull/68))
+-  Fixed improper quoting on tag values when the value was text ([@sparky8251](https://github.com/sparky8251) in [#64](https://github.com/Empty2k12/influxdb-rust/pull/64))
 
 ## [0.1.0] - 2020-03-17
 
@@ -93,7 +108,8 @@ This release removes the prefix `InfluxDb` of most types in this library and ree
 -   Improved Test Coverage: There's now even more tests verifying correctness of the crate (#5)
 -   It's no longer necessary to supply a wildcard generic when working with serde*integration: `client.json_query::<Weather>(query)` instead of `client.json_query::<Weather, *>(query)`
 
-[unreleased]: https://github.com/Empty2k12/influxdb-rust/compare/v0.1.0...HEAD
+[unreleased]: https://github.com/Empty2k12/influxdb-rust/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/Empty2k12/influxdb-rust/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/Empty2k12/influxdb-rust/compare/v0.0.6...v0.1.0
 [0.0.5]: https://github.com/Empty2k12/influxdb-rust/compare/v0.0.5...v0.0.6
 [0.0.5]: https://github.com/Empty2k12/influxdb-rust/compare/v0.0.4...v0.0.5

@@ -11,6 +11,7 @@
 //! -   Authenticated and Unauthenticated Connections
 //! -   `async`/`await` support
 //! -   `#[derive(InfluxDbWriteable)]` Derive Macro for Writing / Reading into Structs
+//! -   `GROUP BY` support
 //!
 //! ## Planned Features
 //!
@@ -21,7 +22,7 @@
 //! Add the following to your `Cargo.toml`
 //!
 //! ```toml
-//! influxdb = { version = "0.1.0", features = ["derive"] }
+//! influxdb = { version = "0.2.0", features = ["derive"] }
 //! ```
 //!
 //! For an example with using Serde deserialization, please refer to [serde_integration](crate::integrations::serde_integration)
@@ -72,6 +73,7 @@
 //! [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 #![allow(clippy::needless_doctest_main)]
+#![allow(clippy::needless_lifetimes)] // False positive in client/mod.rs query fn
 
 mod client;
 mod error;
