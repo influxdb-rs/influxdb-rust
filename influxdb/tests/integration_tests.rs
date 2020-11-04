@@ -11,9 +11,25 @@ use influxdb::{Client, Error, Query, Timestamp};
 
 /// INTEGRATION TEST
 ///
-/// This test case tests whether the InfluxDB server can be connected to and gathers info about it
+/// This test case tests whether the InfluxDB server can be connected to and gathers info about it - tested with async_std
 #[async_std::test]
-async fn test_ping_influx_db() {
+async fn test_ping_influx_db_async_std() {
+    let client = create_client("notusedhere");
+    let result = client.ping().await;
+    assert_result_ok(&result);
+
+    let (build, version) = result.unwrap();
+    assert!(!build.is_empty(), "Build should not be empty");
+    assert!(!version.is_empty(), "Build should not be empty");
+
+    println!("build: {} version: {}", build, version);
+}
+
+/// INTEGRATION TEST
+///
+/// This test case tests whether the InfluxDB server can be connected to and gathers info about it * tested with tokio
+#[tokio::test]
+async fn test_ping_influx_db_tokio() {
     let client = create_client("notusedhere");
     let result = client.ping().await;
     assert_result_ok(&result);
@@ -425,7 +441,8 @@ async fn test_json_query_tagged() {
 ///
 /// This test case tests whether JSON can be decoded from a InfluxDB response and wether that JSON
 /// is equal to the data which was written to the database
-#[async_std::test]
+/// (tested with tokio)
+#[tokio::test]
 #[cfg(feature = "use-serde")]
 async fn test_json_query_vec() {
     use serde::Deserialize;

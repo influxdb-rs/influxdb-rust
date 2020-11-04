@@ -16,7 +16,7 @@
 //! ```
 
 use futures::prelude::*;
-use surf::{self, Client as ReqwestClient, StatusCode, Url};
+use surf::{self, Client as SurfClient, StatusCode, Url};
 
 use crate::query::QueryTypes;
 use crate::Error;
@@ -203,9 +203,9 @@ impl Client {
                 url.query_pairs_mut().append_pair("q", &read_query);
 
                 if read_query.contains("SELECT") || read_query.contains("SHOW") {
-                    ReqwestClient::new().get(url)
+                    SurfClient::new().get(url)
                 } else {
-                    ReqwestClient::new().post(url)
+                    SurfClient::new().post(url)
                 }
             }
             QueryTypes::Write(write_query) => {
@@ -220,7 +220,7 @@ impl Client {
                 url.query_pairs_mut()
                     .append_pair("precision", &write_query.get_precision());
 
-                ReqwestClient::new().post(url).body(query.get())
+                SurfClient::new().post(url).body(query.get())
             }
         };
 

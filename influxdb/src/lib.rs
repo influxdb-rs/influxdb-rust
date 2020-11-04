@@ -33,6 +33,7 @@
 //! use chrono::{DateTime, Utc};
 //!
 //! #[async_std::main]
+//! // or #[tokio::main] if you prefer
 //! async fn main() {
 //!     // Connect to db `test` on `http://localhost:8086`
 //!     let client = Client::new("http://localhost:8086", "test");
