@@ -22,7 +22,7 @@
 //!     weather: WeatherWithoutCityName,
 //! }
 //!
-//! # #[tokio::main]
+//! # #[async_std::main]
 //! # async fn main() -> Result<(), influxdb::Error> {
 //! let client = Client::new("http://localhost:8086", "test");
 //! let query = Query::raw_read_query(
@@ -48,7 +48,7 @@
 
 mod de;
 
-use reqwest::{Client as ReqwestClient, StatusCode, Url};
+use surf::{Client as SurfClient, StatusCode, Url};
 
 use serde::{de::DeserializeOwned, Deserialize};
 
@@ -152,21 +152,20 @@ impl Client {
                 return Err(error);
             }
 
-            ReqwestClient::new().get(url.as_str())
+            SurfClient::new().get(url.as_str())
         };
 
-        let res = client
-            .send()
-            .await
-            .map_err(|err| Error::ConnectionError { error: err })?;
+        let mut res = client.send().await.map_err(|err| Error::ConnectionError {
+            error: err.to_string(),
+        })?;
 
         match res.status() {
-            StatusCode::UNAUTHORIZED => return Err(Error::AuthorizationError),
-            StatusCode::FORBIDDEN => return Err(Error::AuthenticationError),
+            StatusCode::Unauthorized => return Err(Error::AuthorizationError),
+            StatusCode::Forbidden => return Err(Error::AuthenticationError),
             _ => {}
         }
 
-        let body = res.bytes().await.map_err(|err| Error::ProtocolError {
+        let body = res.body_bytes().await.map_err(|err| Error::ProtocolError {
             error: format!("{}", err),
         })?;
 

@@ -16,7 +16,7 @@
 //! ```
 
 use futures::prelude::*;
-use reqwest::{self, Client as ReqwestClient, StatusCode, Url};
+use surf::{self, Client as ReqwestClient, StatusCode, Url};
 
 use crate::query::QueryTypes;
 use crate::Error;
@@ -128,24 +128,14 @@ impl Client {
     ///
     /// Returns a tuple of build type and version number
     pub async fn ping(&self) -> Result<(String, String), Error> {
-        let res = reqwest::get(format!("{}/ping", self.url).as_str())
+        let res = surf::get(format!("{}/ping", self.url).as_str())
             .await
             .map_err(|err| Error::ProtocolError {
                 error: format!("{}", err),
             })?;
 
-        let build = res
-            .headers()
-            .get("X-Influxdb-Build")
-            .unwrap()
-            .to_str()
-            .unwrap();
-        let version = res
-            .headers()
-            .get("X-Influxdb-Version")
-            .unwrap()
-            .to_str()
-            .unwrap();
+        let build = res.header("X-Influxdb-Build").unwrap().as_str();
+        let version = res.header("X-Influxdb-Version").unwrap().as_str();
 
         Ok((build.to_owned(), version.to_owned()))
     }
@@ -165,7 +155,7 @@ impl Client {
     /// use influxdb::InfluxDbWriteable;
     /// use std::time::{SystemTime, UNIX_EPOCH};
     ///
-    /// # #[tokio::main]
+    /// # #[async_std::main]
     /// # async fn main() -> Result<(), influxdb::Error> {
     /// let start = SystemTime::now();
     /// let since_the_epoch = start
@@ -234,20 +224,25 @@ impl Client {
             }
         };
 
-        let res = client
+        let mut res = client
             .send()
-            .map_err(|err| Error::ConnectionError { error: err })
+            .map_err(|err| Error::ConnectionError {
+                error: err.to_string(),
+            })
             .await?;
 
         match res.status() {
-            StatusCode::UNAUTHORIZED => return Err(Error::AuthorizationError),
-            StatusCode::FORBIDDEN => return Err(Error::AuthenticationError),
+            StatusCode::Unauthorized => return Err(Error::AuthorizationError),
+            StatusCode::Forbidden => return Err(Error::AuthenticationError),
             _ => {}
         }
 
-        let s = res.text().await.map_err(|_| Error::DeserializationError {
-            error: "response could not be converted to UTF-8".to_string(),
-        })?;
+        let s = res
+            .body_string()
+            .await
+            .map_err(|_| Error::DeserializationError {
+                error: "response could not be converted to UTF-8".to_string(),
+            })?;
 
         // todo: improve error parsing without serde
         if s.contains("\"error\"") {

@@ -34,8 +34,5 @@ pub enum Error {
 
     #[error("connection error: {error}")]
     /// Error happens when reqwest fails
-    ConnectionError {
-        #[from]
-        error: reqwest::Error,
-    },
+    ConnectionError { error: String },
 }

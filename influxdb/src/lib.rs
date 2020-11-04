@@ -32,7 +32,7 @@
 //! use influxdb::InfluxDbWriteable;
 //! use chrono::{DateTime, Utc};
 //!
-//! #[tokio::main]
+//! #[async_std::main]
 //! async fn main() {
 //!     // Connect to db `test` on `http://localhost:8086`
 //!     let client = Client::new("http://localhost:8086", "test");
