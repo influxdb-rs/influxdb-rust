@@ -27,7 +27,7 @@ use std::sync::Arc;
 /// Internal Representation of a Client
 pub struct Client {
     pub(crate) url: Arc<String>,
-    pub(crate) parameters: Vec<(&'static str, String)>,
+    pub(crate) parameters: Arc<Vec<(&'static str, String)>>,
     pub(crate) client: ReqwestClient,
 }
 
@@ -53,7 +53,7 @@ impl Client {
     {
         Client {
             url: Arc::new(url.into()),
-            parameters: vec![("db", database.into())],
+            parameters: Arc::new(vec![("db", database.into())]),
             client: ReqwestClient::new(),
         }
     }
@@ -77,9 +77,10 @@ impl Client {
         S1: Into<String>,
         S2: Into<String>,
     {
-        self.parameters.push(("u", username.into()));
-        self.parameters.push(("p", password.into()));
-
+        let mut with_auth = self.parameters.as_ref().clone();
+        with_auth.push(("u", username.into()));
+        with_auth.push(("p", password.into()));
+        self.parameters = Arc::new(with_auth);
         self
     }
 
@@ -174,22 +175,28 @@ impl Client {
         let request_builder = match q.into() {
             QueryTypes::Read(_) => {
                 let read_query = query.get();
-                let url = &format!("{}/query", self.url);
+                let url = &format!("{}/query", &self.url);
                 let query = [("q", &read_query)];
 
                 if read_query.contains("SELECT") || read_query.contains("SHOW") {
-                    self.client.get(url).query(&self.parameters).query(&query)
+                    self.client
+                        .get(url)
+                        .query(self.parameters.as_ref())
+                        .query(&query)
                 } else {
-                    self.client.post(url).query(&self.parameters).query(&query)
+                    self.client
+                        .post(url)
+                        .query(self.parameters.as_ref())
+                        .query(&query)
                 }
             }
             QueryTypes::Write(write_query) => {
-                let url = &format!("{}/write", self.url);
+                let url = &format!("{}/write", &self.url);
                 let precision = [("precision", write_query.get_precision())];
 
                 self.client
                     .post(url)
-                    .query(&self.parameters)
+                    .query(self.parameters.as_ref())
                     .query(&precision)
                     .body(query.get())
             }
@@ -198,7 +205,7 @@ impl Client {
         let request = request_builder
             .build()
             .map_err(|err| Error::UrlConstructionError {
-                error: format!("{}", err),
+                error: format!("{}", &err),
             })?;
 
         let res = self
@@ -242,7 +249,7 @@ mod tests {
     #[test]
     fn test_with_auth() {
         let client = Client::new("http://localhost:8068", "database");
-        assert_eq!(vec![("db", "database".to_string())], client.parameters);
+        assert_eq!(vec![("db", "database".to_string())], *client.parameters);
 
         let with_auth = client.with_auth("username", "password");
         assert_eq!(
@@ -251,7 +258,7 @@ mod tests {
                 ("u", "username".to_string()),
                 ("p", "password".to_string())
             ],
-            with_auth.parameters
+            *with_auth.parameters
         );
     }
 }

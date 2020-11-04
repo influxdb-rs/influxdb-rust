@@ -139,12 +139,12 @@ impl Client {
             return Err(error);
         }
 
-        let url = &format!("{}/query", self.url);
+        let url = &format!("{}/query", &self.url);
         let query = [("q", &read_query)];
         let request = self
             .client
             .get(url)
-            .query(&self.parameters)
+            .query(self.parameters.as_ref())
             .query(&query)
             .build()
             .map_err(|err| Error::UrlConstructionError {
