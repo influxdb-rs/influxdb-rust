@@ -16,49 +16,19 @@
 //! ```
 
 use futures::prelude::*;
-use reqwest::{self, Client as ReqwestClient, StatusCode, Url};
+use reqwest::{self, Client as ReqwestClient, StatusCode};
 
 use crate::query::QueryTypes;
 use crate::Error;
 use crate::Query;
-
-#[derive(Clone, Debug)]
-/// Internal Authentication representation
-pub(crate) struct Authentication {
-    pub username: String,
-    pub password: String,
-}
+use std::sync::Arc;
 
 #[derive(Clone, Debug)]
 /// Internal Representation of a Client
 pub struct Client {
-    url: String,
-    database: String,
-    auth: Option<Authentication>,
-}
-
-impl Into<Vec<(String, String)>> for Client {
-    fn into(self) -> Vec<(String, String)> {
-        let mut vec: Vec<(String, String)> = Vec::new();
-        vec.push(("db".to_string(), self.database));
-        if let Some(auth) = self.auth {
-            vec.push(("u".to_string(), auth.username));
-            vec.push(("p".to_string(), auth.password));
-        }
-        vec
-    }
-}
-
-impl<'a> Into<Vec<(String, String)>> for &'a Client {
-    fn into(self) -> Vec<(String, String)> {
-        let mut vec: Vec<(String, String)> = Vec::new();
-        vec.push(("db".to_string(), self.database.to_owned()));
-        if let Some(auth) = &self.auth {
-            vec.push(("u".to_string(), auth.username.to_owned()));
-            vec.push(("p".to_string(), auth.password.to_owned()));
-        }
-        vec
-    }
+    pub(crate) url: Arc<String>,
+    pub(crate) parameters: Arc<Vec<(&'static str, String)>>,
+    pub(crate) client: ReqwestClient,
 }
 
 impl Client {
@@ -82,9 +52,9 @@ impl Client {
         S2: Into<String>,
     {
         Client {
-            url: url.into(),
-            database: database.into(),
-            auth: None,
+            url: Arc::new(url.into()),
+            parameters: Arc::new(vec![("db", database.into())]),
+            client: ReqwestClient::new(),
         }
     }
 
@@ -93,7 +63,7 @@ impl Client {
     /// # Arguments
     ///
     /// * username: The Username for InfluxDB.
-    /// * password: THe Password for the user.
+    /// * password: The Password for the user.
     ///
     /// # Examples
     ///
@@ -107,16 +77,17 @@ impl Client {
         S1: Into<String>,
         S2: Into<String>,
     {
-        self.auth = Some(Authentication {
-            username: username.into(),
-            password: password.into(),
-        });
+        let mut with_auth = self.parameters.as_ref().clone();
+        with_auth.push(("u", username.into()));
+        with_auth.push(("p", password.into()));
+        self.parameters = Arc::new(with_auth);
         self
     }
 
     /// Returns the name of the database the client is using
     pub fn database_name(&self) -> &str {
-        &self.database
+        // safe to unwrap: we always set the database name in `Self::new`
+        &self.parameters.first().unwrap().1
     }
 
     /// Returns the URL of the InfluxDB installation the client is using
@@ -128,7 +99,11 @@ impl Client {
     ///
     /// Returns a tuple of build type and version number
     pub async fn ping(&self) -> Result<(String, String), Error> {
-        let res = reqwest::get(format!("{}/ping", self.url).as_str())
+        let url = &format!("{}/ping", self.url);
+        let res = self
+            .client
+            .get(url)
+            .send()
             .await
             .map_err(|err| Error::ProtocolError {
                 error: format!("{}", err),
@@ -197,45 +172,45 @@ impl Client {
             error: format!("{}", err),
         })?;
 
-        let basic_parameters: Vec<(String, String)> = self.into();
-
-        let client = match q.into() {
+        let request_builder = match q.into() {
             QueryTypes::Read(_) => {
                 let read_query = query.get();
-                let mut url = Url::parse_with_params(
-                    format!("{url}/query", url = self.database_url()).as_str(),
-                    basic_parameters,
-                )
-                .map_err(|err| Error::UrlConstructionError {
-                    error: format!("{}", err),
-                })?;
-
-                url.query_pairs_mut().append_pair("q", &read_query);
+                let url = &format!("{}/query", &self.url);
+                let query = [("q", &read_query)];
 
                 if read_query.contains("SELECT") || read_query.contains("SHOW") {
-                    ReqwestClient::new().get(url)
+                    self.client
+                        .get(url)
+                        .query(self.parameters.as_ref())
+                        .query(&query)
                 } else {
-                    ReqwestClient::new().post(url)
+                    self.client
+                        .post(url)
+                        .query(self.parameters.as_ref())
+                        .query(&query)
                 }
             }
             QueryTypes::Write(write_query) => {
-                let mut url = Url::parse_with_params(
-                    format!("{url}/write", url = self.database_url()).as_str(),
-                    basic_parameters,
-                )
-                .map_err(|err| Error::InvalidQueryError {
-                    error: format!("{}", err),
-                })?;
+                let url = &format!("{}/write", &self.url);
+                let precision = [("precision", write_query.get_precision())];
 
-                url.query_pairs_mut()
-                    .append_pair("precision", &write_query.get_precision());
-
-                ReqwestClient::new().post(url).body(query.get())
+                self.client
+                    .post(url)
+                    .query(self.parameters.as_ref())
+                    .query(&precision)
+                    .body(query.get())
             }
         };
 
-        let res = client
-            .send()
+        let request = request_builder
+            .build()
+            .map_err(|err| Error::UrlConstructionError {
+                error: format!("{}", &err),
+            })?;
+
+        let res = self
+            .client
+            .execute(request)
             .map_err(|err| Error::ConnectionError { error: err })
             .await?;
 
@@ -262,67 +237,28 @@ impl Client {
 
 #[cfg(test)]
 mod tests {
-    use crate::Client;
+    use super::Client;
 
     #[test]
     fn test_fn_database() {
         let client = Client::new("http://localhost:8068", "database");
-        assert_eq!("database", client.database_name());
+        assert_eq!(client.database_name(), "database");
+        assert_eq!(client.database_url(), "http://localhost:8068");
     }
 
     #[test]
     fn test_with_auth() {
         let client = Client::new("http://localhost:8068", "database");
-        assert_eq!(client.url, "http://localhost:8068");
-        assert_eq!(client.database, "database");
-        assert!(client.auth.is_none());
+        assert_eq!(vec![("db", "database".to_string())], *client.parameters);
+
         let with_auth = client.with_auth("username", "password");
-        assert!(with_auth.auth.is_some());
-        let auth = with_auth.auth.unwrap();
-        assert_eq!(&auth.username, "username");
-        assert_eq!(&auth.password, "password");
-    }
-
-    #[test]
-    fn test_into_impl() {
-        let client = Client::new("http://localhost:8068", "database");
-        assert!(client.auth.is_none());
-        let basic_parameters: Vec<(String, String)> = client.into();
-        assert_eq!(
-            vec![("db".to_string(), "database".to_string())],
-            basic_parameters
-        );
-
-        let with_auth =
-            Client::new("http://localhost:8068", "database").with_auth("username", "password");
-        let basic_parameters_with_auth: Vec<(String, String)> = with_auth.into();
         assert_eq!(
             vec![
-                ("db".to_string(), "database".to_string()),
-                ("u".to_string(), "username".to_string()),
-                ("p".to_string(), "password".to_string())
+                ("db", "database".to_string()),
+                ("u", "username".to_string()),
+                ("p", "password".to_string())
             ],
-            basic_parameters_with_auth
-        );
-
-        let client = Client::new("http://localhost:8068", "database");
-        assert!(client.auth.is_none());
-        let basic_parameters: Vec<(String, String)> = (&client).into();
-        assert_eq!(
-            vec![("db".to_string(), "database".to_string())],
-            basic_parameters
-        );
-
-        let with_auth =
-            Client::new("http://localhost:8068", "database").with_auth("username", "password");
-        let basic_parameters_with_auth: Vec<(String, String)> = (&with_auth).into();
-        assert_eq!(
-            vec![
-                ("db".to_string(), "database".to_string()),
-                ("u".to_string(), "username".to_string()),
-                ("p".to_string(), "password".to_string())
-            ],
-            basic_parameters_with_auth
+            *with_auth.parameters
         );
     }
 }
