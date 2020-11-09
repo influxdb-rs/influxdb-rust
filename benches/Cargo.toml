@@ -1,0 +1,18 @@
+# -*- eval: (cargo-minor-mode 1) -*-
+
+[package]
+name = "benches"
+version = "0.0.0"
+publish = false
+edition = "2018"
+
+[dev-dependencies]
+chrono = { version = "0.4.11", features = ["serde"] }
+futures = "0.3.4"
+influxdb = { path = "../influxdb", features = ["derive"] }
+tokio = { version =  "0.2.22", features = ["macros", "rt-threaded", "sync"] }
+
+[[bench]]
+name = "client"
+path = "client.rs"
+harness = false

@@ -48,7 +48,7 @@
 
 mod de;
 
-use surf::{Client as SurfClient, StatusCode, Url};
+use surf::StatusCode;
 
 use serde::{de::DeserializeOwned, Deserialize};
 
@@ -124,40 +124,40 @@ pub struct TaggedSeries<TAG, T> {
 
 impl Client {
     pub async fn json_query(&self, q: ReadQuery) -> Result<DatabaseQueryResult, Error> {
-        let query = q.build().unwrap();
-        let basic_parameters: Vec<(String, String)> = self.into();
-        let client = {
-            let read_query = query.get();
-
-            let mut url = match Url::parse_with_params(
-                format!("{url}/query", url = self.database_url()).as_str(),
-                basic_parameters,
-            ) {
-                Ok(url) => url,
-                Err(err) => {
-                    let error = Error::UrlConstructionError {
-                        error: format!("{}", err),
-                    };
-                    return Err(error);
-                }
-            };
-            url.query_pairs_mut().append_pair("q", &read_query);
-
-            if !read_query.contains("SELECT") && !read_query.contains("SHOW") {
-                let error = Error::InvalidQueryError {
-                    error: String::from(
-                        "Only SELECT and SHOW queries supported with JSON deserialization",
-                    ),
-                };
-                return Err(error);
-            }
-
-            SurfClient::new().get(url.as_str())
-        };
-
-        let mut res = client.send().await.map_err(|err| Error::ConnectionError {
-            error: err.to_string(),
+        let query = q.build().map_err(|err| Error::InvalidQueryError {
+            error: format!("{}", err),
         })?;
+
+        let read_query = query.get();
+
+        if !read_query.contains("SELECT") && !read_query.contains("SHOW") {
+            let error = Error::InvalidQueryError {
+                error: String::from(
+                    "Only SELECT and SHOW queries supported with JSON deserialization",
+                ),
+            };
+            return Err(error);
+        }
+
+        let url = &format!("{}/query", &self.url);
+        let mut parameters = self.parameters.as_ref().clone();
+        parameters.insert("q", read_query);
+        let request = self
+            .client
+            .get(url)
+            .query(&parameters)
+            .map_err(|err| Error::UrlConstructionError {
+                error: err.to_string(),
+            })?
+            .build();
+
+        let mut res = self
+            .client
+            .send(request)
+            .await
+            .map_err(|err| Error::ConnectionError {
+                error: err.to_string(),
+            })?;
 
         match res.status() {
             StatusCode::Unauthorized => return Err(Error::AuthorizationError),
@@ -166,7 +166,7 @@ impl Client {
         }
 
         let body = res.body_bytes().await.map_err(|err| Error::ProtocolError {
-            error: format!("{}", err),
+            error: err.to_string(),
         })?;
 
         // Try parsing InfluxDBs { "error": "error message here" }

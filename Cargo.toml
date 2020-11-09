@@ -1,7 +1,7 @@
 # -*- eval: (cargo-minor-mode 1) -*-
 
 [workspace]
-members = ["influxdb", "influxdb_derive"]
+members = ["influxdb", "influxdb_derive", "benches"]
 
 [patch.crates-io]
 influxdb = { path = "./influxdb" }
