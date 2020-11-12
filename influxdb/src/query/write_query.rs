@@ -180,7 +180,7 @@ impl Query for WriteQuery {
             .join(",");
 
         if !tags.is_empty() {
-            tags.insert_str(0, ",");
+            tags.insert(0, ',');
         }
         let fields = self
             .fields

@@ -16,19 +16,20 @@
 //! ```
 
 use futures::prelude::*;
-use reqwest::{self, Client as ReqwestClient, StatusCode};
+use surf::{self, Client as SurfClient, StatusCode};
 
 use crate::query::QueryTypes;
 use crate::Error;
 use crate::Query;
+use std::collections::HashMap;
 use std::sync::Arc;
 
 #[derive(Clone, Debug)]
 /// Internal Representation of a Client
 pub struct Client {
     pub(crate) url: Arc<String>,
-    pub(crate) parameters: Arc<Vec<(&'static str, String)>>,
-    pub(crate) client: ReqwestClient,
+    pub(crate) parameters: Arc<HashMap<&'static str, String>>,
+    pub(crate) client: SurfClient,
 }
 
 impl Client {
@@ -51,10 +52,12 @@ impl Client {
         S1: Into<String>,
         S2: Into<String>,
     {
+        let mut parameters = HashMap::<&str, String>::new();
+        parameters.insert("db", database.into());
         Client {
             url: Arc::new(url.into()),
-            parameters: Arc::new(vec![("db", database.into())]),
-            client: ReqwestClient::new(),
+            parameters: Arc::new(parameters),
+            client: SurfClient::new(),
         }
     }
 
@@ -78,8 +81,8 @@ impl Client {
         S2: Into<String>,
     {
         let mut with_auth = self.parameters.as_ref().clone();
-        with_auth.push(("u", username.into()));
-        with_auth.push(("p", password.into()));
+        with_auth.insert("u", username.into());
+        with_auth.insert("p", password.into());
         self.parameters = Arc::new(with_auth);
         self
     }
@@ -87,7 +90,7 @@ impl Client {
     /// Returns the name of the database the client is using
     pub fn database_name(&self) -> &str {
         // safe to unwrap: we always set the database name in `Self::new`
-        &self.parameters.first().unwrap().1
+        self.parameters.get("db").unwrap()
     }
 
     /// Returns the URL of the InfluxDB installation the client is using
@@ -109,18 +112,8 @@ impl Client {
                 error: format!("{}", err),
             })?;
 
-        let build = res
-            .headers()
-            .get("X-Influxdb-Build")
-            .unwrap()
-            .to_str()
-            .unwrap();
-        let version = res
-            .headers()
-            .get("X-Influxdb-Version")
-            .unwrap()
-            .to_str()
-            .unwrap();
+        let build = res.header("X-Influxdb-Build").unwrap().as_str();
+        let version = res.header("X-Influxdb-Version").unwrap().as_str();
 
         Ok((build.to_owned(), version.to_owned()))
     }
@@ -140,7 +133,7 @@ impl Client {
     /// use influxdb::InfluxDbWriteable;
     /// use std::time::{SystemTime, UNIX_EPOCH};
     ///
-    /// # #[tokio::main]
+    /// # #[async_std::main]
     /// # async fn main() -> Result<(), influxdb::Error> {
     /// let start = SystemTime::now();
     /// let since_the_epoch = start
@@ -169,60 +162,55 @@ impl Client {
         &'q Q: Into<QueryTypes<'q>>,
     {
         let query = q.build().map_err(|err| Error::InvalidQueryError {
-            error: format!("{}", err),
+            error: err.to_string(),
         })?;
 
         let request_builder = match q.into() {
             QueryTypes::Read(_) => {
                 let read_query = query.get();
                 let url = &format!("{}/query", &self.url);
-                let query = [("q", &read_query)];
+                let mut parameters = self.parameters.as_ref().clone();
+                parameters.insert("q", read_query.clone());
 
                 if read_query.contains("SELECT") || read_query.contains("SHOW") {
-                    self.client
-                        .get(url)
-                        .query(self.parameters.as_ref())
-                        .query(&query)
+                    self.client.get(url).query(&parameters)
                 } else {
-                    self.client
-                        .post(url)
-                        .query(self.parameters.as_ref())
-                        .query(&query)
+                    self.client.post(url).query(&parameters)
                 }
             }
             QueryTypes::Write(write_query) => {
                 let url = &format!("{}/write", &self.url);
-                let precision = [("precision", write_query.get_precision())];
+                let mut parameters = self.parameters.as_ref().clone();
+                parameters.insert("precision", write_query.get_precision());
 
-                self.client
-                    .post(url)
-                    .query(self.parameters.as_ref())
-                    .query(&precision)
-                    .body(query.get())
+                self.client.post(url).body(query.get()).query(&parameters)
             }
-        };
+        }
+        .map_err(|err| Error::UrlConstructionError {
+            error: err.to_string(),
+        })?;
 
-        let request = request_builder
-            .build()
-            .map_err(|err| Error::UrlConstructionError {
-                error: format!("{}", &err),
-            })?;
-
-        let res = self
+        let request = request_builder.build();
+        let mut res = self
             .client
-            .execute(request)
-            .map_err(|err| Error::ConnectionError { error: err })
+            .send(request)
+            .map_err(|err| Error::ConnectionError {
+                error: err.to_string(),
+            })
             .await?;
 
         match res.status() {
-            StatusCode::UNAUTHORIZED => return Err(Error::AuthorizationError),
-            StatusCode::FORBIDDEN => return Err(Error::AuthenticationError),
+            StatusCode::Unauthorized => return Err(Error::AuthorizationError),
+            StatusCode::Forbidden => return Err(Error::AuthenticationError),
             _ => {}
         }
 
-        let s = res.text().await.map_err(|_| Error::DeserializationError {
-            error: "response could not be converted to UTF-8".to_string(),
-        })?;
+        let s = res
+            .body_string()
+            .await
+            .map_err(|_| Error::DeserializationError {
+                error: "response could not be converted to UTF-8".to_string(),
+            })?;
 
         // todo: improve error parsing without serde
         if s.contains("\"error\"") {
@@ -249,16 +237,13 @@ mod tests {
     #[test]
     fn test_with_auth() {
         let client = Client::new("http://localhost:8068", "database");
-        assert_eq!(vec![("db", "database".to_string())], *client.parameters);
+        assert_eq!(client.parameters.len(), 1);
+        assert_eq!(client.parameters.get("db").unwrap(), "database");
 
         let with_auth = client.with_auth("username", "password");
-        assert_eq!(
-            vec![
-                ("db", "database".to_string()),
-                ("u", "username".to_string()),
-                ("p", "password".to_string())
-            ],
-            *with_auth.parameters
-        );
+        assert_eq!(with_auth.parameters.len(), 3);
+        assert_eq!(with_auth.parameters.get("db").unwrap(), "database");
+        assert_eq!(with_auth.parameters.get("u").unwrap(), "username");
+        assert_eq!(with_auth.parameters.get("p").unwrap(), "password");
     }
 }

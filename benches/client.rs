@@ -1,5 +1,4 @@
 use chrono::{DateTime, Utc};
-use futures::stream::StreamExt;
 use influxdb::Error;
 use influxdb::InfluxDbWriteable;
 use influxdb::{Client, Query};
@@ -45,7 +44,7 @@ async fn main() {
 
     let mut successful_count = 0;
     let mut error_count = 0;
-    while let Some(res) = rx.next().await {
+    while let Some(res) = rx.recv().await {
         if res.is_err() {
             error_count += 1;
         } else {

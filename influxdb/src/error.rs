@@ -33,9 +33,6 @@ pub enum Error {
     AuthorizationError,
 
     #[error("connection error: {error}")]
-    /// Error happens when reqwest fails
-    ConnectionError {
-        #[from]
-        error: reqwest::Error,
-    },
+    /// Error happens when HTTP request fails
+    ConnectionError { error: String },
 }

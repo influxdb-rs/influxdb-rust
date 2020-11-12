@@ -22,7 +22,7 @@
 //!     weather: WeatherWithoutCityName,
 //! }
 //!
-//! # #[tokio::main]
+//! # #[async_std::main]
 //! # async fn main() -> Result<(), influxdb::Error> {
 //! let client = Client::new("http://localhost:8086", "test");
 //! let query = Query::raw_read_query(
@@ -48,7 +48,7 @@
 
 mod de;
 
-use reqwest::StatusCode;
+use surf::StatusCode;
 
 use serde::{de::DeserializeOwned, Deserialize};
 
@@ -140,31 +140,33 @@ impl Client {
         }
 
         let url = &format!("{}/query", &self.url);
-        let query = [("q", &read_query)];
+        let mut parameters = self.parameters.as_ref().clone();
+        parameters.insert("q", read_query);
         let request = self
             .client
             .get(url)
-            .query(self.parameters.as_ref())
-            .query(&query)
-            .build()
+            .query(&parameters)
             .map_err(|err| Error::UrlConstructionError {
-                error: format!("{}", err),
+                error: err.to_string(),
+            })?
+            .build();
+
+        let mut res = self
+            .client
+            .send(request)
+            .await
+            .map_err(|err| Error::ConnectionError {
+                error: err.to_string(),
             })?;
 
-        let res = self
-            .client
-            .execute(request)
-            .await
-            .map_err(|err| Error::ConnectionError { error: err })?;
-
         match res.status() {
-            StatusCode::UNAUTHORIZED => return Err(Error::AuthorizationError),
-            StatusCode::FORBIDDEN => return Err(Error::AuthenticationError),
+            StatusCode::Unauthorized => return Err(Error::AuthorizationError),
+            StatusCode::Forbidden => return Err(Error::AuthenticationError),
             _ => {}
         }
 
-        let body = res.bytes().await.map_err(|err| Error::ProtocolError {
-            error: format!("{}", err),
+        let body = res.body_bytes().await.map_err(|err| Error::ProtocolError {
+            error: err.to_string(),
         })?;
 
         // Try parsing InfluxDBs { "error": "error message here" }
