@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2020-11-15
+
+### Changed
+
+-  Internal request connection pooling ([@Robert-Steiner](https://github.com/Robert-Steiner) in [#73](https://github.com/Empty2k12/influxdb-rust/pull/73))
+
+    Previously visible `Client` fields are now private. If you were using them before, please reference them from the creation of the Client.
+
+-  Support async-std ([@JEnoch](https://github.com/JEnoch) in [#72](https://github.com/Empty2k12/influxdb-rust/pull/72))
+
+    The default backend is still Tokio, but if you're keen on switching, [other backends are exposed](https://github.com/Empty2k12/influxdb-rust/blob/master/influxdb/Cargo.toml) as Cargo features
+
 ## [0.2.0] - 2020-10-25
 
 ### Added
@@ -108,7 +120,8 @@ This release removes the prefix `InfluxDb` of most types in this library and ree
 -   Improved Test Coverage: There's now even more tests verifying correctness of the crate (#5)
 -   It's no longer necessary to supply a wildcard generic when working with serde*integration: `client.json_query::<Weather>(query)` instead of `client.json_query::<Weather, *>(query)`
 
-[unreleased]: https://github.com/Empty2k12/influxdb-rust/compare/v0.2.0...HEAD
+[unreleased]: https://github.com/Empty2k12/influxdb-rust/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/Empty2k12/influxdb-rust/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/Empty2k12/influxdb-rust/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/Empty2k12/influxdb-rust/compare/v0.0.6...v0.1.0
 [0.0.5]: https://github.com/Empty2k12/influxdb-rust/compare/v0.0.5...v0.0.6
