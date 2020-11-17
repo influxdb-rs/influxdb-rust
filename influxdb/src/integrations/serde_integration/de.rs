@@ -80,7 +80,8 @@ where
                     }
                 }
                 let name = name.ok_or_else(|| Error::missing_field("name"))?;
-                let values = values.ok_or_else(|| Error::missing_field("values"))?;
+                let values = values.unwrap_or_default();
+
                 Ok(Series { name, values })
             }
         }
