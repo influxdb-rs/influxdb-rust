@@ -16,6 +16,9 @@
     <a href="https://travis-ci.org/Empty2k12/influxdb-rust">
         <img src="https://travis-ci.org/Empty2k12/influxdb-rust.svg?branch=master" alt='Build Status' />
     </a>
+    <a href="https://Empty2k12.github.io/influxdb-rust/tarpaulin-report.html">
+		<img src="https://Empty2k12.github.io/influxdb-rust/coverage.svg" alt="Coverage Report" />
+	</a>
     <a href="https://docs.rs/crate/influxdb">
         <img src="https://docs.rs/influxdb/badge.svg" alt='Documentation Status' />
     </a>

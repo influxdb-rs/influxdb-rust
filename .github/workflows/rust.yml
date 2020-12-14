@@ -66,5 +66,98 @@ jobs:
 
         steps:
             - uses: actions/checkout@v1
-            - uses: dtolnay/rust-toolchain@nightly
+            - uses: dtolnay/rust-toolchain@stable
             - run: cargo test --package influxdb --package influxdb_derive --all-features --no-fail-fast
+    
+    coverage:
+        name: Code Coverage (stable/ubuntu-20.04)
+        runs-on: ubuntu-20.04
+        services:
+            influxdb:
+                image: influxdb
+                ports:
+                    - 8086:8086
+            authed_influxdb:
+                image: influxdb
+                ports:
+                    - 9086:8086
+                env:
+                    INFLUXDB_HTTP_AUTH_ENABLED: true
+                    INFLUXDB_ADMIN_USER: admin
+                    INFLUXDB_ADMIN_PASSWORD: password
+                    INFLUXDB_USER: nopriv_user
+                    INFLUXDB_USER_PASSWORD: password
+        
+        steps:
+          - uses: actions/checkout@v2
+          - uses: dtolnay/rust-toolchain@stable
+          
+          - name: Get Rust Version
+            id: rust-version
+            run: echo "::set-output name=VERSION::$(cargo -V | head -n1 | awk '{print $2}')"
+          
+          - name: Get Tarpaulin Version
+            id: tarpaulin-version
+            run: echo "::set-output name=VERSION::$(wget -qO- 'https://api.github.com/repos/xd009642/tarpaulin/releases/latest' | jq -r '.tag_name')"
+          
+          - uses: actions/cache@v2
+            with:
+              path: |
+                ~/.cargo/bin
+                ~/.cargo/git
+                ~/.cargo/registry
+                target
+              key: ${{ runner.os }}-cargo-${{ steps.rust-version.outputs.VERSION }}-tarpaulin-${{ steps.tarpaulin-version.outputs.VERSION }} }}
+          
+          - name: Install Tarpaulin
+            run: |
+              ls -lh ~/.cargo || true
+              ls -lh ~/.cargo/bin || true
+              cargo install cargo-tarpaulin --version ${{ steps.tarpaulin-version.outputs.VERSION }}
+          
+          - name: Run Tarpaulin coverage tests
+            run: |
+              cargo tarpaulin -v \
+              	--target-dir target/tarpaulin \
+              	--workspace \
+              	--all-features \
+              	--exclude-files 'derive/*' \
+              	--exclude-files 'target/*' \
+              	--ignore-panics --ignore-tests \
+              	--out Html --out Json
+            env:
+              RUST_BACKTRACE: 1
+              RUST_LOG: info
+          
+          - uses: actions/upload-artifact@v2
+            with:
+              name: tarpaulin-report
+              path: |
+                tarpaulin-report.json
+                tarpaulin-report.html
+    
+    pages:
+        runs-on: ubuntu-20.04
+        needs:
+          - coverage
+        if: github.ref == 'refs/heads/master'
+        steps:
+          - uses: actions/checkout@v2
+            with:
+              ref: gh-pages
+          
+          - uses: actions/download-artifact@v2
+            with:
+              name: tarpaulin-report
+          
+          - run: |
+              coverage=$(jq '.files | { covered: map(.covered) | add, coverable: map(.coverable) | add } | .covered / .coverable * 10000 | round | . / 100' tarpaulin-report.json)
+              color=$([[ $coverage < 80 ]] && printf yellow || printf brightgreen)
+              wget -qO coverage.svg "https://img.shields.io/badge/coverage-$coverage%25-$color"
+              
+              git add coverage.svg tarpaulin-report.html
+              git status
+          
+          - uses: stefanzweifel/git-auto-commit-action@v4
+            with:
+              commit_message: "GitHub Pages for ${{ github.sha }}"
