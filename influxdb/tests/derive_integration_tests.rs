@@ -22,6 +22,18 @@ struct WeatherReading {
     wind_strength: Option<u64>,
 }
 
+#[derive(Debug, PartialEq)]
+#[cfg_attr(feature = "derive", derive(InfluxDbWriteable))]
+#[cfg_attr(feature = "use-serde", derive(Deserialize))]
+struct WeatherReadingIgnoredField {
+    time: DateTime<Utc>,
+    humidity: i32,
+    #[tag]
+    wind_strength: Option<u64>,
+    #[ignored]
+    temperature: u64,
+}
+
 #[test]
 fn test_build_query() {
     let weather_reading = WeatherReading {
@@ -80,10 +92,11 @@ async fn test_write_and_read_option() {
         || async move {
             create_db(TEST_NAME).await.expect("could not setup db");
             let client = create_client(TEST_NAME);
-            let weather_reading = WeatherReading {
+            let weather_reading = WeatherReadingIgnoredField {
                 time: Timestamp::Hours(11).into(),
                 humidity: 30,
                 wind_strength: None,
+                temperature: 11,
             };
             let write_result = client
                 .query(&weather_reading.into_query("weather_reading".to_string()))

@@ -6,11 +6,21 @@ use syn::{parse_macro_input, Field, Fields, Ident, ItemStruct};
 struct WriteableField {
     ident: Ident,
     is_tag: bool,
+    is_ignored: bool,
 }
 
 impl From<Field> for WriteableField {
     fn from(field: Field) -> WriteableField {
         let ident = field.ident.expect("fields without ident are not supported");
+        let is_ignored = field.attrs.iter().any(|attr| {
+            attr.path
+                .segments
+                .iter()
+                .last()
+                .map(|seg| seg.ident.to_string())
+                .unwrap_or_default()
+                == "ignored"
+        });
         let is_tag = field.attrs.iter().any(|attr| {
             attr.path
                 .segments
@@ -20,7 +30,12 @@ impl From<Field> for WriteableField {
                 .unwrap_or_default()
                 == "tag"
         });
-        WriteableField { ident, is_tag }
+
+        WriteableField {
+            ident,
+            is_tag,
+            is_ignored,
+        }
     }
 }
 
@@ -38,6 +53,7 @@ pub fn expand_writeable(tokens: TokenStream) -> TokenStream {
             .named
             .into_iter()
             .map(WriteableField::from)
+            .filter(|field| !field.is_ignored)
             .filter(|field| field.ident.to_string() != time_field.to_string())
             .map(|field| {
                 let ident = field.ident;
