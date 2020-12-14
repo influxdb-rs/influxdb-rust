@@ -12,23 +12,18 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v1
-            - uses: actions-rs/toolchain@v1
-              with:
-                toolchain: nightly
-                override: true
+            - uses: dtolnay/rust-toolchain@nightly
             - run: bash ./auxiliary/update_cargo-readme.sh
             - run: bash ./auxiliary/check_readme_consistency.sh
 
     style:
         name: Style Checks (stable/ubuntu-latest)
         runs-on: ubuntu-latest
-
         steps:
-            - uses: actions/checkout@master
-            - uses: hecrj/setup-rust-action@v1
+            - uses: actions/checkout@v1
+            - uses: dtolnay/rust-toolchain@nightly
               with:
                   components: "rustfmt,clippy"
-            - uses: actions/checkout@v1
             - name: Check code formatting
               run: cargo fmt --all -- --check
             - name: Check Clippy lints
@@ -39,14 +34,14 @@ jobs:
         runs-on: ${{ matrix.os }}
         strategy:
             matrix:
-                rust_release: [nightly, stable]
+                rust_release: [1.45, stable, nightly]
                 os: [ubuntu-latest, windows-latest, macOS-latest]
 
         steps:
-            - uses: actions/checkout@master
-            - uses: hecrj/setup-rust-action@v1
+            - uses: actions/checkout@v1
+            - uses: dtolnay/rust-toolchain@master
               with:
-                  rust-version: ${{ matrix.rust_release }}
+                  toolchain: ${{ matrix.rust_release }}
             - name: Build
               run: cargo build --verbose
 
@@ -71,11 +66,5 @@ jobs:
 
         steps:
             - uses: actions/checkout@v1
-            - uses: actions-rs/toolchain@v1
-              with:
-                toolchain: nightly
-                override: true
-            - uses: actions-rs/cargo@v1
-              with:
-                command: test
-                args: --package influxdb --package influxdb_derive --all-features --no-fail-fast
+            - uses: dtolnay/rust-toolchain@nightly
+            - run: cargo test --package influxdb --package influxdb_derive --all-features --no-fail-fast
