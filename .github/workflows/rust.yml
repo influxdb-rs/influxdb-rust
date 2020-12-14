@@ -103,7 +103,7 @@ jobs:
           - uses: actions/cache@v2
             with:
               path: |
-                ~/.cargo/bin
+                ~/.cargo/bin/cargo-tarpaulin
                 ~/.cargo/git
                 ~/.cargo/registry
                 target
@@ -111,9 +111,8 @@ jobs:
           
           - name: Install Tarpaulin
             run: |
-              ls -lh ~/.cargo || true
-              ls -lh ~/.cargo/bin || true
-              cargo install cargo-tarpaulin --version ${{ steps.tarpaulin-version.outputs.VERSION }}
+              ls -lh ~/.cargo/bin
+              test -e ~/.cargo/bin/cargo-tarpaulin || cargo install cargo-tarpaulin --version ${{ steps.tarpaulin-version.outputs.VERSION }}
           
           - name: Run Tarpaulin coverage tests
             run: |
