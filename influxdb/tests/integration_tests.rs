@@ -274,7 +274,8 @@ async fn test_write_and_read_field() {
 ///
 /// This integration tests that writing data and retrieving the data again is working
 #[async_std::test]
-#[cfg(all(feature = "use-serde", not(tarpaulin_include)))]
+#[cfg(feature = "use-serde")]
+#[cfg(not(tarpaulin_include))]
 async fn test_write_and_read_option() {
     use serde::Deserialize;
 
@@ -335,7 +336,8 @@ async fn test_write_and_read_option() {
 /// This test case tests whether JSON can be decoded from a InfluxDB response and whether that JSON
 /// is equal to the data which was written to the database
 #[async_std::test]
-#[cfg(all(feature = "use-serde", not(tarpaulin_include)))]
+#[cfg(feature = "use-serde")]
+#[cfg(not(tarpaulin_include))]
 async fn test_json_query() {
     use serde::Deserialize;
 
@@ -386,7 +388,8 @@ async fn test_json_query() {
 /// This test case tests whether the response to a GROUP BY can be parsed by
 // deserialize_next_tagged into a tags struct
 #[async_std::test]
-#[cfg(all(feature = "use-serde", not(tarpaulin_include)))]
+#[cfg(feature = "use-serde")]
+#[cfg(not(tarpaulin_include))]
 async fn test_json_query_tagged() {
     use serde::Deserialize;
 
@@ -450,7 +453,8 @@ async fn test_json_query_tagged() {
 /// is equal to the data which was written to the database
 /// (tested with tokio)
 #[tokio::test]
-#[cfg(all(feature = "use-serde", not(tarpaulin_include)))]
+#[cfg(feature = "use-serde")]
+#[cfg(not(tarpaulin_include))]
 async fn test_json_query_vec() {
     use serde::Deserialize;
 
@@ -500,7 +504,8 @@ async fn test_json_query_vec() {
 ///
 /// This integration test tests whether using the wrong query method fails building the query
 #[async_std::test]
-#[cfg(all(feature = "use-serde", not(tarpaulin_include)))]
+#[cfg(feature = "use-serde")]
+#[cfg(not(tarpaulin_include))]
 async fn test_serde_multi_query() {
     use serde::Deserialize;
 
@@ -576,7 +581,8 @@ async fn test_serde_multi_query() {
 ///
 /// This integration test tests whether using the wrong query method fails building the query
 #[async_std::test]
-#[cfg(all(feature = "use-serde", not(tarpaulin_include)))]
+#[cfg(feature = "use-serde")]
+#[cfg(not(tarpaulin_include))]
 async fn test_wrong_query_errors() {
     let client = create_client("test_name");
     let result = client
