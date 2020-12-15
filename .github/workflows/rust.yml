@@ -122,7 +122,6 @@ jobs:
                 --all-features \
                 --exclude-files 'derive/*' \
                 --exclude-files 'target/*' \
-                --exclude-files 'influxdb/test/*' \
                 --ignore-panics --ignore-tests \
                 --out Html --out Json
             env:
