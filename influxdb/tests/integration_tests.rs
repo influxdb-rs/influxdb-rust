@@ -13,6 +13,7 @@ use influxdb::{Client, Error, Query, Timestamp};
 ///
 /// This test case tests whether the InfluxDB server can be connected to and gathers info about it - tested with async_std
 #[async_std::test]
+#[cfg(not(tarpaulin_include))]
 async fn test_ping_influx_db_async_std() {
     let client = create_client("notusedhere");
     let result = client.ping().await;
@@ -29,6 +30,7 @@ async fn test_ping_influx_db_async_std() {
 ///
 /// This test case tests whether the InfluxDB server can be connected to and gathers info about it * tested with tokio
 #[tokio::test]
+#[cfg(not(tarpaulin_include))]
 async fn test_ping_influx_db_tokio() {
     let client = create_client("notusedhere");
     let result = client.ping().await;
@@ -45,6 +47,7 @@ async fn test_ping_influx_db_tokio() {
 ///
 /// This test case tests connection error
 #[async_std::test]
+#[cfg(not(tarpaulin_include))]
 async fn test_connection_error() {
     let test_name = "test_connection_error";
     let client =
@@ -65,6 +68,7 @@ async fn test_connection_error() {
 ///
 /// This test case tests the Authentication
 #[async_std::test]
+#[cfg(not(tarpaulin_include))]
 async fn test_authed_write_and_read() {
     const TEST_NAME: &str = "test_authed_write_and_read";
 
@@ -112,6 +116,7 @@ async fn test_authed_write_and_read() {
 ///
 /// This test case tests the Authentication
 #[async_std::test]
+#[cfg(not(tarpaulin_include))]
 async fn test_wrong_authed_write_and_read() {
     const TEST_NAME: &str = "test_wrong_authed_write_and_read";
 
@@ -181,6 +186,7 @@ async fn test_wrong_authed_write_and_read() {
 ///
 /// This test case tests the Authentication
 #[async_std::test]
+#[cfg(not(tarpaulin_include))]
 async fn test_non_authed_write_and_read() {
     const TEST_NAME: &str = "test_non_authed_write_and_read";
 
@@ -235,6 +241,7 @@ async fn test_non_authed_write_and_read() {
 ///
 /// This integration tests that writing data and retrieving the data again is working
 #[async_std::test]
+#[cfg(not(tarpaulin_include))]
 async fn test_write_and_read_field() {
     const TEST_NAME: &str = "test_write_field";
 
@@ -268,6 +275,7 @@ async fn test_write_and_read_field() {
 /// This integration tests that writing data and retrieving the data again is working
 #[async_std::test]
 #[cfg(feature = "use-serde")]
+#[cfg(not(tarpaulin_include))]
 async fn test_write_and_read_option() {
     use serde::Deserialize;
 
@@ -329,6 +337,7 @@ async fn test_write_and_read_option() {
 /// is equal to the data which was written to the database
 #[async_std::test]
 #[cfg(feature = "use-serde")]
+#[cfg(not(tarpaulin_include))]
 async fn test_json_query() {
     use serde::Deserialize;
 
@@ -380,6 +389,7 @@ async fn test_json_query() {
 // deserialize_next_tagged into a tags struct
 #[async_std::test]
 #[cfg(feature = "use-serde")]
+#[cfg(not(tarpaulin_include))]
 async fn test_json_query_tagged() {
     use serde::Deserialize;
 
@@ -444,6 +454,7 @@ async fn test_json_query_tagged() {
 /// (tested with tokio)
 #[tokio::test]
 #[cfg(feature = "use-serde")]
+#[cfg(not(tarpaulin_include))]
 async fn test_json_query_vec() {
     use serde::Deserialize;
 
@@ -494,6 +505,7 @@ async fn test_json_query_vec() {
 /// This integration test tests whether using the wrong query method fails building the query
 #[async_std::test]
 #[cfg(feature = "use-serde")]
+#[cfg(not(tarpaulin_include))]
 async fn test_serde_multi_query() {
     use serde::Deserialize;
 
@@ -570,6 +582,7 @@ async fn test_serde_multi_query() {
 /// This integration test tests whether using the wrong query method fails building the query
 #[async_std::test]
 #[cfg(feature = "use-serde")]
+#[cfg(not(tarpaulin_include))]
 async fn test_wrong_query_errors() {
     let client = create_client("test_name");
     let result = client

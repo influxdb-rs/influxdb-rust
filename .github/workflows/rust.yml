@@ -103,7 +103,7 @@ jobs:
           - uses: actions/cache@v2
             with:
               path: |
-                ~/.cargo/bin
+                ~/.cargo/bin/cargo-tarpaulin
                 ~/.cargo/git
                 ~/.cargo/registry
                 target
@@ -111,20 +111,19 @@ jobs:
           
           - name: Install Tarpaulin
             run: |
-              ls -lh ~/.cargo || true
-              ls -lh ~/.cargo/bin || true
-              cargo install cargo-tarpaulin --version ${{ steps.tarpaulin-version.outputs.VERSION }}
+              ls -lh ~/.cargo/bin
+              test -e ~/.cargo/bin/cargo-tarpaulin || cargo install cargo-tarpaulin --version ${{ steps.tarpaulin-version.outputs.VERSION }}
           
           - name: Run Tarpaulin coverage tests
             run: |
               cargo tarpaulin -v \
-              	--target-dir target/tarpaulin \
-              	--workspace \
-              	--all-features \
-              	--exclude-files 'derive/*' \
-              	--exclude-files 'target/*' \
-              	--ignore-panics --ignore-tests \
-              	--out Html --out Json
+                --target-dir target/tarpaulin \
+                --workspace \
+                --all-features \
+                --exclude-files 'derive/*' \
+                --exclude-files 'target/*' \
+                --ignore-panics --ignore-tests \
+                --out Html --out Json
             env:
               RUST_BACKTRACE: 1
               RUST_LOG: info
