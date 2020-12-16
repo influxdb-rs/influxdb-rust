@@ -17,9 +17,9 @@ use utilities::{assert_result_ok, create_client, create_db, delete_db, run_test}
 #[cfg_attr(feature = "use-serde", derive(Deserialize))]
 struct WeatherReading {
     time: DateTime<Utc>,
-    #[influx_aware(ignore)]
+    #[influxdb(ignore)]
     humidity: i32,
-    #[influx_aware(tag)]
+    #[influxdb(tag)]
     wind_strength: Option<u64>,
 }
 

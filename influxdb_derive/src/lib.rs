@@ -9,7 +9,7 @@ fn krate() -> TokenStream2 {
     quote!(::influxdb)
 }
 
-#[proc_macro_derive(InfluxDbWriteable, attributes(tag, influx_aware))]
+#[proc_macro_derive(InfluxDbWriteable, attributes(influxdb))]
 pub fn derive_writeable(tokens: TokenStream) -> TokenStream {
     expand_writeable(tokens)
 }

@@ -1,5 +1,5 @@
 use proc_macro::TokenStream;
-use proc_macro2::{TokenStream as TokenStream2, TokenTree as TokenTree2};
+use proc_macro2::{TokenStream as TokenStream2, TokenTree};
 use quote::{format_ident, quote};
 use syn::{parse_macro_input, Field, Fields, Ident, ItemStruct};
 
@@ -21,17 +21,17 @@ impl From<Field> for WriteableField {
                 .last()
                 .map(|seg| seg.ident.to_string())
                 .unwrap_or_default()
-                == "influx_aware"
+                == "influxdb"
         };
 
         let check_for_attr = |token_tree, ident_cmp: &str| -> bool {
             match token_tree {
-                TokenTree2::Group(group) => group
+                TokenTree::Group(group) => group
                     .stream()
                     .into_iter()
                     .next()
                     .map(|token_tree| match token_tree {
-                        TokenTree2::Ident(ident) => ident.to_string() == ident_cmp.to_string(),
+                        TokenTree::Ident(ident) => ident.to_string() == ident_cmp.to_string(),
                         _ => false,
                     })
                     .unwrap(),
