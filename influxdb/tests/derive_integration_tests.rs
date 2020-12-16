@@ -19,6 +19,7 @@ struct WeatherReading {
     time: DateTime<Utc>,
     #[influxdb(ignore)]
     humidity: i32,
+    pressure: i32,
     #[influxdb(tag)]
     wind_strength: Option<u64>,
 }
@@ -28,15 +29,14 @@ fn test_build_query() {
     let weather_reading = WeatherReading {
         time: Timestamp::Hours(1).into(),
         humidity: 30,
+        pressure: 100,
         wind_strength: Some(5),
     };
-    let query = weather_reading
-        .into_query("weather_reading")
-        .build()
-        .unwrap();
+    let query = weather_reading.into_query("weather_reading");
+    let query = query.build().unwrap();
     assert_eq!(
         query.get(),
-        "weather_reading,wind_strength=5 humidity=30i 3600000000000"
+        "weather_reading,wind_strength=5 pressure=100i 3600000000000"
     );
 }
 
@@ -57,6 +57,7 @@ async fn test_derive_simple_write() {
                 time: Timestamp::Nanoseconds(0).into(),
                 humidity: 30,
                 wind_strength: Some(5),
+                pressure: 100,
             };
             let query = weather_reading.into_query("weather_reading");
             let result = client.query(&query).await;
@@ -87,6 +88,7 @@ async fn test_write_and_read_option() {
                 time: Timestamp::Hours(11).into(),
                 humidity: 30,
                 wind_strength: None,
+                pressure: 100,
             };
             let write_result = client
                 .query(&weather_reading.into_query("weather_reading".to_string()))
