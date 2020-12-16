@@ -14,13 +14,20 @@ use utilities::{assert_result_ok, create_client, create_db, delete_db, run_test}
 
 #[derive(Debug, PartialEq)]
 #[cfg_attr(feature = "derive", derive(InfluxDbWriteable))]
-#[cfg_attr(feature = "use-serde", derive(Deserialize))]
 struct WeatherReading {
     time: DateTime<Utc>,
     #[influxdb(ignore)]
     humidity: i32,
     pressure: i32,
     #[influxdb(tag)]
+    wind_strength: Option<u64>,
+}
+
+#[derive(Debug)]
+#[cfg_attr(feature = "use-serde", derive(Deserialize))]
+struct WeatherReadingWithoutIgnored {
+    time: DateTime<Utc>,
+    pressure: i32,
     wind_strength: Option<u64>,
 }
 
@@ -98,7 +105,7 @@ async fn test_write_and_read_option() {
                 Query::raw_read_query("SELECT time, pressure, wind_strength FROM weather_reading");
             let result = client.json_query(query).await.and_then(|mut db_result| {
                 println!("{:?}", db_result);
-                db_result.deserialize_next::<WeatherReading>()
+                db_result.deserialize_next::<WeatherReadingWithoutIgnored>()
             });
             assert_result_ok(&result);
             let result = result.unwrap();
