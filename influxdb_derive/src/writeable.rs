@@ -74,9 +74,7 @@ impl From<Field> for WriteableField {
 
 pub fn expand_writeable(tokens: TokenStream) -> TokenStream {
     let krate = super::krate();
-
-    let tokens_cloned = tokens.clone();
-    let input = parse_macro_input!(tokens_cloned as ItemStruct);
+    let input = parse_macro_input!(tokens as ItemStruct);
     let ident = input.ident;
     let generics = input.generics;
 
