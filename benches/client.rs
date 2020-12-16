@@ -11,7 +11,7 @@ use tokio::sync::Semaphore;
 struct WeatherReading {
     time: DateTime<Utc>,
     humidity: i32,
-    #[tag]
+    #[influxdb(tag)]
     wind_direction: String,
 }
 

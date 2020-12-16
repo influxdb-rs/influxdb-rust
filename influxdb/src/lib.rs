@@ -39,7 +39,7 @@
 //!     struct WeatherReading {
 //!         time: DateTime<Utc>,
 //!         humidity: i32,
-//!         #[tag] wind_direction: String,
+//!         #[influxdb(tag)] wind_direction: String,
 //!     }
 //!
 //!     // Let's write some data into a measurement called `weather`

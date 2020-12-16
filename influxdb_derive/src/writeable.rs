@@ -31,7 +31,7 @@ impl From<Field> for WriteableField {
                     .into_iter()
                     .next()
                     .map(|token_tree| match token_tree {
-                        TokenTree::Ident(ident) => ident.to_string() == ident_cmp.to_string(),
+                        TokenTree::Ident(ident) => ident == ident_cmp,
                         _ => false,
                     })
                     .unwrap(),
