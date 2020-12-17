@@ -14,11 +14,20 @@ use utilities::{assert_result_ok, create_client, create_db, delete_db, run_test}
 
 #[derive(Debug, PartialEq)]
 #[cfg_attr(feature = "derive", derive(InfluxDbWriteable))]
-#[cfg_attr(feature = "use-serde", derive(Deserialize))]
 struct WeatherReading {
     time: DateTime<Utc>,
+    #[influxdb(ignore)]
     humidity: i32,
-    #[tag]
+    pressure: i32,
+    #[influxdb(tag)]
+    wind_strength: Option<u64>,
+}
+
+#[derive(Debug)]
+#[cfg_attr(feature = "use-serde", derive(Deserialize))]
+struct WeatherReadingWithoutIgnored {
+    time: DateTime<Utc>,
+    pressure: i32,
     wind_strength: Option<u64>,
 }
 
@@ -27,15 +36,14 @@ fn test_build_query() {
     let weather_reading = WeatherReading {
         time: Timestamp::Hours(1).into(),
         humidity: 30,
+        pressure: 100,
         wind_strength: Some(5),
     };
-    let query = weather_reading
-        .into_query("weather_reading")
-        .build()
-        .unwrap();
+    let query = weather_reading.into_query("weather_reading");
+    let query = query.build().unwrap();
     assert_eq!(
         query.get(),
-        "weather_reading,wind_strength=5 humidity=30i 3600000000000"
+        "weather_reading,wind_strength=5 pressure=100i 3600000000000"
     );
 }
 
@@ -56,6 +64,7 @@ async fn test_derive_simple_write() {
                 time: Timestamp::Nanoseconds(0).into(),
                 humidity: 30,
                 wind_strength: Some(5),
+                pressure: 100,
             };
             let query = weather_reading.into_query("weather_reading");
             let result = client.query(&query).await;
@@ -86,20 +95,21 @@ async fn test_write_and_read_option() {
                 time: Timestamp::Hours(11).into(),
                 humidity: 30,
                 wind_strength: None,
+                pressure: 100,
             };
             let write_result = client
                 .query(&weather_reading.into_query("weather_reading".to_string()))
                 .await;
             assert_result_ok(&write_result);
             let query =
-                Query::raw_read_query("SELECT time, humidity, wind_strength FROM weather_reading");
+                Query::raw_read_query("SELECT time, pressure, wind_strength FROM weather_reading");
             let result = client.json_query(query).await.and_then(|mut db_result| {
                 println!("{:?}", db_result);
-                db_result.deserialize_next::<WeatherReading>()
+                db_result.deserialize_next::<WeatherReadingWithoutIgnored>()
             });
             assert_result_ok(&result);
             let result = result.unwrap();
-            assert_eq!(result.series[0].values[0].humidity, 30);
+            assert_eq!(result.series[0].values[0].pressure, 100);
             assert_eq!(result.series[0].values[0].wind_strength, None);
         },
         || async move {
