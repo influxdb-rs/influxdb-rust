@@ -129,8 +129,9 @@ impl Client {
         })?;
 
         let read_query = query.get();
+        let read_query_lower = read_query.to_lowercase();
 
-        if !read_query.contains("SELECT") && !read_query.contains("SHOW") {
+        if !read_query_lower.contains("select") && !read_query_lower.contains("show") {
             let error = Error::InvalidQueryError {
                 error: String::from(
                     "Only SELECT and SHOW queries supported with JSON deserialization",
