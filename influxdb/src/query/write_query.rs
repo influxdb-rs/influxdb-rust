@@ -318,7 +318,7 @@ mod tests {
             .add_tag("location", "us-midwest")
             .add_tag("season", "summer");
 
-        assert_eq!(query.get_type(), QueryType::WriteQuery);
+        assert_eq!(query.get_type(), QueryType::WriteQuery("h".to_owned()));
     }
 
     #[test]
