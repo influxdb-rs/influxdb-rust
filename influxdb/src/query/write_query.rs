@@ -205,11 +205,7 @@ impl Query for WriteQuery {
     }
 
     fn get_type(&self) -> QueryType {
-        QueryType::WriteQuery
-    }
-
-    fn get_query_precision(&self) -> Option<String> {
-        Some(self.get_precision())
+        QueryType::WriteQuery(self.get_precision())
     }
 }
 
@@ -226,11 +222,12 @@ impl Query for Vec<WriteQuery> {
     }
 
     fn get_type(&self) -> QueryType {
-        QueryType::WriteQuery
-    }
-
-    fn get_query_precision(&self) -> Option<String> {
-        self.get(0).map(|q| q.get_precision())
+        QueryType::WriteQuery(
+            self.get(0)
+                .map(|q| q.get_precision())
+                // use "ms" as placeholder if query is empty
+                .unwrap_or_else(|| "ms".to_owned()),
+        )
     }
 }
 

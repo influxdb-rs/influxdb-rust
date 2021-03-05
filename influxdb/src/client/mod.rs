@@ -177,12 +177,10 @@ impl Client {
                     self.client.post(url).query(&parameters)
                 }
             }
-            QueryType::WriteQuery => {
+            QueryType::WriteQuery(precision) => {
                 let url = &format!("{}/write", &self.url);
                 let mut parameters = self.parameters.as_ref().clone();
-                if let Some(precision) = q.get_query_precision() {
-                    parameters.insert("precision", precision);
-                }
+                parameters.insert("precision", precision);
 
                 self.client.post(url).body(query.get()).query(&parameters)
             }

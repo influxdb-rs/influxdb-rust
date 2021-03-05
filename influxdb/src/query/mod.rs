@@ -113,10 +113,6 @@ pub trait Query {
     fn build(&self) -> Result<ValidQuery, Error>;
 
     fn get_type(&self) -> QueryType;
-
-    fn get_query_precision(&self) -> Option<String> {
-        None
-    }
 }
 
 pub trait InfluxDbWriteable {
@@ -178,7 +174,8 @@ impl PartialEq<&str> for ValidQuery {
 #[derive(PartialEq, Debug)]
 pub enum QueryType {
     ReadQuery,
-    WriteQuery,
+    /// write query with precision
+    WriteQuery(String),
 }
 
 #[cfg(test)]
