@@ -93,24 +93,6 @@ where
     }
 }
 
-/// Internal enum used to represent either type of query.
-pub enum QueryTypes<'a> {
-    Read(&'a ReadQuery),
-    Write(&'a WriteQuery),
-}
-
-impl<'a> From<&'a ReadQuery> for QueryTypes<'a> {
-    fn from(query: &'a ReadQuery) -> Self {
-        Self::Read(query)
-    }
-}
-
-impl<'a> From<&'a WriteQuery> for QueryTypes<'a> {
-    fn from(query: &'a WriteQuery) -> Self {
-        Self::Write(query)
-    }
-}
-
 pub trait Query {
     /// Builds valid InfluxSQL which can be run against the Database.
     /// In case no fields have been specified, it will return an error,
@@ -131,6 +113,10 @@ pub trait Query {
     fn build(&self) -> Result<ValidQuery, Error>;
 
     fn get_type(&self) -> QueryType;
+
+    fn get_query_precision(&self) -> Option<String> {
+        None
+    }
 }
 
 pub trait InfluxDbWriteable {

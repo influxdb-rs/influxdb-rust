@@ -207,6 +207,31 @@ impl Query for WriteQuery {
     fn get_type(&self) -> QueryType {
         QueryType::WriteQuery
     }
+
+    fn get_query_precision(&self) -> Option<String> {
+        Some(self.get_precision())
+    }
+}
+
+impl Query for Vec<WriteQuery> {
+    fn build(&self) -> Result<ValidQuery, Error> {
+        let mut qlines = Vec::new();
+
+        for q in self {
+            let valid_query = q.build()?;
+            qlines.push(valid_query.0);
+        }
+
+        Ok(ValidQuery(qlines.join("\n")))
+    }
+
+    fn get_type(&self) -> QueryType {
+        QueryType::WriteQuery
+    }
+
+    fn get_query_precision(&self) -> Option<String> {
+        self.get(0).map(|q| q.get_precision())
+    }
 }
 
 #[cfg(test)]
