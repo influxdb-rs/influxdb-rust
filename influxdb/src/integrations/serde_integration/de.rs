@@ -22,11 +22,11 @@ where
             Name,
             Columns,
             Values,
-        };
+        }
 
         struct SeriesVisitor<T> {
             _inner_type: PhantomData<T>,
-        };
+        }
 
         impl<'de, T> Visitor<'de> for SeriesVisitor<T>
         where
@@ -115,12 +115,12 @@ where
             Tags,
             Columns,
             Values,
-        };
+        }
 
         struct SeriesVisitor<TAG, T> {
             _tag_type: PhantomData<TAG>,
             _value_type: PhantomData<T>,
-        };
+        }
 
         impl<'de, TAG, T> Visitor<'de> for SeriesVisitor<TAG, T>
         where

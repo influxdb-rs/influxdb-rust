@@ -55,9 +55,9 @@ impl fmt::Display for Timestamp {
     }
 }
 
-impl Into<DateTime<Utc>> for Timestamp {
-    fn into(self) -> DateTime<Utc> {
-        match self {
+impl From<Timestamp> for DateTime<Utc> {
+    fn from(ts: Timestamp) -> DateTime<Utc> {
+        match ts {
             Timestamp::Hours(h) => {
                 let nanos =
                     h * MINUTES_PER_HOUR * SECONDS_PER_MINUTE * MILLIS_PER_SECOND * NANOS_PER_MILLI;
