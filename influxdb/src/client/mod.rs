@@ -18,7 +18,7 @@
 use futures::prelude::*;
 use surf::{self, Client as SurfClient, StatusCode};
 
-use crate::query::QueryTypes;
+use crate::query::QueryType;
 use crate::Error;
 use crate::Query;
 use std::collections::HashMap;
@@ -159,14 +159,13 @@ impl Client {
     pub async fn query<'q, Q>(&self, q: &'q Q) -> Result<String, Error>
     where
         Q: Query,
-        &'q Q: Into<QueryTypes<'q>>,
     {
         let query = q.build().map_err(|err| Error::InvalidQueryError {
             error: err.to_string(),
         })?;
 
-        let request_builder = match q.into() {
-            QueryTypes::Read(_) => {
+        let request_builder = match q.get_type() {
+            QueryType::ReadQuery => {
                 let read_query = query.get();
                 let url = &format!("{}/query", &self.url);
                 let mut parameters = self.parameters.as_ref().clone();
@@ -178,10 +177,10 @@ impl Client {
                     self.client.post(url).query(&parameters)
                 }
             }
-            QueryTypes::Write(write_query) => {
+            QueryType::WriteQuery(precision) => {
                 let url = &format!("{}/write", &self.url);
                 let mut parameters = self.parameters.as_ref().clone();
-                parameters.insert("precision", write_query.get_precision());
+                parameters.insert("precision", precision);
 
                 self.client.post(url).body(query.get()).query(&parameters)
             }

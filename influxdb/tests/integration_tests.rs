@@ -57,10 +57,10 @@ async fn test_connection_error() {
     assert_result_err(&read_result);
     match read_result {
         Err(Error::ConnectionError { .. }) => {}
-        _ => panic!(format!(
+        _ => panic!(
             "Should cause a ConnectionError: {}",
             read_result.unwrap_err()
-        )),
+        ),
     }
 }
 
@@ -139,10 +139,10 @@ async fn test_wrong_authed_write_and_read() {
             assert_result_err(&write_result);
             match write_result {
                 Err(Error::AuthorizationError) => {}
-                _ => panic!(format!(
+                _ => panic!(
                     "Should be an AuthorizationError: {}",
                     write_result.unwrap_err()
-                )),
+                ),
             }
 
             let read_query = Query::raw_read_query("SELECT * FROM weather");
@@ -150,10 +150,10 @@ async fn test_wrong_authed_write_and_read() {
             assert_result_err(&read_result);
             match read_result {
                 Err(Error::AuthorizationError) => {}
-                _ => panic!(format!(
+                _ => panic!(
                     "Should be an AuthorizationError: {}",
                     read_result.unwrap_err()
-                )),
+                ),
             }
 
             let client = Client::new("http://localhost:9086", TEST_NAME)
@@ -163,10 +163,10 @@ async fn test_wrong_authed_write_and_read() {
             assert_result_err(&read_result);
             match read_result {
                 Err(Error::AuthenticationError) => {}
-                _ => panic!(format!(
+                _ => panic!(
                     "Should be an AuthenticationError: {}",
                     read_result.unwrap_err()
-                )),
+                ),
             }
         },
         || async move {
@@ -207,10 +207,10 @@ async fn test_non_authed_write_and_read() {
             assert_result_err(&write_result);
             match write_result {
                 Err(Error::AuthorizationError) => {}
-                _ => panic!(format!(
+                _ => panic!(
                     "Should be an AuthorizationError: {}",
                     write_result.unwrap_err()
-                )),
+                ),
             }
 
             let read_query = Query::raw_read_query("SELECT * FROM weather");
@@ -218,10 +218,10 @@ async fn test_non_authed_write_and_read() {
             assert_result_err(&read_result);
             match read_result {
                 Err(Error::AuthorizationError) => {}
-                _ => panic!(format!(
+                _ => panic!(
                     "Should be an AuthorizationError: {}",
                     read_result.unwrap_err()
-                )),
+                ),
             }
         },
         || async move {

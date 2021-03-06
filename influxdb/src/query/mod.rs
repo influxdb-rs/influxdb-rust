@@ -55,9 +55,9 @@ impl fmt::Display for Timestamp {
     }
 }
 
-impl Into<DateTime<Utc>> for Timestamp {
-    fn into(self) -> DateTime<Utc> {
-        match self {
+impl From<Timestamp> for DateTime<Utc> {
+    fn from(ts: Timestamp) -> DateTime<Utc> {
+        match ts {
             Timestamp::Hours(h) => {
                 let nanos =
                     h * MINUTES_PER_HOUR * SECONDS_PER_MINUTE * MILLIS_PER_SECOND * NANOS_PER_MILLI;
@@ -90,24 +90,6 @@ where
 {
     fn from(date_time: DateTime<T>) -> Self {
         Timestamp::Nanoseconds(date_time.timestamp_nanos() as u128)
-    }
-}
-
-/// Internal enum used to represent either type of query.
-pub enum QueryTypes<'a> {
-    Read(&'a ReadQuery),
-    Write(&'a WriteQuery),
-}
-
-impl<'a> From<&'a ReadQuery> for QueryTypes<'a> {
-    fn from(query: &'a ReadQuery) -> Self {
-        Self::Read(query)
-    }
-}
-
-impl<'a> From<&'a WriteQuery> for QueryTypes<'a> {
-    fn from(query: &'a WriteQuery) -> Self {
-        Self::Write(query)
     }
 }
 
@@ -192,7 +174,8 @@ impl PartialEq<&str> for ValidQuery {
 #[derive(PartialEq, Debug)]
 pub enum QueryType {
     ReadQuery,
-    WriteQuery,
+    /// write query with precision
+    WriteQuery(String),
 }
 
 #[cfg(test)]

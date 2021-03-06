@@ -82,7 +82,7 @@ pub use error::Error;
 pub use query::{
     read_query::ReadQuery,
     write_query::{Type, WriteQuery},
-    InfluxDbWriteable, Query, QueryType, QueryTypes, Timestamp, ValidQuery,
+    InfluxDbWriteable, Query, QueryType, Timestamp, ValidQuery,
 };
 
 #[cfg(feature = "use-serde")]

@@ -205,7 +205,29 @@ impl Query for WriteQuery {
     }
 
     fn get_type(&self) -> QueryType {
-        QueryType::WriteQuery
+        QueryType::WriteQuery(self.get_precision())
+    }
+}
+
+impl Query for Vec<WriteQuery> {
+    fn build(&self) -> Result<ValidQuery, Error> {
+        let mut qlines = Vec::new();
+
+        for q in self {
+            let valid_query = q.build()?;
+            qlines.push(valid_query.0);
+        }
+
+        Ok(ValidQuery(qlines.join("\n")))
+    }
+
+    fn get_type(&self) -> QueryType {
+        QueryType::WriteQuery(
+            self.get(0)
+                .map(|q| q.get_precision())
+                // use "ms" as placeholder if query is empty
+                .unwrap_or_else(|| "ms".to_owned()),
+        )
     }
 }
 
@@ -296,7 +318,7 @@ mod tests {
             .add_tag("location", "us-midwest")
             .add_tag("season", "summer");
 
-        assert_eq!(query.get_type(), QueryType::WriteQuery);
+        assert_eq!(query.get_type(), QueryType::WriteQuery("h".to_owned()));
     }
 
     #[test]
@@ -316,6 +338,27 @@ mod tests {
         assert_eq!(
             query_res,
             r#"wea\,\ ther=,location=us-midwest,loc\,\ \="ation=us\,\ \"mid\=west temperature=82i,"temp\=era\,t\ ure"="too\"\\\\hot",float=82 11"#
+        );
+    }
+
+    #[test]
+    fn test_batch() {
+        let q0 = Timestamp::Hours(11)
+            .into_query("weather")
+            .add_field("temperature", 82)
+            .add_tag("location", "us-midwest");
+
+        let q1 = Timestamp::Hours(12)
+            .into_query("weather")
+            .add_field("temperature", 65)
+            .add_tag("location", "us-midwest");
+
+        let query = vec![q0, q1].build();
+
+        assert_eq!(
+            query.unwrap().get(),
+            r#"weather,location=us-midwest temperature=82i 11
+weather,location=us-midwest temperature=65i 12"#
         );
     }
 }
