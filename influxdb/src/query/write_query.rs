@@ -340,4 +340,25 @@ mod tests {
             r#"wea\,\ ther=,location=us-midwest,loc\,\ \="ation=us\,\ \"mid\=west temperature=82i,"temp\=era\,t\ ure"="too\"\\\\hot",float=82 11"#
         );
     }
+
+    #[test]
+    fn test_batch() {
+        let q0 = Timestamp::Hours(11)
+            .into_query("weather")
+            .add_field("temperature", 82)
+            .add_tag("location", "us-midwest");
+
+        let q1 = Timestamp::Hours(12)
+            .into_query("weather")
+            .add_field("temperature", 65)
+            .add_tag("location", "us-midwest");
+
+        let query = vec![q0, q1].build();
+
+        assert_eq!(
+            query.unwrap().get(),
+            r#"weather,location=us-midwest temperature=82i 11
+weather,location=us-midwest temperature=65i 12"#
+        );
+    }
 }
