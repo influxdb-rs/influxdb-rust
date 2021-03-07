@@ -16,7 +16,7 @@
 //! ```
 
 use futures::prelude::*;
-use surf::{self, Client as SurfClient, StatusCode};
+use surf::{self, Client as SurfClient, RequestBuilder, StatusCode};
 
 use crate::query::QueryType;
 use crate::Error;
@@ -30,6 +30,8 @@ pub struct Client {
     pub(crate) url: Arc<String>,
     pub(crate) parameters: Arc<HashMap<&'static str, String>>,
     pub(crate) client: SurfClient,
+    pub(crate) username: Option<String>,
+    pub(crate) password: Option<String>,
 }
 
 impl Client {
@@ -58,6 +60,8 @@ impl Client {
             url: Arc::new(url.into()),
             parameters: Arc::new(parameters),
             client: SurfClient::new(),
+            username: None,
+            password: None,
         }
     }
 
@@ -80,10 +84,8 @@ impl Client {
         S1: Into<String>,
         S2: Into<String>,
     {
-        let mut with_auth = self.parameters.as_ref().clone();
-        with_auth.insert("u", username.into());
-        with_auth.insert("p", password.into());
-        self.parameters = Arc::new(with_auth);
+        self.username = Some(username.into());
+        self.password = Some(password.into());
         self
     }
 
@@ -172,9 +174,9 @@ impl Client {
                 parameters.insert("q", read_query.clone());
 
                 if read_query.contains("SELECT") || read_query.contains("SHOW") {
-                    self.client.get(url).query(&parameters)
+                    self.try_authed(self.client.get(url)).query(&parameters)
                 } else {
-                    self.client.post(url).query(&parameters)
+                    self.try_authed(self.client.post(url)).query(&parameters)
                 }
             }
             QueryType::WriteQuery(precision) => {
@@ -182,7 +184,9 @@ impl Client {
                 let mut parameters = self.parameters.as_ref().clone();
                 parameters.insert("precision", precision);
 
-                self.client.post(url).body(query.get()).query(&parameters)
+                self.try_authed(self.client.post(url))
+                    .body(query.get())
+                    .query(&parameters)
             }
         }
         .map_err(|err| Error::UrlConstructionError {
@@ -219,6 +223,14 @@ impl Client {
         }
 
         Ok(s)
+    }
+
+    fn try_authed(&self, rb: RequestBuilder) -> RequestBuilder {
+        if let (Some(ref username), Some(ref password)) = (&self.username, &self.password) {
+            rb.header("Authorization", format!("Basic {}:{}", username, password))
+        } else {
+            rb
+        }
     }
 }
 
