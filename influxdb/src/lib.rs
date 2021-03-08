@@ -83,7 +83,7 @@
 //!    ```toml
 //!    influxdb = { version = "0.3.0", default-features = false, features = ["derive", "use-serde", "h1-client"] }
 //!    ```
-//! - **[async-h1](https://github.com/http-rs/async-h1)** with [rutstls](https://github.com/ctz/rustls)
+//! - **[async-h1](https://github.com/http-rs/async-h1)** with [rustls](https://github.com/ctz/rustls)
 //!    ```toml
 //!    influxdb = { version = "0.3.0", default-features = false, features = ["derive", "use-serde", "h1-client-rustls"] }
 //!    ```
