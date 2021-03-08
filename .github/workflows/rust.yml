@@ -48,6 +48,9 @@ jobs:
     integration_test:
         name: Integration Tests (stable/ubuntu-latest)
         runs-on: ubuntu-latest
+        strategy:
+            matrix:
+                http-backend: [curl-client, h1-client, h1-client-rustls, hyper-client]
         services:
             influxdb:
                 image: influxdb:1.8
@@ -67,7 +70,7 @@ jobs:
         steps:
             - uses: actions/checkout@v1
             - uses: dtolnay/rust-toolchain@stable
-            - run: cargo test --package influxdb --package influxdb_derive --all-features --no-fail-fast
+            - run: cargo test --manifest-path=./influxdb/Cargo.toml --no-default-features --features 'use-serde derive ${{ matrix.http-backend }}' --no-fail-fast
 
     coverage:
         name: Code Coverage (stable/ubuntu-20.04)

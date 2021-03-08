@@ -18,7 +18,7 @@ pub fn create_client<T>(db_name: T) -> Client
 where
     T: Into<String>,
 {
-    Client::new("http://localhost:8086", db_name)
+    Client::new("http://127.0.0.1:8086", db_name)
 }
 
 #[cfg(not(tarpaulin_include))]
