@@ -7,6 +7,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2021-03-08
+
+### Fixed
+
+-  Fix deserialization of Series in case of no values ([@JEnoch](https://github.com/JEnoch) in [#75](https://github.com/Empty2k12/influxdb-rust/pull/75))
+
+### Added
+
+-  implement `#[influxdb(tag)]` and `#[influxdb(ignore)]` ([@blasrodri](https://github.com/blasrodri) in [#81](https://github.com/Empty2k12/influxdb-rust/pull/81))
+
+    `#[tag]` is now `#[influxdb(tag)]` and fields can be ignored with `#[influxdb(ignore)]`
+
+-  Batch write support ([@sunng87](https://github.com/sunng87) in [#87](https://github.com/Empty2k12/influxdb-rust/pull/87))
+
+    Build a query containing mutliple rows to be inserted
+    ```
+    let q0 = Timestamp::Hours(11)
+        .into_query("weather")
+        .add_field("temperature", 82)
+        .add_tag("location", "us-midwest");
+
+    let q1 = Timestamp::Hours(12)
+        .into_query("weather")
+        .add_field("temperature", 65)
+        .add_tag("location", "us-midwest");
+
+    let query = vec![q0, q1].build();
+    ```
+
+### Changed
+
+-  Assertion should consider case-insensitive keywords ([@rcastill](https://github.com/rcastill) in [#83](https://github.com/Empty2k12/influxdb-rust/pull/83))
+
+    `#[tag]` is now `#[influxdb(tag)]` and fields can be ignored with `#[influxdb(ignore)]`
+
+-  Add h1-client-rustls feature ([@JEnoch](https://github.com/JEnoch) in [#88](https://github.com/Empty2k12/influxdb-rust/pull/88))
+
+    Switch between multiple http backends as described in the [README.md](README.md#Choice-of-HTTP-backend)
+
+
 ## [0.3.0] - 2020-11-15
 
 ### Changed
@@ -120,7 +160,8 @@ This release removes the prefix `InfluxDb` of most types in this library and ree
 -   Improved Test Coverage: There's now even more tests verifying correctness of the crate (#5)
 -   It's no longer necessary to supply a wildcard generic when working with serde*integration: `client.json_query::<Weather>(query)` instead of `client.json_query::<Weather, *>(query)`
 
-[unreleased]: https://github.com/Empty2k12/influxdb-rust/compare/v0.3.0...HEAD
+[unreleased]: https://github.com/Empty2k12/influxdb-rust/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/Empty2k12/influxdb-rust/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/Empty2k12/influxdb-rust/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/Empty2k12/influxdb-rust/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/Empty2k12/influxdb-rust/compare/v0.0.6...v0.1.0

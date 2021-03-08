@@ -2,7 +2,7 @@
 
 [package]
 name = "influxdb_derive"
-version = "0.3.0"
+version = "0.4.0"
 authors = ["Gero Gerke <11deutron11@gmail.com>"]
 edition = "2018"
 description = "InfluxDB Driver for Rust - Derive"

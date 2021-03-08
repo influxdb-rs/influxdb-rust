@@ -1,7 +1,7 @@
 //! This library is a work in progress. This means a feature you might need is not implemented
 //! yet or could be handled better.
 //!
-//! Pull requests are always welcome. See [Contributing](https://github.com/Empty2k12/influxdb-rust/blob/master/CONTRIBUTING.md) and [Code of Conduct](https://github.com/Empty2k12/influxdb-rust/blob/master/CODE_OF_CONDUCT.md).
+//! Pull requests are always welcome. See [Contributing](https://github.com/Empty2k12/influxdb-rust/blob/master/CONTRIBUTING.md) and [Code of Conduct](https://github.com/Empty2k12/influxdb-rust/blob/master/CODE_OF_CONDUCT.md). For a list of past changes, see [CHANGELOG.md](https://github.com/Empty2k12/influxdb-rust/blob/master/CHANGELOG.md).
 //!
 //! ## Currently Supported Features
 //!
@@ -20,7 +20,7 @@
 //! Add the following to your `Cargo.toml`
 //!
 //! ```toml
-//! influxdb = { version = "0.3.0", features = ["derive"] }
+//! influxdb = { version = "0.4.0", features = ["derive"] }
 //! ```
 //!
 //! For an example with using Serde deserialization, please refer to [serde_integration](crate::integrations::serde_integration)
@@ -73,23 +73,23 @@
 //!
 //! - **[hyper](https://github.com/hyperium/hyper)** (used by default)
 //!    ```toml
-//!    influxdb = { version = "0.3.0", features = ["derive"] }
+//!    influxdb = { version = "0.4.0", features = ["derive"] }
 //!    ```
 //! - **[curl](https://github.com/alexcrichton/curl-rust)**, using [libcurl](https://curl.se/libcurl/)
 //!    ```toml
-//!    influxdb = { version = "0.3.0", default-features = false, features = ["derive", "use-serde", "curl-client"] }
+//!    influxdb = { version = "0.4.0", default-features = false, features = ["derive", "use-serde", "curl-client"] }
 //!    ```
 //! - **[async-h1](https://github.com/http-rs/async-h1)** with native TLS (OpenSSL)
 //!    ```toml
-//!    influxdb = { version = "0.3.0", default-features = false, features = ["derive", "use-serde", "h1-client"] }
+//!    influxdb = { version = "0.4.0", default-features = false, features = ["derive", "use-serde", "h1-client"] }
 //!    ```
 //! - **[async-h1](https://github.com/http-rs/async-h1)** with [rustls](https://github.com/ctz/rustls)
 //!    ```toml
-//!    influxdb = { version = "0.3.0", default-features = false, features = ["derive", "use-serde", "h1-client-rustls"] }
+//!    influxdb = { version = "0.4.0", default-features = false, features = ["derive", "use-serde", "h1-client-rustls"] }
 //!    ```
 //! - WebAssembly's `window.fetch`, via `web-sys` and **[wasm-bindgen](https://github.com/rustwasm/wasm-bindgen)**
 //!    ```toml
-//!    influxdb = { version = "0.3.0", default-features = false, features = ["derive", "use-serde", "wasm-client"] }
+//!    influxdb = { version = "0.4.0", default-features = false, features = ["derive", "use-serde", "wasm-client"] }
 //!    ```
 //!
 //! # License
