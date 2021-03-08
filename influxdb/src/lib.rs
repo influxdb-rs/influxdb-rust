@@ -13,6 +13,7 @@
 //! -   `#[derive(InfluxDbWriteable)]` Derive Macro for Writing / Reading into Structs
 //! -   `GROUP BY` support
 //! -   Tokio and async-std support (see example below) or [available backends](https://github.com/Empty2k12/influxdb-rust/blob/master/influxdb/Cargo.toml)
+//! -   Swappable HTTP backends ([see below](#Choice-of-HTTP-backend))
 //!
 //! # Quickstart
 //!
@@ -65,6 +66,31 @@
 //!
 //! For further examples, check out the Integration Tests in `tests/integration_tests.rs`
 //! in the repository.
+//!
+//! # Choice of HTTP backend
+//!
+//! To communicate with InfluxDB, you can choose the HTTP backend to be used configuring the appropriate feature:
+//!
+//! - **[hyper](https://github.com/hyperium/hyper)** (used by default)
+//!    ```toml
+//!    influxdb = { version = "0.3.0", features = ["derive"] }
+//!    ```
+//! - **[curl](https://github.com/alexcrichton/curl-rust)**, using [libcurl](https://curl.se/libcurl/)
+//!    ```toml
+//!    influxdb = { version = "0.3.0", default-features = false, features = ["derive", "use-serde", "curl-client"] }
+//!    ```
+//! - **[async-h1](https://github.com/http-rs/async-h1)** with native TLS (OpenSSL)
+//!    ```toml
+//!    influxdb = { version = "0.3.0", default-features = false, features = ["derive", "use-serde", "h1-client"] }
+//!    ```
+//! - **[async-h1](https://github.com/http-rs/async-h1)** with [rutstls](https://github.com/ctz/rustls)
+//!    ```toml
+//!    influxdb = { version = "0.3.0", default-features = false, features = ["derive", "use-serde", "h1-client-rustls"] }
+//!    ```
+//! - WebAssembly's `window.fetch`, via `web-sys` and **[wasm-bindgen](https://github.com/rustwasm/wasm-bindgen)**
+//!    ```toml
+//!    influxdb = { version = "0.3.0", default-features = false, features = ["derive", "use-serde", "wasm-client"] }
+//!    ```
 //!
 //! # License
 //!
