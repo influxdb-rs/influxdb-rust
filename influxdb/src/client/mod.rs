@@ -30,8 +30,6 @@ pub struct Client {
     pub(crate) url: Arc<String>,
     pub(crate) parameters: Arc<HashMap<&'static str, String>>,
     pub(crate) client: SurfClient,
-    pub(crate) username: Option<String>,
-    pub(crate) password: Option<String>,
     pub(crate) token: Option<String>,
 }
 
@@ -61,8 +59,6 @@ impl Client {
             url: Arc::new(url.into()),
             parameters: Arc::new(parameters),
             client: SurfClient::new(),
-            username: None,
-            password: None,
             token: None,
         }
     }
@@ -86,8 +82,10 @@ impl Client {
         S1: Into<String>,
         S2: Into<String>,
     {
-        self.username = Some(username.into());
-        self.password = Some(password.into());
+        let mut with_auth = self.parameters.as_ref().clone();
+        with_auth.insert("u", username.into());
+        with_auth.insert("p", password.into());
+        self.parameters = Arc::new(with_auth);
         self
     }
 
@@ -181,11 +179,11 @@ impl Client {
             error: err.to_string(),
         })?;
 
+        let mut parameters = self.parameters.as_ref().clone();
         let request_builder = match q.get_type() {
             QueryType::ReadQuery => {
                 let read_query = query.get();
                 let url = &format!("{}/query", &self.url);
-                let mut parameters = self.parameters.as_ref().clone();
                 parameters.insert("q", read_query.clone());
 
                 if read_query.contains("SELECT") || read_query.contains("SHOW") {
@@ -206,7 +204,7 @@ impl Client {
             error: err.to_string(),
         })?;
 
-        let request = self.try_authed(request_builder).build();
+        let request = self.auth_if_needed(request_builder).build();
         let mut res = self
             .client
             .send(request)
@@ -238,10 +236,8 @@ impl Client {
         Ok(s)
     }
 
-    fn try_authed(&self, rb: RequestBuilder) -> RequestBuilder {
-        if let (Some(ref username), Some(ref password)) = (&self.username, &self.password) {
-            rb.header("Authorization", format!("Basic {}:{}", username, password))
-        } else if let Some(ref token) = self.token {
+    fn auth_if_needed(&self, rb: RequestBuilder) -> RequestBuilder {
+        if let Some(ref token) = self.token {
             rb.header("Authorization", format!("Token {}", token))
         } else {
             rb
@@ -267,10 +263,10 @@ mod tests {
         assert_eq!(client.parameters.get("db").unwrap(), "database");
 
         let with_auth = client.with_auth("username", "password");
-        assert_eq!(with_auth.parameters.len(), 1);
+        assert_eq!(with_auth.parameters.len(), 3);
         assert_eq!(with_auth.parameters.get("db").unwrap(), "database");
-        assert_eq!(with_auth.username.unwrap(), "username");
-        assert_eq!(with_auth.password.unwrap(), "password");
+        assert_eq!(with_auth.parameters.get("u").unwrap(), "username");
+        assert_eq!(with_auth.parameters.get("p").unwrap(), "password");
 
         let client = Client::new("http://localhost:8068", "database");
         let with_auth = client.with_token("token");
