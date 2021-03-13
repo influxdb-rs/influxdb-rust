@@ -267,9 +267,15 @@ mod tests {
         assert_eq!(client.parameters.get("db").unwrap(), "database");
 
         let with_auth = client.with_auth("username", "password");
-        assert_eq!(with_auth.parameters.len(), 3);
+        assert_eq!(with_auth.parameters.len(), 1);
         assert_eq!(with_auth.parameters.get("db").unwrap(), "database");
-        assert_eq!(with_auth.parameters.get("u").unwrap(), "username");
-        assert_eq!(with_auth.parameters.get("p").unwrap(), "password");
+        assert_eq!(with_auth.username.unwrap(), "username");
+        assert_eq!(with_auth.password.unwrap(), "password");
+
+        let client = Client::new("http://localhost:8068", "database");
+        let with_auth = client.with_token("token");
+        assert_eq!(with_auth.parameters.len(), 1);
+        assert_eq!(with_auth.parameters.get("db").unwrap(), "database");
+        assert_eq!(with_auth.token.unwrap(), "token");
     }
 }
