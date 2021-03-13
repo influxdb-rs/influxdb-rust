@@ -36,6 +36,7 @@ pub struct Client {
     pub(crate) parameters: Arc<HashMap<&'static str, String>>,
     pub(crate) username: Option<String>,
     pub(crate) password: Option<String>,
+    pub(crate) token: Option<String>,
     pub(crate) client: HttpClient,
 }
 
@@ -93,6 +94,7 @@ impl Client {
             client: HttpClient::new(),
             username: None,
             password: None,
+            token: None,
         }
     }
 
@@ -125,6 +127,19 @@ impl Client {
     #[must_use = "Creating a client is pointless unless you use it"]
     pub fn with_http_client(mut self, http_client: HttpClient) -> Self {
         self.client = http_client;
+        self
+    }
+
+    /// Add authorization token to [`Client`](crate::Client)
+    ///
+    /// This is designed for influxdb 2.0's backward-compatible API which
+    /// requires authrozation by default. You can create such token from
+    /// console of influxdb 2.0 .
+    pub fn with_token<S>(mut self, token: S) -> Self
+    where
+        S: Into<String>,
+    {
+        self.token = Some(token.into());
         self
     }
 
@@ -228,9 +243,9 @@ impl Client {
                 parameters.insert("q", read_query.clone());
 
                 if read_query.contains("SELECT") || read_query.contains("SHOW") {
-                    self.try_authed(self.client.get(url)).query(&parameters)
+                    self.client.get(url).query(&parameters)
                 } else {
-                    self.try_authed(self.client.post(url)).query(&parameters)
+                    self.client.post(url).query(&parameters)
                 }
             }
             QueryType::WriteQuery(precision) => {
@@ -238,9 +253,7 @@ impl Client {
                 let mut parameters = self.parameters.as_ref().clone();
                 parameters.insert("precision", precision);
 
-                self.try_authed(self.client.post(url))
-                    .body(query.get())
-                    .query(&parameters)
+                self.client.post(url).body(query.get()).query(&parameters)
             }
         };
 
@@ -249,7 +262,7 @@ impl Client {
             error: err.to_string(),
         })?;
 
-        let res = request_builder
+        let res = self.try_authed(request_builder)
             .send()
             .map_err(|err| Error::ConnectionError {
                 error: err.to_string(),
@@ -281,6 +294,8 @@ impl Client {
     fn try_authed(&self, rb: RequestBuilder) -> RequestBuilder {
         if let (Some(ref username), Some(ref password)) = (&self.username, &self.password) {
             rb.header("Authorization", format!("Basic {}:{}", username, password))
+        } else if let Some(ref token) = self.token {
+            rb.header("Authorization", format!("Token {}", token))
         } else {
             rb
         }
