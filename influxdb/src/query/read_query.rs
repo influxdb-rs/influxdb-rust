@@ -47,14 +47,14 @@ mod tests {
 
     #[test]
     fn test_read_builder_single_query() {
-        let query = Query::raw_read_query("SELECT * FROM aachen").build();
+        let query = <dyn Query>::raw_read_query("SELECT * FROM aachen").build();
 
         assert_eq!(query.unwrap(), "SELECT * FROM aachen");
     }
 
     #[test]
     fn test_read_builder_multi_query() {
-        let query = Query::raw_read_query("SELECT * FROM aachen")
+        let query = <dyn Query>::raw_read_query("SELECT * FROM aachen")
             .add_query("SELECT * FROM cologne")
             .build();
 
@@ -63,7 +63,7 @@ mod tests {
 
     #[test]
     fn test_correct_query_type() {
-        let query = Query::raw_read_query("SELECT * FROM aachen");
+        let query = <dyn Query>::raw_read_query("SELECT * FROM aachen");
 
         assert_eq!(query.get_type(), QueryType::ReadQuery);
     }
