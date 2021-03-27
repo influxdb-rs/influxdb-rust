@@ -21,6 +21,7 @@ where
     Client::new("http://127.0.0.1:8086", db_name)
 }
 
+#[allow(dead_code)]
 #[cfg(not(tarpaulin_include))]
 pub async fn create_db<T>(name: T) -> Result<String, Error>
 where
@@ -33,6 +34,7 @@ where
         .await
 }
 
+#[allow(dead_code)]
 #[cfg(not(tarpaulin_include))]
 pub async fn delete_db<T>(name: T) -> Result<String, Error>
 where
