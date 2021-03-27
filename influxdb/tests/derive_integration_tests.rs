@@ -101,8 +101,9 @@ async fn test_write_and_read_option() {
                 .query(&weather_reading.into_query("weather_reading".to_string()))
                 .await;
             assert_result_ok(&write_result);
-            let query =
-                Query::raw_read_query("SELECT time, pressure, wind_strength FROM weather_reading");
+            let query = <dyn Query>::raw_read_query(
+                "SELECT time, pressure, wind_strength FROM weather_reading",
+            );
             let result = client.json_query(query).await.and_then(|mut db_result| {
                 println!("{:?}", db_result);
                 db_result.deserialize_next::<WeatherReadingWithoutIgnored>()
