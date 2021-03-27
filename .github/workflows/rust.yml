@@ -97,7 +97,7 @@ jobs:
             influxdbv2:
                 image: influxdb:2.0
                 ports:
-                    - 8086:8086
+                    - 9086:8086
                 env:
                     DOCKER_INFLUXDB_INIT_USERNAME: admin
                     DOCKER_INFLUXDB_INIT_PASSWORD: password
