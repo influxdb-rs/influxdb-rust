@@ -34,7 +34,7 @@ jobs:
         runs-on: ${{ matrix.os }}
         strategy:
             matrix:
-                rust_release: [1.45, stable, nightly]
+                rust_release: [1.46, stable, nightly]
                 os: [ubuntu-latest, windows-latest, macOS-latest]
 
         steps:
@@ -50,7 +50,7 @@ jobs:
         runs-on: ${{ matrix.os }}
         strategy:
             matrix:
-                rust_release: [1.45, stable, nightly]
+                rust_release: [1.46, stable, nightly]
                 os: [ubuntu-latest, windows-latest, macOS-latest]
 
         steps:
