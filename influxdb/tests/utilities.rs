@@ -14,6 +14,7 @@ pub fn assert_result_ok<A: std::fmt::Debug, B: std::fmt::Debug>(result: &Result<
     result.as_ref().expect("assert_result_ok failed");
 }
 
+#[allow(dead_code)]
 #[cfg(not(tarpaulin_include))]
 pub fn create_client<T>(db_name: T) -> Client
 where
