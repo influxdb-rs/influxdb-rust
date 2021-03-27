@@ -215,6 +215,7 @@ async fn test_non_authed_write_and_read() {
 
             let read_query = ReadQuery::new("SELECT * FROM weather");
             let read_result = non_authed_client.query(read_query).await;
+
             assert_result_err(&read_result);
             match read_result {
                 Err(Error::AuthorizationError) => {}
