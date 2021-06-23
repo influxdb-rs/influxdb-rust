@@ -25,8 +25,10 @@ jobs:
                   components: "rustfmt,clippy"
             - name: Check code formatting
               run: cargo fmt --all -- --check
-            - name: Check Clippy lints
-              run: cargo clippy --all-targets --all-features -- -D warnings
+            - name: Check Clippy lints (reqwest)
+              run: cargo clippy --all-targets --no-default-features --features use-serde,derive,reqwest-client -- -D warnings
+            - name: Check Clippy lints (surf)
+              run: cargo clippy --all-targets --no-default-features --features use-serde,derive,hyper-client -- -D warnings
 
     compile:
         name: Compile (${{ matrix.rust_release }}/${{ matrix.os }})
@@ -121,7 +123,7 @@ jobs:
               cargo tarpaulin -v \
                 --target-dir target/tarpaulin \
                 --workspace \
-                --all-features \
+                --features use-serde,derive \
                 --exclude-files 'derive/*' \
                 --exclude-files 'target/*' \
                 --ignore-panics --ignore-tests \
