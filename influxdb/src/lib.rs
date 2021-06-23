@@ -30,8 +30,8 @@
 //! use influxdb::InfluxDbWriteable;
 //! use chrono::{DateTime, Utc};
 //!
-//! #[async_std::main]
-//! // or #[tokio::main] if you prefer
+//! #[tokio::main]
+//! // or #[async_std::main] if you prefer
 //! async fn main() {
 //!     // Connect to db `test` on `http://localhost:8086`
 //!     let client = Client::new("http://localhost:8086", "test");
@@ -69,11 +69,21 @@
 //!
 //! # Choice of HTTP backend
 //!
-//! To communicate with InfluxDB, you can choose the HTTP backend to be used configuring the appropriate feature:
+//! To communicate with InfluxDB, you can choose the HTTP backend to be used configuring the appropriate feature. We recommend sticking with the default reqwest-based client, unless you really need async-std compatibility.
 //!
-//! - **[hyper](https://github.com/hyperium/hyper)** (used by default)
+//! - **[hyper](https://github.com/hyperium/hyper)** (through reqwest, used by default), with [rustls](https://github.com/ctz/rustls)
+//!   ```toml
+//!   influxdb = { version = "0.4.0", features = ["derive"] }
+//!   ```
+//!
+//! - **[hyper](https://github.com/hyperium/hyper)** (through reqwest), with native TLS (OpenSSL)
+//!   ```toml
+//!   influxdb = { version = "0.4.0", default-features = false, features = ["derive", "use-serde", "reqwest-client"] }
+//!   ```
+//!
+//! - **[hyper](https://github.com/hyperium/hyper)** (through surf), use this if you need tokio 0.2 compatibility
 //!    ```toml
-//!    influxdb = { version = "0.4.0", features = ["derive"] }
+//!    influxdb = { version = "0.4.0", default-features = false, features = ["derive", "use-serde", "curl-client"] }
 //!    ```
 //! - **[curl](https://github.com/alexcrichton/curl-rust)**, using [libcurl](https://curl.se/libcurl/)
 //!    ```toml
@@ -98,6 +108,12 @@
 
 #![allow(clippy::needless_doctest_main)]
 #![allow(clippy::needless_lifetimes)] // False positive in client/mod.rs query fn
+
+#[cfg(all(feature = "reqwest", feature = "surf"))]
+compile_error!("You need to choose between reqwest and surf; enabling both is not supported");
+
+#[cfg(not(any(feature = "reqwest", feature = "surf")))]
+compile_error!("You need to choose an http client; consider not disabling default features");
 
 mod client;
 mod error;
