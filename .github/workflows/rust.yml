@@ -50,7 +50,7 @@ jobs:
         runs-on: ubuntu-latest
         strategy:
             matrix:
-                http-backend: [curl-client, h1-client, h1-client-rustls, hyper-client]
+                http-backend: [curl-client, h1-client, h1-client-rustls, hyper-client, reqwest-client, reqwest-client-rustls]
         services:
             influxdb:
                 image: influxdb:1.8

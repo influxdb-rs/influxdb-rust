@@ -45,4 +45,4 @@ wasm-client = ["surf", "surf/wasm-client"]
 [dev-dependencies]
 async-std = { version = "1.6.5", features = ["attributes"] }
 tokio02 = { package = "tokio", version = "0.2.22", features = ["rt-threaded", "macros"] }
-tokio = { version = "1.7", features = ["rt"] }
+tokio = { version = "1.7", features = ["macros", "rt"] }
