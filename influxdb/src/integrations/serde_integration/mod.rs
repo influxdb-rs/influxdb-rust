@@ -50,7 +50,7 @@ mod de;
 
 use serde::{de::DeserializeOwned, Deserialize};
 
-use crate::{Client, Error, Query, ReadQuery, client::check_status};
+use crate::{client::check_status, Client, Error, Query, ReadQuery};
 
 #[derive(Deserialize)]
 #[doc(hidden)]
@@ -141,17 +141,15 @@ impl Client {
         let url = &format!("{}/query", &self.url);
         let mut parameters = self.parameters.as_ref().clone();
         parameters.insert("q", read_query);
-        let request_builder = self
-            .client
-            .get(url)
-            .query(&parameters);
+        let request_builder = self.client.get(url).query(&parameters);
 
         #[cfg(feature = "surf")]
         let request_builder = request_builder.map_err(|err| Error::UrlConstructionError {
             error: err.to_string(),
         })?;
 
-        let res = request_builder.send()
+        let res = request_builder
+            .send()
             .await
             .map_err(|err| Error::ConnectionError {
                 error: err.to_string(),
@@ -164,7 +162,7 @@ impl Client {
         let mut res = res;
         #[cfg(feature = "surf")]
         let body = res.body_bytes();
-        
+
         let body = body.await.map_err(|err| Error::ProtocolError {
             error: err.to_string(),
         })?;
