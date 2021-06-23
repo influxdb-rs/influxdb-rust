@@ -25,8 +25,8 @@
     <a href="https://www.rust-lang.org/en-US/">
         <img src="https://img.shields.io/badge/Made%20with-Rust-orange.svg" alt='Build with Rust' />
     </a>
-    <a href="https://blog.rust-lang.org/2020/03/12/Rust-1.45.html">
-        <img src="https://img.shields.io/badge/rustc-1.45+-yellow.svg" alt='Minimum Rust Version' />
+    <a href="https://blog.rust-lang.org/2020/08/27/Rust-1.46.0.html">
+        <img src="https://img.shields.io/badge/rustc-1.46+-yellow.svg" alt='Minimum Rust Version' />
     </a>
 </p>
 
@@ -62,8 +62,8 @@ use influxdb::{Client, Query, Timestamp};
 use influxdb::InfluxDbWriteable;
 use chrono::{DateTime, Utc};
 
-#[async_std::main]
-// or #[tokio::main] if you prefer
+#[tokio::main]
+// or #[async_std::main] if you prefer
 async fn main() {
     // Connect to db `test` on `http://localhost:8086`
     let client = Client::new("http://localhost:8086", "test");
@@ -101,11 +101,21 @@ in the repository.
 
 ## Choice of HTTP backend
 
-To communicate with InfluxDB, you can choose the HTTP backend to be used configuring the appropriate feature:
+To communicate with InfluxDB, you can choose the HTTP backend to be used configuring the appropriate feature. We recommend sticking with the default reqwest-based client, unless you really need async-std compatibility.
 
-- **[hyper](https://github.com/hyperium/hyper)** (used by default)
+- **[hyper](https://github.com/hyperium/hyper)** (through reqwest, used by default), with [rustls](https://github.com/ctz/rustls)
+  ```toml
+  influxdb = { version = "0.4.0", features = ["derive"] }
+  ```
+
+- **[hyper](https://github.com/hyperium/hyper)** (through reqwest), with native TLS (OpenSSL)
+  ```toml
+  influxdb = { version = "0.4.0", default-features = false, features = ["derive", "use-serde", "reqwest-client"] }
+  ```
+
+- **[hyper](https://github.com/hyperium/hyper)** (through surf), use this if you need tokio 0.2 compatibility
    ```toml
-   influxdb = { version = "0.4.0", features = ["derive"] }
+   influxdb = { version = "0.4.0", default-features = false, features = ["derive", "use-serde", "curl-client"] }
    ```
 - **[curl](https://github.com/alexcrichton/curl-rust)**, using [libcurl](https://curl.se/libcurl/)
    ```toml
