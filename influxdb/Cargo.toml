@@ -43,6 +43,5 @@ reqwest-client-rustls = ["reqwest", "reqwest/rustls-tls-webpki-roots"]
 wasm-client = ["surf", "surf/wasm-client"]
 
 [dev-dependencies]
-async-std = { version = "1.6.5", features = ["attributes"] }
-tokio02 = { package = "tokio", version = "0.2.22", features = ["rt-threaded", "macros"] }
+async-std = { version = "1.6.5", features = ["attributes", "tokio02", "tokio1"] }
 tokio = { version = "1.7", features = ["macros", "rt-multi-thread"] }

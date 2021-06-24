@@ -28,9 +28,9 @@ async fn test_ping_influx_db_async_std() {
 
 /// INTEGRATION TEST
 ///
-/// This test case tests whether the InfluxDB server can be connected to and gathers info about it * tested with tokio
+/// This test case tests whether the InfluxDB server can be connected to and gathers info about it - tested with tokio 1.0
 #[tokio::test]
-#[cfg(not(tarpaulin_include))]
+#[cfg(not(any(tarpaulin_include, feature = "hyper-client")))]
 async fn test_ping_influx_db_tokio() {
     let client = create_client("notusedhere");
     let result = client.ping().await;
