@@ -453,8 +453,10 @@ async fn test_json_query_tagged() {
 /// is equal to the data which was written to the database
 /// (tested with tokio)
 #[tokio::test]
-#[cfg(feature = "use-serde")]
-#[cfg(not(tarpaulin_include))]
+#[cfg(all(
+    feature = "use-serde",
+    not(any(tarpaulin_include, feature = "hyper-client"))
+))]
 async fn test_json_query_vec() {
     use serde::Deserialize;
 
