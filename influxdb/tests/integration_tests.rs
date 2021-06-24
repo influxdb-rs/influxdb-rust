@@ -13,7 +13,7 @@ use influxdb::{Client, Error, Query, Timestamp};
 ///
 /// This test case tests whether the InfluxDB server can be connected to and gathers info about it - tested with async_std
 #[async_std::test]
-#[cfg(not(any(tarpaulin_include, feature = "reqwest")))]
+#[cfg(not(tarpaulin_include))]
 async fn test_ping_influx_db_async_std() {
     let client = create_client("notusedhere");
     let result = client.ping().await;
@@ -29,8 +29,7 @@ async fn test_ping_influx_db_async_std() {
 /// INTEGRATION TEST
 ///
 /// This test case tests whether the InfluxDB server can be connected to and gathers info about it * tested with tokio
-#[cfg_attr(feature = "surf", tokio02::test)]
-#[cfg_attr(feature = "reqwest", tokio::test)]
+#[tokio::test]
 #[cfg(not(tarpaulin_include))]
 async fn test_ping_influx_db_tokio() {
     let client = create_client("notusedhere");
@@ -47,8 +46,7 @@ async fn test_ping_influx_db_tokio() {
 /// INTEGRATION TEST
 ///
 /// This test case tests connection error
-#[cfg_attr(feature = "surf", tokio02::test)]
-#[cfg_attr(feature = "reqwest", tokio::test)]
+#[async_std::test]
 #[cfg(not(tarpaulin_include))]
 async fn test_connection_error() {
     let test_name = "test_connection_error";
@@ -69,8 +67,7 @@ async fn test_connection_error() {
 /// INTEGRATION TEST
 ///
 /// This test case tests the Authentication
-#[cfg_attr(feature = "surf", tokio02::test)]
-#[cfg_attr(feature = "reqwest", tokio::test)]
+#[async_std::test]
 #[cfg(not(tarpaulin_include))]
 async fn test_authed_write_and_read() {
     const TEST_NAME: &str = "test_authed_write_and_read";
@@ -118,8 +115,7 @@ async fn test_authed_write_and_read() {
 /// INTEGRATION TEST
 ///
 /// This test case tests the Authentication
-#[cfg_attr(feature = "surf", tokio02::test)]
-#[cfg_attr(feature = "reqwest", tokio::test)]
+#[async_std::test]
 #[cfg(not(tarpaulin_include))]
 async fn test_wrong_authed_write_and_read() {
     const TEST_NAME: &str = "test_wrong_authed_write_and_read";
@@ -189,8 +185,7 @@ async fn test_wrong_authed_write_and_read() {
 /// INTEGRATION TEST
 ///
 /// This test case tests the Authentication
-#[cfg_attr(feature = "surf", tokio02::test)]
-#[cfg_attr(feature = "reqwest", tokio::test)]
+#[async_std::test]
 #[cfg(not(tarpaulin_include))]
 async fn test_non_authed_write_and_read() {
     const TEST_NAME: &str = "test_non_authed_write_and_read";
@@ -245,8 +240,7 @@ async fn test_non_authed_write_and_read() {
 /// INTEGRATION TEST
 ///
 /// This integration tests that writing data and retrieving the data again is working
-#[cfg_attr(feature = "surf", tokio02::test)]
-#[cfg_attr(feature = "reqwest", tokio::test)]
+#[async_std::test]
 #[cfg(not(tarpaulin_include))]
 async fn test_write_and_read_field() {
     const TEST_NAME: &str = "test_write_field";
@@ -279,8 +273,7 @@ async fn test_write_and_read_field() {
 /// INTEGRATION TEST
 ///
 /// This integration tests that writing data and retrieving the data again is working
-#[cfg_attr(feature = "surf", tokio02::test)]
-#[cfg_attr(feature = "reqwest", tokio::test)]
+#[async_std::test]
 #[cfg(feature = "use-serde")]
 #[cfg(not(tarpaulin_include))]
 async fn test_write_and_read_option() {
@@ -342,8 +335,7 @@ async fn test_write_and_read_option() {
 ///
 /// This test case tests whether JSON can be decoded from a InfluxDB response and whether that JSON
 /// is equal to the data which was written to the database
-#[cfg_attr(feature = "surf", tokio02::test)]
-#[cfg_attr(feature = "reqwest", tokio::test)]
+#[async_std::test]
 #[cfg(feature = "use-serde")]
 #[cfg(not(tarpaulin_include))]
 async fn test_json_query() {
@@ -395,8 +387,7 @@ async fn test_json_query() {
 ///
 /// This test case tests whether the response to a GROUP BY can be parsed by
 /// deserialize_next_tagged into a tags struct
-#[cfg_attr(feature = "surf", tokio02::test)]
-#[cfg_attr(feature = "reqwest", tokio::test)]
+#[async_std::test]
 #[cfg(feature = "use-serde")]
 #[cfg(not(tarpaulin_include))]
 async fn test_json_query_tagged() {
@@ -460,8 +451,8 @@ async fn test_json_query_tagged() {
 ///
 /// This test case tests whether JSON can be decoded from a InfluxDB response and wether that JSON
 /// is equal to the data which was written to the database
-#[cfg_attr(feature = "surf", tokio02::test)]
-#[cfg_attr(feature = "reqwest", tokio::test)]
+/// (tested with tokio)
+#[tokio::test]
 #[cfg(feature = "use-serde")]
 #[cfg(not(tarpaulin_include))]
 async fn test_json_query_vec() {
@@ -512,8 +503,7 @@ async fn test_json_query_vec() {
 /// INTEGRATION TEST
 ///
 /// This integration test tests whether using the wrong query method fails building the query
-#[cfg_attr(feature = "surf", tokio02::test)]
-#[cfg_attr(feature = "reqwest", tokio::test)]
+#[async_std::test]
 #[cfg(feature = "use-serde")]
 #[cfg(not(tarpaulin_include))]
 async fn test_serde_multi_query() {
@@ -590,8 +580,7 @@ async fn test_serde_multi_query() {
 /// INTEGRATION TEST
 ///
 /// This integration test tests whether using the wrong query method fails building the query
-#[cfg_attr(feature = "surf", tokio02::test)]
-#[cfg_attr(feature = "reqwest", tokio::test)]
+#[async_std::test]
 #[cfg(feature = "use-serde")]
 #[cfg(not(tarpaulin_include))]
 async fn test_wrong_query_errors() {

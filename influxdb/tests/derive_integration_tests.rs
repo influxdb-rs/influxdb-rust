@@ -51,8 +51,7 @@ fn test_build_query() {
 /// INTEGRATION TEST
 ///
 /// This integration tests that writing data and retrieving the data again is working
-#[cfg_attr(feature = "surf", tokio02::test)]
-#[cfg_attr(feature = "reqwest", tokio::test)]
+#[async_std::test]
 #[cfg(not(tarpaulin_include))]
 async fn test_derive_simple_write() {
     const TEST_NAME: &str = "test_derive_simple_write";
@@ -83,8 +82,7 @@ async fn test_derive_simple_write() {
 /// This integration tests that writing data and retrieving the data again is working
 #[cfg(feature = "derive")]
 #[cfg(feature = "use-serde")]
-#[cfg_attr(feature = "surf", tokio02::test)]
-#[cfg_attr(feature = "reqwest", tokio::test)]
+#[async_std::test]
 #[cfg(not(tarpaulin_include))]
 async fn test_write_and_read_option() {
     const TEST_NAME: &str = "test_write_and_read_option";
