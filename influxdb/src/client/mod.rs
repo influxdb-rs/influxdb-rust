@@ -16,7 +16,7 @@
 //! ```
 
 use futures::prelude::*;
-use surf::{self, Client as SurfClient, StatusCode};
+use reqwest::{self, Client as ReqwestClient, StatusCode};
 
 use crate::query::QueryType;
 use crate::Error;
@@ -29,7 +29,7 @@ use std::sync::Arc;
 pub struct Client {
     pub(crate) url: Arc<String>,
     pub(crate) parameters: Arc<HashMap<&'static str, String>>,
-    pub(crate) client: SurfClient,
+    pub(crate) client: ReqwestClient,
 }
 
 impl Client {
@@ -57,7 +57,7 @@ impl Client {
         Client {
             url: Arc::new(url.into()),
             parameters: Arc::new(parameters),
-            client: SurfClient::new(),
+            client: ReqwestClient::new(),
         }
     }
 
@@ -112,8 +112,8 @@ impl Client {
                 error: format!("{}", err),
             })?;
 
-        let build = res.header("X-Influxdb-Build").unwrap().as_str();
-        let version = res.header("X-Influxdb-Version").unwrap().as_str();
+        let build = res.headers().get("X-Influxdb-Build").unwrap().to_str().unwrap();
+        let version = res.headers().get("X-Influxdb-Version").unwrap().to_str().unwrap();
 
         Ok((build.to_owned(), version.to_owned()))
     }
@@ -184,28 +184,25 @@ impl Client {
 
                 self.client.post(url).body(query.get()).query(&parameters)
             }
-        }
-        .map_err(|err| Error::UrlConstructionError {
-            error: err.to_string(),
-        })?;
+        };
 
-        let request = request_builder.build();
-        let mut res = self
+        let request = request_builder.build().unwrap();
+        let res = self
             .client
-            .send(request)
+            .execute(request)
             .map_err(|err| Error::ConnectionError {
                 error: err.to_string(),
             })
             .await?;
 
         match res.status() {
-            StatusCode::Unauthorized => return Err(Error::AuthorizationError),
-            StatusCode::Forbidden => return Err(Error::AuthenticationError),
+            StatusCode::UNAUTHORIZED => return Err(Error::AuthorizationError),
+            StatusCode::FORBIDDEN => return Err(Error::AuthenticationError),
             _ => {}
         }
 
         let s = res
-            .body_string()
+            .text()
             .await
             .map_err(|_| Error::DeserializationError {
                 error: "response could not be converted to UTF-8".to_string(),

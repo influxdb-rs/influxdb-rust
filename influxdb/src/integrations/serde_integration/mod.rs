@@ -25,7 +25,7 @@
 //! # #[async_std::main]
 //! # async fn main() -> Result<(), influxdb::Error> {
 //! let client = Client::new("http://localhost:8086", "test");
-//! let query = Query::raw_read_query(
+//! let query = <dyn Query>::raw_read_query(
 //!     "SELECT temperature FROM /weather_[a-z]*$/ WHERE time > now() - 1m ORDER BY DESC",
 //! );
 //! let mut db_result = client.json_query(query).await?;
@@ -48,7 +48,7 @@
 
 mod de;
 
-use surf::StatusCode;
+use reqwest::StatusCode;
 
 use serde::{de::DeserializeOwned, Deserialize};
 
@@ -147,26 +147,23 @@ impl Client {
             .client
             .get(url)
             .query(&parameters)
-            .map_err(|err| Error::UrlConstructionError {
-                error: err.to_string(),
-            })?
-            .build();
+            .build().unwrap();
 
-        let mut res = self
+        let res = self
             .client
-            .send(request)
+            .execute(request)
             .await
             .map_err(|err| Error::ConnectionError {
                 error: err.to_string(),
             })?;
 
         match res.status() {
-            StatusCode::Unauthorized => return Err(Error::AuthorizationError),
-            StatusCode::Forbidden => return Err(Error::AuthenticationError),
+            StatusCode::UNAUTHORIZED => return Err(Error::AuthorizationError),
+            StatusCode::FORBIDDEN => return Err(Error::AuthenticationError),
             _ => {}
         }
 
-        let body = res.body_bytes().await.map_err(|err| Error::ProtocolError {
+        let body = res.bytes().await.map_err(|err| Error::ProtocolError {
             error: err.to_string(),
         })?;
 

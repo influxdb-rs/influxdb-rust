@@ -14,7 +14,7 @@
 //!
 //! assert!(write_query.is_ok());
 //!
-//! let read_query = Query::raw_read_query("SELECT * FROM weather")
+//! let read_query = <dyn Query>::raw_read_query("SELECT * FROM weather")
 //!     .build();
 //!
 //! assert!(read_query.is_ok());
@@ -133,7 +133,7 @@ impl dyn Query {
     /// ```rust
     /// use influxdb::Query;
     ///
-    /// Query::raw_read_query("SELECT * FROM weather"); // Is of type [`ReadQuery`](crate::ReadQuery)
+    /// <dyn Query>::raw_read_query("SELECT * FROM weather"); // Is of type [`ReadQuery`](crate::ReadQuery)
     /// ```
     pub fn raw_read_query<S>(read_query: S) -> ReadQuery
     where
