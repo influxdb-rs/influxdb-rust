@@ -135,6 +135,7 @@ impl dyn Query {
     ///
     /// Query::raw_read_query("SELECT * FROM weather"); // Is of type [`ReadQuery`](crate::ReadQuery)
     /// ```
+    #[deprecated(since = "0.5.0", note = "Use ReadQuery::new instead")]
     pub fn raw_read_query<S>(read_query: S) -> ReadQuery
     where
         S: Into<String>,
