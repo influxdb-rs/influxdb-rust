@@ -108,8 +108,10 @@ async fn test_write_and_read_option() {
             });
             assert_result_ok(&result);
             let result = result.unwrap();
-            assert_eq!(result.series[0].values[0].pressure, 100);
-            assert_eq!(result.series[0].values[0].wind_strength, None);
+            let value = &result.series[0].values[0];
+            assert_eq!(value.time, Timestamp::Hours(11).into());
+            assert_eq!(value.pressure, 100);
+            assert_eq!(value.wind_strength, None);
         },
         || async move {
             delete_db(TEST_NAME).await.expect("could not clean up db");
