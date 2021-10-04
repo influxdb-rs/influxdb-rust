@@ -20,7 +20,7 @@ use http::StatusCode;
 #[cfg(feature = "reqwest")]
 use reqwest::{Client as HttpClient, Response as HttpResponse};
 #[cfg(feature = "surf")]
-use surf::{Client as HttpClient, Response as HttpResponse};
+use surf::{Client as HttpClient, HttpClient as SurfHttpClient, Response as HttpResponse};
 
 use crate::query::QueryType;
 use crate::Error;
@@ -88,6 +88,13 @@ impl Client {
         with_auth.insert("u", username.into());
         with_auth.insert("p", password.into());
         self.parameters = Arc::new(with_auth);
+        self
+    }
+
+    /// Allows creation of custom http clients
+    #[cfg(feature = "surf")]
+    pub fn with_http_client<T: SurfHttpClient>(mut self, http_client: T) -> Self {
+        self.client = HttpClient::with_http_client(http_client);
         self
     }
 
