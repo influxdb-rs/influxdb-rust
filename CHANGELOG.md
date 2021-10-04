@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - reqwest-based http client (enabled by default)
+- deprecate `<dyn Query>::raw_read_query` in favour of `ReadQuery::new`
 
 ## [0.4.0] - 2021-03-08
 

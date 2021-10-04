@@ -108,6 +108,7 @@
 
 #![allow(clippy::needless_doctest_main)]
 #![allow(clippy::needless_lifetimes)] // False positive in client/mod.rs query fn
+#![forbid(bare_trait_objects)]
 
 #[cfg(all(feature = "reqwest", feature = "surf"))]
 compile_error!("You need to choose between reqwest and surf; enabling both is not supported");

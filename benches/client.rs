@@ -1,7 +1,7 @@
 use chrono::{DateTime, Utc};
 use influxdb::Error;
 use influxdb::InfluxDbWriteable;
-use influxdb::{Client, Query};
+use influxdb::{Client, ReadQuery};
 use std::sync::Arc;
 use std::time::Instant;
 use tokio::sync::mpsc::unbounded_channel;
@@ -67,7 +67,7 @@ async fn main() {
 async fn prepare_influxdb(client: &Client, db_name: &str) {
     let create_db_stmt = format!("CREATE DATABASE {}", db_name);
     client
-        .query(&Query::raw_read_query(create_db_stmt))
+        .query(&ReadQuery::new(create_db_stmt))
         .await
         .expect("failed to create database");
 }

@@ -5,7 +5,7 @@ mod utilities;
 use influxdb::InfluxDbWriteable;
 
 use chrono::{DateTime, Utc};
-use influxdb::{Query, Timestamp};
+use influxdb::{Query, ReadQuery, Timestamp};
 
 #[cfg(feature = "use-serde")]
 use serde::Deserialize;
@@ -101,8 +101,7 @@ async fn test_write_and_read_option() {
                 .query(&weather_reading.into_query("weather_reading".to_string()))
                 .await;
             assert_result_ok(&write_result);
-            let query =
-                Query::raw_read_query("SELECT time, pressure, wind_strength FROM weather_reading");
+            let query = ReadQuery::new("SELECT time, pressure, wind_strength FROM weather_reading");
             let result = client.json_query(query).await.and_then(|mut db_result| {
                 println!("{:?}", db_result);
                 db_result.deserialize_next::<WeatherReadingWithoutIgnored>()
