@@ -10,10 +10,7 @@ keywords = ["influxdb", "database", "influx"]
 license = "MIT"
 readme = "README.md"
 include = ["src/**/*", "tests/**/*", "Cargo.toml", "LICENSE"]
-repository = "https://github.com/Empty2k12/influxdb-rust"
-
-[badges]
-travis-ci = { repository = "Empty2k12/influxdb-rust", branch = "master" }
+repository = "https://github.com/influxdb-rs/influxdb-rust"
 
 [dependencies]
 chrono = { version = "0.4.11", features = ["serde"] }

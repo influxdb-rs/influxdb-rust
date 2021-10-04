@@ -1,7 +1,7 @@
 //! This library is a work in progress. This means a feature you might need is not implemented
 //! yet or could be handled better.
 //!
-//! Pull requests are always welcome. See [Contributing](https://github.com/Empty2k12/influxdb-rust/blob/master/CONTRIBUTING.md) and [Code of Conduct](https://github.com/Empty2k12/influxdb-rust/blob/master/CODE_OF_CONDUCT.md). For a list of past changes, see [CHANGELOG.md](https://github.com/Empty2k12/influxdb-rust/blob/master/CHANGELOG.md).
+//! Pull requests are always welcome. See [Contributing](https://github.com/influxdb-rs/influxdb-rust/blob/main/CONTRIBUTING.md) and [Code of Conduct](https://github.com/influxdb-rs/influxdb-rust/blob/main/CODE_OF_CONDUCT.md). For a list of past changes, see [CHANGELOG.md](https://github.com/influxdb-rs/influxdb-rust/blob/main/CHANGELOG.md).
 //!
 //! ## Currently Supported Features
 //!
@@ -12,7 +12,7 @@
 //! -   `async`/`await` support
 //! -   `#[derive(InfluxDbWriteable)]` Derive Macro for Writing / Reading into Structs
 //! -   `GROUP BY` support
-//! -   Tokio and async-std support (see example below) or [available backends](https://github.com/Empty2k12/influxdb-rust/blob/master/influxdb/Cargo.toml)
+//! -   Tokio and async-std support (see example below) or [available backends](https://github.com/influxdb-rs/influxdb-rust/blob/main/influxdb/Cargo.toml)
 //! -   Swappable HTTP backends ([see below](#Choice-of-HTTP-backend))
 //!
 //! # Quickstart

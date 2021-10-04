@@ -16,15 +16,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
--  Fix deserialization of Series in case of no values ([@JEnoch](https://github.com/JEnoch) in [#75](https://github.com/Empty2k12/influxdb-rust/pull/75))
+-  Fix deserialization of Series in case of no values ([@JEnoch](https://github.com/JEnoch) in [#75](https://github.com/influxdb-rs/influxdb-rust/pull/75))
 
 ### Added
 
--  implement `#[influxdb(tag)]` and `#[influxdb(ignore)]` ([@blasrodri](https://github.com/blasrodri) in [#81](https://github.com/Empty2k12/influxdb-rust/pull/81))
+-  implement `#[influxdb(tag)]` and `#[influxdb(ignore)]` ([@blasrodri](https://github.com/blasrodri) in [#81](https://github.com/influxdb-rs/influxdb-rust/pull/81))
 
     `#[tag]` is now `#[influxdb(tag)]` and fields can be ignored with `#[influxdb(ignore)]`
 
--  Batch write support ([@sunng87](https://github.com/sunng87) in [#87](https://github.com/Empty2k12/influxdb-rust/pull/87))
+-  Batch write support ([@sunng87](https://github.com/sunng87) in [#87](https://github.com/influxdb-rs/influxdb-rust/pull/87))
 
     Build a query containing mutliple rows to be inserted
     ```
@@ -43,11 +43,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
--  Assertion should consider case-insensitive keywords ([@rcastill](https://github.com/rcastill) in [#83](https://github.com/Empty2k12/influxdb-rust/pull/83))
+-  Assertion should consider case-insensitive keywords ([@rcastill](https://github.com/rcastill) in [#83](https://github.com/influxdb-rs/influxdb-rust/pull/83))
 
     `#[tag]` is now `#[influxdb(tag)]` and fields can be ignored with `#[influxdb(ignore)]`
 
--  Add h1-client-rustls feature ([@JEnoch](https://github.com/JEnoch) in [#88](https://github.com/Empty2k12/influxdb-rust/pull/88))
+-  Add h1-client-rustls feature ([@JEnoch](https://github.com/JEnoch) in [#88](https://github.com/influxdb-rs/influxdb-rust/pull/88))
 
     Switch between multiple http backends as described in the [README.md](README.md#Choice-of-HTTP-backend)
 
@@ -56,26 +56,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
--  Internal request connection pooling ([@Robert-Steiner](https://github.com/Robert-Steiner) in [#73](https://github.com/Empty2k12/influxdb-rust/pull/73))
+-  Internal request connection pooling ([@Robert-Steiner](https://github.com/Robert-Steiner) in [#73](https://github.com/influxdb-rs/influxdb-rust/pull/73))
 
     Previously visible `Client` fields are now private. If you were using them before, please reference them from the creation of the Client.
 
--  Support async-std ([@JEnoch](https://github.com/JEnoch) in [#72](https://github.com/Empty2k12/influxdb-rust/pull/72))
+-  Support async-std ([@JEnoch](https://github.com/JEnoch) in [#72](https://github.com/influxdb-rs/influxdb-rust/pull/72))
 
-    The default backend is still Tokio, but if you're keen on switching, [other backends are exposed](https://github.com/Empty2k12/influxdb-rust/blob/master/influxdb/Cargo.toml) as Cargo features
+    The default backend is still Tokio, but if you're keen on switching, [other backends are exposed](https://github.com/influxdb-rs/influxdb-rust/blob/main/influxdb/Cargo.toml) as Cargo features
 
 ## [0.2.0] - 2020-10-25
 
 ### Added
 
--  Allow `GROUP BY` queries by providing `deserialize_next_tagged` to deserialize the group fields ([@SafariMonkey](https://github.com/SafariMonkey) in [#69](https://github.com/Empty2k12/influxdb-rust/pull/69))
--  Added `Default` for `series` in InfluxDb Response ([@SafariMonkey](https://github.com/SafariMonkey) in [#67](https://github.com/Empty2k12/influxdb-rust/pull/67))
-- `WriteQuery` and `ReadQuery` now derive `Debug` and `Clone` ([@jaredwolff](https://github.com/jaredwolff) in [#63](https://github.com/Empty2k12/influxdb-rust/pull/63))
+-  Allow `GROUP BY` queries by providing `deserialize_next_tagged` to deserialize the group fields ([@SafariMonkey](https://github.com/SafariMonkey) in [#69](https://github.com/influxdb-rs/influxdb-rust/pull/69))
+-  Added `Default` for `series` in InfluxDb Response ([@SafariMonkey](https://github.com/SafariMonkey) in [#67](https://github.com/influxdb-rs/influxdb-rust/pull/67))
+- `WriteQuery` and `ReadQuery` now derive `Debug` and `Clone` ([@jaredwolff](https://github.com/jaredwolff) in [#63](https://github.com/influxdb-rs/influxdb-rust/pull/63))
 
 ### Changed
 
--  Replaced `failure` crate with `thiserror` crate ([@msrd0](https://github.com/msrd0) in [#70](https://github.com/Empty2k12/influxdb-rust/pull/70))
--  Deserialize series are now deserialized using field names not field order ([@SafariMonkey](https://github.com/SafariMonkey) in [#62](https://github.com/Empty2k12/influxdb-rust/pull/62))
+-  Replaced `failure` crate with `thiserror` crate ([@msrd0](https://github.com/msrd0) in [#70](https://github.com/influxdb-rs/influxdb-rust/pull/70))
+-  Deserialize series are now deserialized using field names not field order ([@SafariMonkey](https://github.com/SafariMonkey) in [#62](https://github.com/influxdb-rs/influxdb-rust/pull/62))
 -  Due to InfluxDb inconsistencies between versions and ambiguities, `Timestamp::Now` has been removed. Please calculate the current timestamp since the epoch yourself and use the other available `Timestamp` values like so:
 
     ```
@@ -93,8 +93,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
--  Fixed quotation marks of tag values and escaping of field values ([@Robert-Steiner](https://github.com/Robert-Steiner) in [#68](https://github.com/Empty2k12/influxdb-rust/pull/68))
--  Fixed improper quoting on tag values when the value was text ([@sparky8251](https://github.com/sparky8251) in [#64](https://github.com/Empty2k12/influxdb-rust/pull/64))
+-  Fixed quotation marks of tag values and escaping of field values ([@Robert-Steiner](https://github.com/Robert-Steiner) in [#68](https://github.com/influxdb-rs/influxdb-rust/pull/68))
+-  Fixed improper quoting on tag values when the value was text ([@sparky8251](https://github.com/sparky8251) in [#64](https://github.com/influxdb-rs/influxdb-rust/pull/64))
 
 ## [0.1.0] - 2020-03-17
 
@@ -165,13 +165,13 @@ This release removes the prefix `InfluxDb` of most types in this library and ree
 -   Improved Test Coverage: There's now even more tests verifying correctness of the crate (#5)
 -   It's no longer necessary to supply a wildcard generic when working with serde*integration: `client.json_query::<Weather>(query)` instead of `client.json_query::<Weather, *>(query)`
 
-[unreleased]: https://github.com/Empty2k12/influxdb-rust/compare/v0.4.0...HEAD
-[0.4.0]: https://github.com/Empty2k12/influxdb-rust/compare/v0.3.0...v0.4.0
-[0.3.0]: https://github.com/Empty2k12/influxdb-rust/compare/v0.2.0...v0.3.0
-[0.2.0]: https://github.com/Empty2k12/influxdb-rust/compare/v0.1.0...v0.2.0
-[0.1.0]: https://github.com/Empty2k12/influxdb-rust/compare/v0.0.6...v0.1.0
-[0.0.5]: https://github.com/Empty2k12/influxdb-rust/compare/v0.0.5...v0.0.6
-[0.0.5]: https://github.com/Empty2k12/influxdb-rust/compare/v0.0.4...v0.0.5
-[0.0.4]: https://github.com/Empty2k12/influxdb-rust/compare/v0.0.3...v0.0.4
-[0.0.3]: https://github.com/Empty2k12/influxdb-rust/compare/v0.0.2...v0.0.3
-[0.0.2]: https://github.com/Empty2k12/influxdb-rust/releases/tag/v0.0.2
+[unreleased]: https://github.com/influxdb-rs/influxdb-rust/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/influxdb-rs/influxdb-rust/compare/v0.3.0...v0.4.0
+[0.3.0]: https://github.com/influxdb-rs/influxdb-rust/compare/v0.2.0...v0.3.0
+[0.2.0]: https://github.com/influxdb-rs/influxdb-rust/compare/v0.1.0...v0.2.0
+[0.1.0]: https://github.com/influxdb-rs/influxdb-rust/compare/v0.0.6...v0.1.0
+[0.0.5]: https://github.com/influxdb-rs/influxdb-rust/compare/v0.0.5...v0.0.6
+[0.0.5]: https://github.com/influxdb-rs/influxdb-rust/compare/v0.0.4...v0.0.5
+[0.0.4]: https://github.com/influxdb-rs/influxdb-rust/compare/v0.0.3...v0.0.4
+[0.0.3]: https://github.com/influxdb-rs/influxdb-rust/compare/v0.0.2...v0.0.3
+[0.0.2]: https://github.com/influxdb-rs/influxdb-rust/releases/tag/v0.0.2

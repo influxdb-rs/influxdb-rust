@@ -10,14 +10,10 @@ keywords = ["influxdb", "database", "influx", "derive"]
 license = "MIT"
 readme = "README.md"
 include = ["src/**/*", "tests/**/*", "Cargo.toml", "LICENSE"]
-repository = "https://github.com/Empty2k12/influxdb-rust"
+repository = "https://github.com/influxdb-rs/influxdb-rust"
 
 [lib]
 proc-macro = true
-
-[badges]
-travis-ci = { repository = "Empty2k12/influxdb-rust", branch = "master" }
-coveralls = { repository = "Empty2k12/influxdb-rust", branch = "master", service = "github" }
 
 [dependencies]
 proc-macro2 = "1.0.9"
