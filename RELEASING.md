@@ -10,7 +10,7 @@ This project consists of two crates which need to be published to crates.io in t
 - [ ] `CHANGELOG.md`: Add new Section for the new version number with subsections `Added`, `Changed` and `Fixed`.
 - [ ] `CHANGELOG.md`: For each commit since the last release commit `Release vX.Y.Z`, added a changelog entry in the correct section linking to the author and PR in this format?
     ```
-    ([@GithubUserName](https://github.com/GithubUserName) in [#PRNumber](https://github.com/Empty2k12/influxdb-rust/pull/PRNumber))
+    ([@GithubUserName](https://github.com/GithubUserName) in [#PRNumber](https://github.com/influxdb-rs/influxdb-rust/pull/PRNumber))
     ```
 - [ ] `CHANGELOG.md`: At the bottom, changed the unreleased section link to `NEWVERSIONNUMBER...HEAD` and created a new link for the current release?
 - [ ] `influxdb/lib.rs`: Changed the version number mentioned in the doc-comment to the new version number?
@@ -22,7 +22,7 @@ This project consists of two crates which need to be published to crates.io in t
 
 1) `git add .` and `git commit -m "Release vX.Y.Z"`
 2) `git tag vX.Y.Z`
-3) `git push origin master` and `git push --tags`
+3) `git push origin main` and `git push --tags`
 4) `(cd influxdb-derive/ && cargo publish)`
 5) `(cd influxdb/ && cargo publish)`
 6) Create a Release in the Github Web UI

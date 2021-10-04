@@ -2,7 +2,7 @@
 
 Thank you for contributing. It's much apprechiated!
 
-The following is a set of guidelines for contributing to influxdb-rust, which is hosted at [Empty2k12/influxdb-rust](https://github.com/Empty2k12/influxdb-rust) on GitHub. These are mostly guidelines, not rules. Use your best judgment, and feel free to propose changes to this document in a pull request.
+The following is a set of guidelines for contributing to influxdb-rust, which is hosted at [influxdb-rs/influxdb-rust](https://github.com/influxdb-rs/influxdb-rust) on GitHub. These are mostly guidelines, not rules. Use your best judgment, and feel free to propose changes to this document in a pull request.
 
 #### Table Of Contents
 
@@ -49,7 +49,7 @@ Explain the problem and include additional details to help maintainers reproduce
 Provide more context by answering these questions:
 
 -   **Did the problem start happening recently** (e.g. after updating to a new version of influxdb-rust) or was this always a problem?
--   If the problem started happening recently, **can you reproduce the problem in an older version of influxdb-rust?** What's the most recent version in which the problem doesn't happen? You can download older versions of influxdb-rust from [the releases page](https://github.com/Empty2k12/influxdb-rust/releases).
+-   If the problem started happening recently, **can you reproduce the problem in an older version of influxdb-rust?** What's the most recent version in which the problem doesn't happen? You can download older versions of influxdb-rust from [the releases page](https://github.com/influxdb-rs/influxdb-rust/releases).
 -   **Can you reliably reproduce the issue?** If not, provide details about how often the problem happens and under which conditions it normally happens.
 
 ### Suggesting Enhancements
@@ -73,9 +73,9 @@ Enhancement suggestions are tracked as [GitHub issues](https://guides.github.com
 
 Unsure where to begin contributing to influxdb-rust? You can start by looking through these `good first issue` and `Type of Change: Minor` issues:
 
--   [good first issue issues](https://github.com/Empty2k12/influxdb-rust/labels/good%20first%20issue) - issues which are suited for new developers. usually just some lines of code or just a test.
--   [Type of Change: Minor issues](https://github.com/Empty2k12/influxdb-rust/labels/Type%20of%20Change%3A%20Minor) - issues which only change a small amount of code in the library.
--   [Hacktoberfest issues](https://github.com/Empty2k12/influxdb-rust/labels/Hacktoberfest) - issues which are suited for someone taking part in Hacktoberfest.
+-   [good first issue issues](https://github.com/influxdb-rs/influxdb-rust/labels/good%20first%20issue) - issues which are suited for new developers. usually just some lines of code or just a test.
+-   [Type of Change: Minor issues](https://github.com/influxdb-rs/influxdb-rust/labels/Type%20of%20Change%3A%20Minor) - issues which only change a small amount of code in the library.
+-   [Hacktoberfest issues](https://github.com/influxdb-rs/influxdb-rust/labels/Hacktoberfest) - issues which are suited for someone taking part in Hacktoberfest.
 
 #### Local development
 
@@ -128,37 +128,37 @@ Please open an issue if you have suggestions for new labels.
 
 | Issue label                    | List issues                                                                                        | Description                                                                                                                            |
 | ------------------------------ | -------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| `Status: Merge when CI passes` | [search](https://github.com/empty2k12/influxdb-rust/labels/status%3a%20merge%20when%20ci%20passes) | Applied when the pull request has been reviewed and is ready for merge once the CI pipeline passes.                                    |
-| `Status: Awaiting Response`    | [search](https://github.com/empty2k12/influxdb-rust/labels/status%3a%20awaiting%20response)        | Applied to issues which have a response from the issue owner pending.                                                                  |
-| `Status: Pending Discussion`   | [search](https://github.com/empty2k12/influxdb-rust/labels/status%3a%20pending%20discussion)       | Applied to pull requests where a pull request review has been submitted and the pull request author has not responded to feedback yet. |
-| `Status: Pending Updates`      | [search](https://github.com/Empty2k12/influxdb-rust/labels/Status%3A%20Pending%20Updates)          | Applied to pull requests where updates to the changeset is pending.                                                                    |
-| `Status: Work in Progress`     | [search](https://github.com/Empty2k12/influxdb-rust/labels/Status%3A%20Work%20in%20Progress)       | Applied to pull requests that are work in progress.                                                                                    |
+| `Status: Merge when CI passes` | [search](https://github.com/influxdb-rs/influxdb-rust/labels/status%3a%20merge%20when%20ci%20passes) | Applied when the pull request has been reviewed and is ready for merge once the CI pipeline passes.                                    |
+| `Status: Awaiting Response`    | [search](https://github.com/influxdb-rs/influxdb-rust/labels/status%3a%20awaiting%20response)        | Applied to issues which have a response from the issue owner pending.                                                                  |
+| `Status: Pending Discussion`   | [search](https://github.com/influxdb-rs/influxdb-rust/labels/status%3a%20pending%20discussion)       | Applied to pull requests where a pull request review has been submitted and the pull request author has not responded to feedback yet. |
+| `Status: Pending Updates`      | [search](https://github.com/influxdb-rs/influxdb-rust/labels/Status%3A%20Pending%20Updates)          | Applied to pull requests where updates to the changeset is pending.                                                                    |
+| `Status: Work in Progress`     | [search](https://github.com/influxdb-rs/influxdb-rust/labels/Status%3A%20Work%20in%20Progress)       | Applied to pull requests that are work in progress.                                                                                    |
 
 #### Type of Change of Issue or Pull Request
 
 | Issue label          | List issues                                                                                  | Description                                                                            |
 | -------------------- | -------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| `Type: Bug`          | [search](https://github.com/Empty2k12/influxdb-rust/labels/Status%3A%20Type%20Bug)           | Applied to issues reporting bugs.                                                      |
-| `Type: Chore`        | [search](https://github.com/Empty2k12/influxdb-rust/labels/Status%3A%20Type%20Chore)         | Applied to issues and pull requests regarding miscellaneous tasks around the reposity. |
-| `Type: Enhancement`  | [search](https://github.com/Empty2k12/influxdb-rust/labels/Status%3A%20Type%20Enhancement)   | Applied to issues and pull requests where an existing feature is improved.             |
-| `Type: Governance`   | [search](https://github.com/Empty2k12/influxdb-rust/labels/Status%3A%20Type%20Governance)    | Applied to issues pull requests regarding repository governance.                       |
-| `Type: New Feature`  | [search](https://github.com/empty2k12/influxdb-rust/labels/status%3a%20Type%20New%20Feature) | Applied to issues and pull requests requesting or implementing new features.           |  |
-| `Type: Optimization` | [search](https://github.com/empty2k12/influxdb-rust/labels/status%3a%20Type%20Optimization)  | Applied to issues and pull requests regarding optimizing existing code.                |  |
-| `Type: Security`     | [search](https://github.com/empty2k12/influxdb-rust/labels/status%3a%20Type%20Security)      | Applied to issues and pull requests regarding the security of the library.             |  |
+| `Type: Bug`          | [search](https://github.com/influxdb-rs/influxdb-rust/labels/Status%3A%20Type%20Bug)           | Applied to issues reporting bugs.                                                      |
+| `Type: Chore`        | [search](https://github.com/influxdb-rs/influxdb-rust/labels/Status%3A%20Type%20Chore)         | Applied to issues and pull requests regarding miscellaneous tasks around the reposity. |
+| `Type: Enhancement`  | [search](https://github.com/influxdb-rs/influxdb-rust/labels/Status%3A%20Type%20Enhancement)   | Applied to issues and pull requests where an existing feature is improved.             |
+| `Type: Governance`   | [search](https://github.com/influxdb-rs/influxdb-rust/labels/Status%3A%20Type%20Governance)    | Applied to issues pull requests regarding repository governance.                       |
+| `Type: New Feature`  | [search](https://github.com/influxdb-rs/influxdb-rust/labels/status%3a%20Type%20New%20Feature) | Applied to issues and pull requests requesting or implementing new features.           |  |
+| `Type: Optimization` | [search](https://github.com/influxdb-rs/influxdb-rust/labels/status%3a%20Type%20Optimization)  | Applied to issues and pull requests regarding optimizing existing code.                |  |
+| `Type: Security`     | [search](https://github.com/influxdb-rs/influxdb-rust/labels/status%3a%20Type%20Security)      | Applied to issues and pull requests regarding the security of the library.             |  |
 
 #### Size of Change Labels
 
 | Issue label              | List issues                                                                                | Description                                                   |
 | ------------------------ | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------- |
-| `Type of Change: Master` | [search](https://github.com/Empty2k12/influxdb-rust/labels/Type%20of%20Change%3A%20Master) | Applied to issues and pull requests which are major changes.  |
-| `Type of Change: Medium` | [search](https://github.com/Empty2k12/influxdb-rust/labels/Type%20of%20Change%3A%20Medium) | Applied to issues and pull requests which are medium changes. |
-| `Type of Change: Minor`  | [search](https://github.com/Empty2k12/influxdb-rust/labels/Type%20of%20Change%3A%20Minor)  | Applied to issues and pull requests which are small changes.  |
+| `Type of Change: Master` | [search](https://github.com/influxdb-rs/influxdb-rust/labels/Type%20of%20Change%3A%20Master) | Applied to issues and pull requests which are major changes.  |
+| `Type of Change: Medium` | [search](https://github.com/influxdb-rs/influxdb-rust/labels/Type%20of%20Change%3A%20Medium) | Applied to issues and pull requests which are medium changes. |
+| `Type of Change: Minor`  | [search](https://github.com/influxdb-rs/influxdb-rust/labels/Type%20of%20Change%3A%20Minor)  | Applied to issues and pull requests which are small changes.  |
 
 #### Misc Labels
 
 | Issue label      | List issues                                                                      | Description                                                       |
 | ---------------- | -------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
-| good first issue | [search](https://github.com/Empty2k12/influxdb-rust/labels/good%20first%20issue) | Indicates this issue is suited for new contributors               |
-| Hacktoberfest    | [search](https://github.com/Empty2k12/influxdb-rust/labels/Hacktoberfest)        | Issues which are suited for someone taking part in Hacktoberfest. |
+| good first issue | [search](https://github.com/influxdb-rs/influxdb-rust/labels/good%20first%20issue) | Indicates this issue is suited for new contributors               |
+| Hacktoberfest    | [search](https://github.com/influxdb-rs/influxdb-rust/labels/Hacktoberfest)        | Issues which are suited for someone taking part in Hacktoberfest. |
 
 This document has been adopted from [Atom contributing guidelines](https://github.com/atom/atom/blob/master/CONTRIBUTING.md)
