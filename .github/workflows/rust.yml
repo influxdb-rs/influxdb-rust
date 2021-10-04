@@ -26,15 +26,17 @@ jobs:
                   components: "rustfmt,clippy"
             - name: Check code formatting
               run: cargo fmt --all -- --check
-            - name: Check Clippy lints
-              run: cargo clippy --all-targets --all-features -- -D warnings
+            - name: Check Clippy lints (reqwest)
+              run: cargo clippy --all-targets --no-default-features --features use-serde,derive,reqwest-client -- -D warnings
+            - name: Check Clippy lints (surf)
+              run: cargo clippy --all-targets --no-default-features --features use-serde,derive,hyper-client -- -D warnings
 
     compile:
         name: Compile (${{ matrix.rust_release }}/${{ matrix.os }})
         runs-on: ${{ matrix.os }}
         strategy:
             matrix:
-                rust_release: [1.45, stable, nightly]
+                rust_release: [1.46, stable, nightly]
                 os: [ubuntu-latest, windows-latest, macOS-latest]
 
         steps:
@@ -50,7 +52,7 @@ jobs:
         runs-on: ubuntu-latest
         strategy:
             matrix:
-                http-backend: [curl-client, h1-client, h1-client-rustls, hyper-client]
+                http-backend: [curl-client, h1-client, h1-client-rustls, hyper-client, reqwest-client, reqwest-client-rustls]
         services:
             influxdb:
                 image: influxdb:1.8
@@ -122,7 +124,7 @@ jobs:
               cargo tarpaulin -v \
                 --target-dir target/tarpaulin \
                 --workspace \
-                --all-features \
+                --features use-serde,derive \
                 --exclude-files 'derive/*' \
                 --exclude-files 'target/*' \
                 --ignore-panics --ignore-tests \

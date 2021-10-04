@@ -48,11 +48,9 @@
 
 mod de;
 
-use surf::StatusCode;
-
 use serde::{de::DeserializeOwned, Deserialize};
 
-use crate::{Client, Error, Query, ReadQuery};
+use crate::{client::check_status, Client, Error, Query, ReadQuery};
 
 #[derive(Deserialize)]
 #[doc(hidden)]
@@ -143,30 +141,29 @@ impl Client {
         let url = &format!("{}/query", &self.url);
         let mut parameters = self.parameters.as_ref().clone();
         parameters.insert("q", read_query);
-        let request = self
-            .client
-            .get(url)
-            .query(&parameters)
-            .map_err(|err| Error::UrlConstructionError {
-                error: err.to_string(),
-            })?
-            .build();
+        let request_builder = self.client.get(url).query(&parameters);
 
-        let mut res = self
-            .client
-            .send(request)
+        #[cfg(feature = "surf")]
+        let request_builder = request_builder.map_err(|err| Error::UrlConstructionError {
+            error: err.to_string(),
+        })?;
+
+        let res = request_builder
+            .send()
             .await
             .map_err(|err| Error::ConnectionError {
                 error: err.to_string(),
             })?;
+        check_status(&res)?;
 
-        match res.status() {
-            StatusCode::Unauthorized => return Err(Error::AuthorizationError),
-            StatusCode::Forbidden => return Err(Error::AuthenticationError),
-            _ => {}
-        }
+        #[cfg(feature = "reqwest")]
+        let body = res.bytes();
+        #[cfg(feature = "surf")]
+        let mut res = res;
+        #[cfg(feature = "surf")]
+        let body = res.body_bytes();
 
-        let body = res.body_bytes().await.map_err(|err| Error::ProtocolError {
+        let body = body.await.map_err(|err| Error::ProtocolError {
             error: err.to_string(),
         })?;
 

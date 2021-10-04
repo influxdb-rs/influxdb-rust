@@ -16,7 +16,11 @@
 //! ```
 
 use futures::prelude::*;
-use surf::{self, Client as SurfClient, StatusCode};
+use http::StatusCode;
+#[cfg(feature = "reqwest")]
+use reqwest::{Client as HttpClient, Response as HttpResponse};
+#[cfg(feature = "surf")]
+use surf::{Client as HttpClient, Response as HttpResponse};
 
 use crate::query::QueryType;
 use crate::Error;
@@ -29,7 +33,7 @@ use std::sync::Arc;
 pub struct Client {
     pub(crate) url: Arc<String>,
     pub(crate) parameters: Arc<HashMap<&'static str, String>>,
-    pub(crate) client: SurfClient,
+    pub(crate) client: HttpClient,
 }
 
 impl Client {
@@ -57,7 +61,7 @@ impl Client {
         Client {
             url: Arc::new(url.into()),
             parameters: Arc::new(parameters),
-            client: SurfClient::new(),
+            client: HttpClient::new(),
         }
     }
 
@@ -112,10 +116,25 @@ impl Client {
                 error: format!("{}", err),
             })?;
 
-        let build = res.header("X-Influxdb-Build").unwrap().as_str();
-        let version = res.header("X-Influxdb-Version").unwrap().as_str();
+        const BUILD_HEADER: &str = "X-Influxdb-Build";
+        const VERSION_HEADER: &str = "X-Influxdb-Version";
 
-        Ok((build.to_owned(), version.to_owned()))
+        #[cfg(feature = "reqwest")]
+        let (build, version) = {
+            let hdrs = res.headers();
+            (
+                hdrs.get(BUILD_HEADER).and_then(|value| value.to_str().ok()),
+                hdrs.get(VERSION_HEADER)
+                    .and_then(|value| value.to_str().ok()),
+            )
+        };
+
+        #[cfg(feature = "surf")]
+        let build = res.header(BUILD_HEADER).map(|value| value.as_str());
+        #[cfg(feature = "surf")]
+        let version = res.header(VERSION_HEADER).map(|value| value.as_str());
+
+        Ok((build.unwrap().to_owned(), version.unwrap().to_owned()))
     }
 
     /// Sends a [`ReadQuery`](crate::ReadQuery) or [`WriteQuery`](crate::WriteQuery) to the InfluxDB Server.
@@ -184,32 +203,31 @@ impl Client {
 
                 self.client.post(url).body(query.get()).query(&parameters)
             }
-        }
-        .map_err(|err| Error::UrlConstructionError {
+        };
+
+        #[cfg(feature = "surf")]
+        let request_builder = request_builder.map_err(|err| Error::UrlConstructionError {
             error: err.to_string(),
         })?;
 
-        let request = request_builder.build();
-        let mut res = self
-            .client
-            .send(request)
+        let res = request_builder
+            .send()
             .map_err(|err| Error::ConnectionError {
                 error: err.to_string(),
             })
             .await?;
+        check_status(&res)?;
 
-        match res.status() {
-            StatusCode::Unauthorized => return Err(Error::AuthorizationError),
-            StatusCode::Forbidden => return Err(Error::AuthenticationError),
-            _ => {}
-        }
+        #[cfg(feature = "reqwest")]
+        let body = res.text();
+        #[cfg(feature = "surf")]
+        let mut res = res;
+        #[cfg(feature = "surf")]
+        let body = res.body_string();
 
-        let s = res
-            .body_string()
-            .await
-            .map_err(|_| Error::DeserializationError {
-                error: "response could not be converted to UTF-8".to_string(),
-            })?;
+        let s = body.await.map_err(|_| Error::DeserializationError {
+            error: "response could not be converted to UTF-8".to_string(),
+        })?;
 
         // todo: improve error parsing without serde
         if s.contains("\"error\"") {
@@ -219,6 +237,17 @@ impl Client {
         }
 
         Ok(s)
+    }
+}
+
+pub(crate) fn check_status(res: &HttpResponse) -> Result<(), Error> {
+    let status = res.status();
+    if status == StatusCode::UNAUTHORIZED.as_u16() {
+        Err(Error::AuthorizationError)
+    } else if status == StatusCode::FORBIDDEN.as_u16() {
+        Err(Error::AuthenticationError)
+    } else {
+        Ok(())
     }
 }
 

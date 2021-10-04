@@ -28,9 +28,9 @@ async fn test_ping_influx_db_async_std() {
 
 /// INTEGRATION TEST
 ///
-/// This test case tests whether the InfluxDB server can be connected to and gathers info about it * tested with tokio
+/// This test case tests whether the InfluxDB server can be connected to and gathers info about it - tested with tokio 1.0
 #[tokio::test]
-#[cfg(not(tarpaulin_include))]
+#[cfg(not(any(tarpaulin_include, feature = "hyper-client")))]
 async fn test_ping_influx_db_tokio() {
     let client = create_client("notusedhere");
     let result = client.ping().await;
@@ -386,7 +386,7 @@ async fn test_json_query() {
 /// INTEGRATION TEST
 ///
 /// This test case tests whether the response to a GROUP BY can be parsed by
-// deserialize_next_tagged into a tags struct
+/// deserialize_next_tagged into a tags struct
 #[async_std::test]
 #[cfg(feature = "use-serde")]
 #[cfg(not(tarpaulin_include))]
@@ -453,8 +453,10 @@ async fn test_json_query_tagged() {
 /// is equal to the data which was written to the database
 /// (tested with tokio)
 #[tokio::test]
-#[cfg(feature = "use-serde")]
-#[cfg(not(tarpaulin_include))]
+#[cfg(all(
+    feature = "use-serde",
+    not(any(tarpaulin_include, feature = "hyper-client"))
+))]
 async fn test_json_query_vec() {
     use serde::Deserialize;
 
