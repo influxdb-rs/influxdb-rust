@@ -83,14 +83,14 @@ async fn main() {
     };
 
     let write_result = client
-        .query(&weather_reading.into_query("weather"))
+        .query(weather_reading.into_query("weather"))
         .await;
     assert!(write_result.is_ok(), "Write result was not okay");
 
     // Let's see if the data we wrote is there
     let read_query = Query::raw_read_query("SELECT * FROM weather");
 
-    let read_result = client.query(&read_query).await;
+    let read_result = client.query(read_query).await;
     assert!(read_result.is_ok(), "Read result was not ok");
     println!("{}", read_result.unwrap());
 }

@@ -115,6 +115,26 @@ pub trait Query {
     fn get_type(&self) -> QueryType;
 }
 
+impl<Q: Query> Query for &Q {
+    fn build(&self) -> Result<ValidQuery, Error> {
+        Q::build(self)
+    }
+
+    fn get_type(&self) -> QueryType {
+        Q::get_type(self)
+    }
+}
+
+impl<Q: Query> Query for Box<Q> {
+    fn build(&self) -> Result<ValidQuery, Error> {
+        Q::build(&*self)
+    }
+
+    fn get_type(&self) -> QueryType {
+        Q::get_type(&*self)
+    }
+}
+
 pub trait InfluxDbWriteable {
     fn into_query<I: Into<String>>(self, name: I) -> WriteQuery;
 }
