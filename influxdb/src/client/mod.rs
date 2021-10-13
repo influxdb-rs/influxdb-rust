@@ -91,6 +91,12 @@ impl Client {
         self
     }
 
+    /// Replaces the HTTP Client
+    pub fn with_http_client(mut self, http_client: HttpClient) -> Self {
+        self.client = http_client;
+        self
+    }
+
     /// Returns the name of the database the client is using
     pub fn database_name(&self) -> &str {
         // safe to unwrap: we always set the database name in `Self::new`
