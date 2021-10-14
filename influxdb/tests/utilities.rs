@@ -28,7 +28,7 @@ where
 {
     let test_name = name.into();
     let query = format!("CREATE DATABASE {}", test_name);
-    create_client(test_name).query(&ReadQuery::new(query)).await
+    create_client(test_name).query(ReadQuery::new(query)).await
 }
 
 #[cfg(not(tarpaulin_include))]
@@ -38,7 +38,7 @@ where
 {
     let test_name = name.into();
     let query = format!("DROP DATABASE {}", test_name);
-    create_client(test_name).query(&ReadQuery::new(query)).await
+    create_client(test_name).query(ReadQuery::new(query)).await
 }
 
 #[cfg(not(tarpaulin_include))]

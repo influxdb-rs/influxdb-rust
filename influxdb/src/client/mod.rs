@@ -170,7 +170,7 @@ impl Client {
     /// let query = Timestamp::Milliseconds(since_the_epoch)
     ///     .into_query("weather")
     ///     .add_field("temperature", 82);
-    /// let results = client.query(&query).await?;
+    /// let results = client.query(query).await?;
     ///
     /// # Ok(())
     /// # }
@@ -181,7 +181,7 @@ impl Client {
     /// a [`Error`] variant will be returned.
     ///
     /// [`Error`]: enum.Error.html
-    pub async fn query<'q, Q>(&self, q: &'q Q) -> Result<String, Error>
+    pub async fn query<Q>(&self, q: Q) -> Result<String, Error>
     where
         Q: Query,
     {
