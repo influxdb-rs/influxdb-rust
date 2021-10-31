@@ -1,5 +1,6 @@
-use futures::prelude::*;
+use futures_util::FutureExt;
 use influxdb::{Client, Error, ReadQuery};
+use std::future::Future;
 use std::panic::{AssertUnwindSafe, UnwindSafe};
 
 #[allow(dead_code)]

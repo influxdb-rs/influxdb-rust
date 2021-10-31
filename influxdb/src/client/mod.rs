@@ -15,7 +15,7 @@
 //! assert_eq!(client.database_name(), "test");
 //! ```
 
-use futures::prelude::*;
+use futures_util::TryFutureExt;
 use http::StatusCode;
 #[cfg(feature = "reqwest")]
 use reqwest::{Client as HttpClient, Response as HttpResponse};
