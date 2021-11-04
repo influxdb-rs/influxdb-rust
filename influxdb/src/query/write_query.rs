@@ -196,11 +196,11 @@ impl Query for WriteQuery {
             .join(",");
 
         Ok(ValidQuery(format!(
-            "{measurement}{tags} {fields}{time}",
+            "{measurement}{tags} {fields} {time}",
             measurement = LineProtoTerm::Measurement(&self.measurement).escape(),
             tags = tags,
             fields = fields,
-            time = format!(" {}", self.timestamp)
+            time = self.timestamp
         )))
     }
 
