@@ -7,7 +7,6 @@
 //! `name`, InfluxDB provides alongside query results.
 //!
 //! ```rust,no_run
-//! use futures::prelude::*;
 //! use influxdb::{Client, Query};
 //! use serde::Deserialize;
 //!

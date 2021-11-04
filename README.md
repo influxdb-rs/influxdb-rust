@@ -58,7 +58,7 @@ influxdb = { version = "0.4.0", features = ["derive"] }
 For an example with using Serde deserialization, please refer to [serde_integration](crate::integrations::serde_integration)
 
 ```rust
-use influxdb::{Client, Query, Timestamp};
+use influxdb::{Client, Query, Timestamp, ReadQuery};
 use influxdb::InfluxDbWriteable;
 use chrono::{DateTime, Utc};
 
@@ -88,7 +88,7 @@ async fn main() {
     assert!(write_result.is_ok(), "Write result was not okay");
 
     // Let's see if the data we wrote is there
-    let read_query = Query::raw_read_query("SELECT * FROM weather");
+    let read_query = ReadQuery::new("SELECT * FROM weather");
 
     let read_result = client.query(read_query).await;
     assert!(read_result.is_ok(), "Read result was not ok");
