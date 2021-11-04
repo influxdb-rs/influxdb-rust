@@ -9,8 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- reqwest-based http client (enabled by default)
+## [0.5.0] - 2021-11-04
+
+### Added
+
+- Reqwest client for Tokio 1.0 support
+- New client constructor `with_http_client` ([@nshaaban-cPacket](https://github.com/nshaaban-cPacket) in [#94](https://github.com/influxdb-rs/influxdb-rust/pull/94))
+
+### Changed
+
+- default client is the new reqwest client
 - deprecate `<dyn Query>::raw_read_query` in favour of `ReadQuery::new`
+- `Client::query` now accepts both owned and borrowed queries as argument
 
 ## [0.4.0] - 2021-03-08
 
