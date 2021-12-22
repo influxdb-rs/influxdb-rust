@@ -20,7 +20,7 @@
 //! Add the following to your `Cargo.toml`
 //!
 //! ```toml
-//! influxdb = { version = "0.5.0", features = ["derive"] }
+//! influxdb = { version = "0.5.1", features = ["derive"] }
 //! ```
 //!
 //! For an example with using Serde deserialization, please refer to [serde_integration](crate::integrations::serde_integration)
@@ -73,33 +73,33 @@
 //!
 //! - **[hyper](https://github.com/hyperium/hyper)** (through reqwest, used by default), with [rustls](https://github.com/ctz/rustls)
 //!   ```toml
-//!   influxdb = { version = "0.5.0", features = ["derive"] }
+//!   influxdb = { version = "0.5.1", features = ["derive"] }
 //!   ```
 //!
 //! - **[hyper](https://github.com/hyperium/hyper)** (through reqwest), with native TLS (OpenSSL)
 //!   ```toml
-//!   influxdb = { version = "0.5.0", default-features = false, features = ["derive", "use-serde", "reqwest-client"] }
+//!   influxdb = { version = "0.5.1", default-features = false, features = ["derive", "use-serde", "reqwest-client"] }
 //!   ```
 //!
 //! - **[hyper](https://github.com/hyperium/hyper)** (through surf), use this if you need tokio 0.2 compatibility
 //!    ```toml
-//!    influxdb = { version = "0.5.0", default-features = false, features = ["derive", "use-serde", "curl-client"] }
+//!    influxdb = { version = "0.5.1", default-features = false, features = ["derive", "use-serde", "curl-client"] }
 //!    ```
 //! - **[curl](https://github.com/alexcrichton/curl-rust)**, using [libcurl](https://curl.se/libcurl/)
 //!    ```toml
-//!    influxdb = { version = "0.5.0", default-features = false, features = ["derive", "use-serde", "curl-client"] }
+//!    influxdb = { version = "0.5.1", default-features = false, features = ["derive", "use-serde", "curl-client"] }
 //!    ```
 //! - **[async-h1](https://github.com/http-rs/async-h1)** with native TLS (OpenSSL)
 //!    ```toml
-//!    influxdb = { version = "0.5.0", default-features = false, features = ["derive", "use-serde", "h1-client"] }
+//!    influxdb = { version = "0.5.1", default-features = false, features = ["derive", "use-serde", "h1-client"] }
 //!    ```
 //! - **[async-h1](https://github.com/http-rs/async-h1)** with [rustls](https://github.com/ctz/rustls)
 //!    ```toml
-//!    influxdb = { version = "0.5.0", default-features = false, features = ["derive", "use-serde", "h1-client-rustls"] }
+//!    influxdb = { version = "0.5.1", default-features = false, features = ["derive", "use-serde", "h1-client-rustls"] }
 //!    ```
 //! - WebAssembly's `window.fetch`, via `web-sys` and **[wasm-bindgen](https://github.com/rustwasm/wasm-bindgen)**
 //!    ```toml
-//!    influxdb = { version = "0.5.0", default-features = false, features = ["derive", "use-serde", "wasm-client"] }
+//!    influxdb = { version = "0.5.1", default-features = false, features = ["derive", "use-serde", "wasm-client"] }
 //!    ```
 //!
 //! # License

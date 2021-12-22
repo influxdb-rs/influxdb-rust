@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+## [0.5.1] - 2021-12-23
+
+### Changed
+ - `Debug` implementation on `Client` now redacts passwords ([#106](https://github.com/influxdb-rs/influxdb-rust/pull/106))
+ - `Client` and `Query` builder functions are now annotated with `#[must_use]` ([#107](https://github.com/influxdb-rs/influxdb-rust/pull/107))
+
 ## [0.5.0] - 2021-11-04
 
 ### Added
