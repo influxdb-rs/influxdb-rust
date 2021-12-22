@@ -12,6 +12,7 @@ pub struct ReadQuery {
 
 impl ReadQuery {
     /// Creates a new [`ReadQuery`]
+    #[must_use = "Creating a query is pointless unless you execute it"]
     pub fn new<S>(query: S) -> Self
     where
         S: Into<String>,
@@ -22,6 +23,7 @@ impl ReadQuery {
     }
 
     /// Adds a query to the [`ReadQuery`]
+    #[must_use = "Creating a query is pointless unless you execute it"]
     pub fn add_query<S>(mut self, query: S) -> Self
     where
         S: Into<String>,

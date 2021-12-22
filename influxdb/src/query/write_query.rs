@@ -37,6 +37,7 @@ pub struct WriteQuery {
 
 impl WriteQuery {
     /// Creates a new [`WriteQuery`](crate::query::write_query::WriteQuery)
+    #[must_use = "Creating a query is pointless unless you execute it"]
     pub fn new<S>(timestamp: Timestamp, measurement: S) -> Self
     where
         S: Into<String>,
@@ -59,6 +60,7 @@ impl WriteQuery {
     ///
     /// Timestamp::Nanoseconds(0).into_query("measurement").add_field("field1", 5).build();
     /// ```
+    #[must_use = "Creating a query is pointless unless you execute it"]
     pub fn add_field<S, F>(mut self, field: S, value: F) -> Self
     where
         S: Into<String>,
@@ -83,6 +85,7 @@ impl WriteQuery {
     ///     .into_query("measurement")
     ///     .add_tag("field1", 5); // calling `.build()` now would result in a `Err(Error::InvalidQueryError)`
     /// ```
+    #[must_use = "Creating a query is pointless unless you execute it"]
     pub fn add_tag<S, I>(mut self, tag: S, value: I) -> Self
     where
         S: Into<String>,

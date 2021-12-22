@@ -77,6 +77,7 @@ impl Client {
     ///
     /// let _client = Client::new("http://localhost:8086", "test");
     /// ```
+    #[must_use = "Creating a client is pointless unless you use it"]
     pub fn new<S1, S2>(url: S1, database: S2) -> Self
     where
         S1: Into<String>,
@@ -105,6 +106,7 @@ impl Client {
     ///
     /// let _client = Client::new("http://localhost:9086", "test").with_auth("admin", "password");
     /// ```
+    #[must_use = "Creating a client is pointless unless you use it"]
     pub fn with_auth<S1, S2>(mut self, username: S1, password: S2) -> Self
     where
         S1: Into<String>,
@@ -118,6 +120,7 @@ impl Client {
     }
 
     /// Replaces the HTTP Client
+    #[must_use = "Creating a client is pointless unless you use it"]
     pub fn with_http_client(mut self, http_client: HttpClient) -> Self {
         self.client = http_client;
         self
