@@ -19,21 +19,47 @@ use futures_util::TryFutureExt;
 use http::StatusCode;
 #[cfg(feature = "reqwest")]
 use reqwest::{Client as HttpClient, Response as HttpResponse};
+use std::collections::{BTreeMap, HashMap};
+use std::fmt::{self, Debug, Formatter};
+use std::sync::Arc;
 #[cfg(feature = "surf")]
 use surf::{Client as HttpClient, Response as HttpResponse};
 
 use crate::query::QueryType;
 use crate::Error;
 use crate::Query;
-use std::collections::HashMap;
-use std::sync::Arc;
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 /// Internal Representation of a Client
 pub struct Client {
     pub(crate) url: Arc<String>,
     pub(crate) parameters: Arc<HashMap<&'static str, String>>,
     pub(crate) client: HttpClient,
+}
+
+struct RedactPassword<'a>(&'a HashMap<&'static str, String>);
+
+impl<'a> Debug for RedactPassword<'a> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        let entries = self
+            .0
+            .iter()
+            .map(|(k, v)| match *k {
+                "p" => (*k, "<redacted>"),
+                _ => (*k, v.as_str()),
+            })
+            .collect::<BTreeMap<&'static str, &str>>();
+        f.debug_map().entries(entries.into_iter()).finish()
+    }
+}
+
+impl Debug for Client {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Client")
+            .field("url", &self.url)
+            .field("parameters", &RedactPassword(&self.parameters))
+            .finish_non_exhaustive()
+    }
 }
 
 impl Client {
@@ -260,6 +286,25 @@ pub(crate) fn check_status(res: &HttpResponse) -> Result<(), Error> {
 #[cfg(test)]
 mod tests {
     use super::Client;
+    use indoc::indoc;
+
+    #[test]
+    fn test_client_debug_redacted_password() {
+        let client = Client::new("https://localhost:8086", "db").with_auth("user", "pass");
+        let actual = format!("{:#?}", client);
+        let expected = indoc! { r#"
+            Client {
+                url: "https://localhost:8086",
+                parameters: {
+                    "db": "db",
+                    "p": "<redacted>",
+                    "u": "user",
+                },
+                ..
+            }
+        "# };
+        assert_eq!(actual.trim(), expected.trim());
+    }
 
     #[test]
     fn test_fn_database() {
