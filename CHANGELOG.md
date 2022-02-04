@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+## [0.5.2] - 2022-02-04
+
+### Changed
+ - disable default features of `chrono`
+
 ## [0.5.1] - 2021-12-23
 
 ### Changed
