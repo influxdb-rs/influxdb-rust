@@ -8,6 +8,7 @@
 //! -   Reading and Writing to InfluxDB
 //! -   Optional Serde Support for Deserialization
 //! -   Running multiple queries in one request (e.g. `SELECT * FROM weather_berlin; SELECT * FROM weather_london`)
+//! -   Writing single or multiple measurements in one request (e.g. `WriteQuery` or `Vec<WriteQuery>` argument)
 //! -   Authenticated and Unauthenticated Connections
 //! -   `async`/`await` support
 //! -   `#[derive(InfluxDbWriteable)]` Derive Macro for Writing / Reading into Structs
@@ -44,14 +45,21 @@
 //!     }
 //!
 //!     // Let's write some data into a measurement called `weather`
-//!     let weather_reading = WeatherReading {
-//!         time: Timestamp::Hours(1).into(),
-//!         humidity: 30,
-//!         wind_direction: String::from("north"),
-//!     };
+//!     let weather_readings = vec!(
+//!         WeatherReading {
+//!             time: Timestamp::Hours(1).into(),
+//!             humidity: 30,
+//!             wind_direction: String::from("north"),
+//!         }.into_query("weather"),
+//!         WeatherReading {
+//!             time: Timestamp::Hours(2).into(),
+//!             humidity: 40,
+//!             wind_direction: String::from("west"),
+//!         }.into_query("weather"),
+//!     );
 //!
 //!     let write_result = client
-//!         .query(weather_reading.into_query("weather"))
+//!         .query(weather_readings)
 //!         .await;
 //!     assert!(write_result.is_ok(), "Write result was not okay");
 //!
