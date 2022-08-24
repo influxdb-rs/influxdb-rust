@@ -25,8 +25,8 @@
     <a href="https://www.rust-lang.org/en-US/">
         <img src="https://img.shields.io/badge/Made%20with-Rust-orange.svg" alt='Build with Rust' />
     </a>
-    <a href="https://blog.rust-lang.org/2021/06/17/Rust-1.53.0.html">
-        <img src="https://img.shields.io/badge/rustc-1.53+-yellow.svg" alt='Minimum Rust Version' />
+    <a href="https://blog.rust-lang.org/2021/10/21/Rust-1.56.0.html">
+        <img src="https://img.shields.io/badge/rustc-1.56+-yellow.svg" alt='Minimum Rust Version' />
     </a>
 </p>
 
