@@ -35,7 +35,7 @@ use consts::{MILLIS_PER_SECOND, MINUTES_PER_HOUR, NANOS_PER_MILLI, SECONDS_PER_M
 #[cfg(feature = "derive")]
 pub use influxdb_derive::InfluxDbWriteable;
 
-#[derive(PartialEq, Debug, Copy, Clone)]
+#[derive(PartialEq, Eq, Debug, Copy, Clone)]
 pub enum Timestamp {
     Nanoseconds(u128),
     Microseconds(u128),
@@ -127,11 +127,11 @@ impl<Q: Query> Query for &Q {
 
 impl<Q: Query> Query for Box<Q> {
     fn build(&self) -> Result<ValidQuery, Error> {
-        Q::build(&*self)
+        Q::build(self)
     }
 
     fn get_type(&self) -> QueryType {
-        Q::get_type(&*self)
+        Q::get_type(self)
     }
 }
 
@@ -192,7 +192,7 @@ impl PartialEq<&str> for ValidQuery {
 }
 
 /// Internal Enum used to decide if a `POST` or `GET` request should be sent to InfluxDB. See [InfluxDB Docs](https://docs.influxdata.com/influxdb/v1.7/tools/api/#query-http-endpoint).
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Eq, Debug)]
 pub enum QueryType {
     ReadQuery,
     /// write query with precision
