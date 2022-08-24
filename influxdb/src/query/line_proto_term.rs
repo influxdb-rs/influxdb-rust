@@ -43,7 +43,7 @@ impl LineProtoTerm<'_> {
             .to_string(),
             Float(v) => v.to_string(),
             SignedInteger(v) => format!("{}i", v),
-            UnsignedInteger(v) => format!("{}i", v),
+            UnsignedInteger(v) => format!("{}u", v),
             Text(v) => format!(r#""{}""#, Self::escape_any(v, &*QUOTES_SLASHES)),
         }
     }
