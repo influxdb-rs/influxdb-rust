@@ -11,7 +11,7 @@ jobs:
         name: README Format Check
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v1
+            - uses: actions/checkout@v3
             - uses: dtolnay/rust-toolchain@nightly
             - run: bash ./auxiliary/update_cargo-readme.sh
             - run: bash ./auxiliary/check_readme_consistency.sh
@@ -20,12 +20,15 @@ jobs:
         name: Style Checks (stable/ubuntu-latest)
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v1
+            - uses: actions/checkout@v3
             - uses: dtolnay/rust-toolchain@nightly
               with:
-                  components: "rustfmt,clippy"
+                  components: rustfmt
             - name: Check code formatting
               run: cargo fmt --all -- --check
+            - uses: dtolnay/rust-toolchain@1.63.0
+              with:
+                components: clippy
             - name: Check Clippy lints (reqwest)
               run: cargo clippy --manifest-path influxdb/Cargo.toml --all-targets --no-default-features --features use-serde,derive,reqwest-client -- -D warnings
             - name: Check Clippy lints (surf)
@@ -36,11 +39,11 @@ jobs:
         runs-on: ${{ matrix.os }}
         strategy:
             matrix:
-                rust_release: ["1.53", stable, nightly]
+                rust_release: ["1.56", stable, nightly]
                 os: [ubuntu-latest, windows-latest, macOS-latest]
 
         steps:
-            - uses: actions/checkout@v1
+            - uses: actions/checkout@v3
             - uses: dtolnay/rust-toolchain@master
               with:
                   toolchain: ${{ matrix.rust_release }}
@@ -70,13 +73,13 @@ jobs:
                     INFLUXDB_USER_PASSWORD: password
 
         steps:
-            - uses: actions/checkout@v1
+            - uses: actions/checkout@v3
             - uses: dtolnay/rust-toolchain@stable
             - run: cargo test --manifest-path=./influxdb/Cargo.toml --no-default-features --features 'use-serde derive ${{ matrix.http-backend }}' --no-fail-fast
 
     coverage:
-        name: Code Coverage (stable/ubuntu-20.04)
-        runs-on: ubuntu-20.04
+        name: Code Coverage (stable/ubuntu-latest)
+        runs-on: ubuntu-latest
         services:
             influxdb:
                 image: influxdb:1.8
@@ -94,7 +97,7 @@ jobs:
                     INFLUXDB_USER_PASSWORD: password
 
         steps:
-          - uses: actions/checkout@v2
+          - uses: actions/checkout@v3
           - uses: dtolnay/rust-toolchain@stable
 
           - name: Get Rust Version
@@ -103,9 +106,9 @@ jobs:
 
           - name: Get Tarpaulin Version
             id: tarpaulin-version
-            run: echo "::set-output name=VERSION::$(wget -qO- 'https://api.github.com/repos/xd009642/tarpaulin/releases/latest' | jq -r '.tag_name')"
+            run: echo "::set-output name=VERSION::$(wget -qO- 'https://crates.io/api/v1/crates/cargo-tarpaulin' | jq -r '.crate.max_stable_version')"
 
-          - uses: actions/cache@v2
+          - uses: actions/cache@v3
             with:
               path: |
                 ~/.cargo/bin/cargo-tarpaulin
@@ -133,7 +136,7 @@ jobs:
               RUST_BACKTRACE: 1
               RUST_LOG: info
 
-          - uses: actions/upload-artifact@v2
+          - uses: actions/upload-artifact@v3
             with:
               name: tarpaulin-report
               path: |
@@ -141,16 +144,16 @@ jobs:
                 tarpaulin-report.html
 
     pages:
-        runs-on: ubuntu-20.04
+        runs-on: ubuntu-latest
         needs:
           - coverage
-        if: github.ref == 'refs/heads/master'
+        if: github.ref == 'refs/heads/main'
         steps:
-          - uses: actions/checkout@v2
+          - uses: actions/checkout@v3
             with:
               ref: gh-pages
 
-          - uses: actions/download-artifact@v2
+          - uses: actions/download-artifact@v3
             with:
               name: tarpaulin-report
 
