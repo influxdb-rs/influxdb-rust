@@ -264,12 +264,13 @@ mod tests {
             .into_query("weather".to_string())
             .add_field("temperature", 82)
             .add_field("wind_strength", 3.7)
+            .add_field("temperature_unsigned", 82u64)
             .build();
 
         assert!(query.is_ok(), "Query was empty");
         assert_eq!(
             query.unwrap(),
-            "weather temperature=82i,wind_strength=3.7 11"
+            "weather temperature=82i,wind_strength=3.7,temperature_unsigned=82u 11"
         );
     }
 
@@ -282,7 +283,7 @@ mod tests {
             .build();
 
         assert!(query.is_ok(), "Query was empty");
-        assert_eq!(query.unwrap(), "weather temperature=82i 11");
+        assert_eq!(query.unwrap(), "weather temperature=82u 11");
     }
 
     #[test]
