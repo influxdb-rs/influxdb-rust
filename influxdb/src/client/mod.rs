@@ -88,7 +88,7 @@ impl Client {
         parameters.insert("db", database.into());
         Client {
             url: Arc::new(url.into()),
-            parameters: Arc::new(parameters),   
+            parameters: Arc::new(parameters),
             client: HttpClient::new(),
             token: None,
         }
@@ -260,7 +260,8 @@ impl Client {
             error: err.to_string(),
         })?;
 
-        let res = self.auth_if_needed(request_builder)
+        let res = self
+            .auth_if_needed(request_builder)
             .send()
             .map_err(|err| Error::ConnectionError {
                 error: err.to_string(),
