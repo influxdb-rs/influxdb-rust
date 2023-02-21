@@ -104,6 +104,7 @@ jobs:
                 ports:
                     - 9086:8086
                 env:
+                    DOCKER_INFLUXDB_INIT_MODE: setup
                     DOCKER_INFLUXDB_INIT_USERNAME: admin
                     DOCKER_INFLUXDB_INIT_PASSWORD: password
                     DOCKER_INFLUXDB_INIT_ORG: testing
