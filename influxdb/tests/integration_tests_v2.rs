@@ -14,18 +14,10 @@ use influxdb::{Client, Error, ReadQuery, Timestamp};
 #[async_std::test]
 #[cfg(not(tarpaulin_include))]
 async fn test_authed_write_and_read() {
-    const TEST_NAME: &str = "test_authed_write_and_read";
 
     run_test(
         || async move {
-            let client = Client::new("http://127.0.0.1:9086", TEST_NAME).with_token("admintoken");
-            let query = format!("CREATE DATABASE {}", TEST_NAME);
-            client
-                .query(ReadQuery::new(query))
-                .await
-                .expect("could not setup db");
-
-            let client = Client::new("http://127.0.0.1:9086", TEST_NAME).with_token("admintoken");
+            let client = Client::new("http://127.0.0.1:9086", "mydb").with_token("admintoken");
             let write_query = Timestamp::Hours(11)
                 .into_query("weather")
                 .add_field("temperature", 82);
@@ -41,13 +33,11 @@ async fn test_authed_write_and_read() {
             );
         },
         || async move {
-            let client = Client::new("http://127.0.0.1:9086", TEST_NAME).with_token("admintoken");
-            let query = format!("DROP DATABASE {}", TEST_NAME);
-
-            client
-                .query(ReadQuery::new(query))
-                .await
-                .expect("could not clean up db");
+            let client = Client::new("http://127.0.0.1:9086", "mydb").with_token("admintoken");
+            let read_query = ReadQuery::new("DELETE MEASUREMENT weather");
+            let read_result = client.query(read_query).await;
+            assert_result_ok(&read_result);
+            assert!(!read_result.unwrap().contains("error"), "Teardown failed");
         },
     )
     .await;
@@ -59,18 +49,10 @@ async fn test_authed_write_and_read() {
 #[async_std::test]
 #[cfg(not(tarpaulin_include))]
 async fn test_wrong_authed_write_and_read() {
-    const TEST_NAME: &str = "test_wrong_authed_write_and_read";
 
     run_test(
         || async move {
-            let client = Client::new("http://127.0.0.1:9086", TEST_NAME).with_token("admintoken");
-            let query = format!("CREATE DATABASE {}", TEST_NAME);
-            client
-                .query(ReadQuery::new(query))
-                .await
-                .expect("could not setup db");
-
-            let client = Client::new("http://127.0.0.1:9086", TEST_NAME).with_token("falsetoken");
+            let client = Client::new("http://127.0.0.1:9086", "mydb").with_token("falsetoken");
             let write_query = Timestamp::Hours(11)
                 .into_query("weather")
                 .add_field("temperature", 82);
@@ -94,28 +76,8 @@ async fn test_wrong_authed_write_and_read() {
                     read_result.unwrap_err()
                 ),
             }
-
-            let client = Client::new("http://127.0.0.1:9086", TEST_NAME)
-                .with_auth("nopriv_user", "password");
-            let read_query = ReadQuery::new("SELECT * FROM weather");
-            let read_result = client.query(&read_query).await;
-            assert_result_err(&read_result);
-            match read_result {
-                Err(Error::AuthenticationError) => {}
-                _ => panic!(
-                    "Should be an AuthenticationError: {}",
-                    read_result.unwrap_err()
-                ),
-            }
         },
-        || async move {
-            let client = Client::new("http://127.0.0.1:9086", TEST_NAME).with_token("admintoken");
-            let query = format!("DROP DATABASE {}", TEST_NAME);
-            client
-                .query(ReadQuery::new(query))
-                .await
-                .expect("could not clean up db");
-        },
+        || async move {},
     )
     .await;
 }
@@ -126,17 +88,10 @@ async fn test_wrong_authed_write_and_read() {
 #[async_std::test]
 #[cfg(not(tarpaulin_include))]
 async fn test_non_authed_write_and_read() {
-    const TEST_NAME: &str = "test_non_authed_write_and_read";
 
     run_test(
         || async move {
-            let client = Client::new("http://127.0.0.1:9086", TEST_NAME).with_token("admintoken");
-            let query = format!("CREATE DATABASE {}", TEST_NAME);
-            client
-                .query(ReadQuery::new(query))
-                .await
-                .expect("could not setup db");
-            let non_authed_client = Client::new("http://127.0.0.1:9086", TEST_NAME);
+            let non_authed_client = Client::new("http://127.0.0.1:9086", "mydb");
             let write_query = Timestamp::Hours(11)
                 .into_query("weather")
                 .add_field("temperature", 82);
@@ -161,14 +116,7 @@ async fn test_non_authed_write_and_read() {
                 ),
             }
         },
-        || async move {
-            let client = Client::new("http://127.0.0.1:9086", TEST_NAME).with_token("admintoken");
-            let query = format!("DROP DATABASE {}", TEST_NAME);
-            client
-                .query(ReadQuery::new(query))
-                .await
-                .expect("could not clean up db");
-        },
+        || async move {},
     )
     .await;
 }
