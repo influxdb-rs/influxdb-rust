@@ -100,7 +100,7 @@ jobs:
                 http-backend: [curl-client, h1-client, h1-client-rustls, hyper-client]
         services:
             influxdbv2:
-                image: influxdb:2.0
+                image: influxdb:2.6
                 ports:
                     - 9086:8086
                 env:
