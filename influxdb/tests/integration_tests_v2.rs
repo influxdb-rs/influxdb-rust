@@ -12,7 +12,7 @@ use influxdb::{Client, Error, ReadQuery, Timestamp};
 
 /// This test case tests the Authentication
 #[async_std::test]
-#[cfg(not(tarpaulin_include))]
+#[cfg(not(tarpaulin))]
 async fn test_authed_write_and_read() {
     run_test(
         || async move {
@@ -46,7 +46,7 @@ async fn test_authed_write_and_read() {
 ///
 /// This test case tests the Authentication
 #[async_std::test]
-#[cfg(not(tarpaulin_include))]
+#[cfg(not(tarpaulin))]
 async fn test_wrong_authed_write_and_read() {
     run_test(
         || async move {
@@ -84,7 +84,7 @@ async fn test_wrong_authed_write_and_read() {
 ///
 /// This test case tests the Authentication
 #[async_std::test]
-#[cfg(not(tarpaulin_include))]
+#[cfg(not(tarpaulin))]
 async fn test_non_authed_write_and_read() {
     run_test(
         || async move {
