@@ -14,7 +14,6 @@ use influxdb::{Client, Error, ReadQuery, Timestamp};
 #[async_std::test]
 #[cfg(not(tarpaulin_include))]
 async fn test_authed_write_and_read() {
-
     run_test(
         || async move {
             let client = Client::new("http://127.0.0.1:9086", "mydb").with_token("admintoken");
@@ -49,7 +48,6 @@ async fn test_authed_write_and_read() {
 #[async_std::test]
 #[cfg(not(tarpaulin_include))]
 async fn test_wrong_authed_write_and_read() {
-
     run_test(
         || async move {
             let client = Client::new("http://127.0.0.1:9086", "mydb").with_token("falsetoken");
@@ -88,7 +86,6 @@ async fn test_wrong_authed_write_and_read() {
 #[async_std::test]
 #[cfg(not(tarpaulin_include))]
 async fn test_non_authed_write_and_read() {
-
     run_test(
         || async move {
             let non_authed_client = Client::new("http://127.0.0.1:9086", "mydb");
