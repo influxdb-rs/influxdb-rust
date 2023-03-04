@@ -7,7 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2023-03-04
+
+### Changed
+ - Unsigned integers are no longer treated as signed integers ([#113](https://github.com/influxdb-rs/influxdb-rust/pull/113))
+
 ### Added
+ - Support for token auth ([#118](https://github.com/influxdb-rs/influxdb-rust/pull/118))
 
 ## [0.5.2] - 2022-02-04
 
