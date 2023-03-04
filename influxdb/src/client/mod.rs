@@ -18,12 +18,12 @@
 use futures_util::TryFutureExt;
 use http::StatusCode;
 #[cfg(feature = "reqwest")]
-use reqwest::{Client as HttpClient, Response as HttpResponse};
+use reqwest::{Client as HttpClient, RequestBuilder, Response as HttpResponse};
 use std::collections::{BTreeMap, HashMap};
 use std::fmt::{self, Debug, Formatter};
 use std::sync::Arc;
 #[cfg(feature = "surf")]
-use surf::{Client as HttpClient, Response as HttpResponse};
+use surf::{Client as HttpClient, RequestBuilder, Response as HttpResponse};
 
 use crate::query::QueryType;
 use crate::Error;
@@ -34,6 +34,7 @@ use crate::Query;
 pub struct Client {
     pub(crate) url: Arc<String>,
     pub(crate) parameters: Arc<HashMap<&'static str, String>>,
+    pub(crate) token: Option<String>,
     pub(crate) client: HttpClient,
 }
 
@@ -89,6 +90,7 @@ impl Client {
             url: Arc::new(url.into()),
             parameters: Arc::new(parameters),
             client: HttpClient::new(),
+            token: None,
         }
     }
 
@@ -123,6 +125,19 @@ impl Client {
     #[must_use = "Creating a client is pointless unless you use it"]
     pub fn with_http_client(mut self, http_client: HttpClient) -> Self {
         self.client = http_client;
+        self
+    }
+
+    /// Add authorization token to [`Client`](crate::Client)
+    ///
+    /// This is designed for influxdb 2.0's backward-compatible API which
+    /// requires authrozation by default. You can create such token from
+    /// console of influxdb 2.0 .
+    pub fn with_token<S>(mut self, token: S) -> Self
+    where
+        S: Into<String>,
+    {
+        self.token = Some(token.into());
         self
     }
 
@@ -218,11 +233,11 @@ impl Client {
             error: err.to_string(),
         })?;
 
+        let mut parameters = self.parameters.as_ref().clone();
         let request_builder = match q.get_type() {
             QueryType::ReadQuery => {
                 let read_query = query.get();
                 let url = &format!("{}/query", &self.url);
-                let mut parameters = self.parameters.as_ref().clone();
                 parameters.insert("q", read_query.clone());
 
                 if read_query.contains("SELECT") || read_query.contains("SHOW") {
@@ -245,7 +260,8 @@ impl Client {
             error: err.to_string(),
         })?;
 
-        let res = request_builder
+        let res = self
+            .auth_if_needed(request_builder)
             .send()
             .map_err(|err| Error::ConnectionError {
                 error: err.to_string(),
@@ -272,6 +288,14 @@ impl Client {
         }
 
         Ok(s)
+    }
+
+    fn auth_if_needed(&self, rb: RequestBuilder) -> RequestBuilder {
+        if let Some(ref token) = self.token {
+            rb.header("Authorization", format!("Token {}", token))
+        } else {
+            rb
+        }
     }
 }
 
@@ -327,5 +351,11 @@ mod tests {
         assert_eq!(with_auth.parameters.get("db").unwrap(), "database");
         assert_eq!(with_auth.parameters.get("u").unwrap(), "username");
         assert_eq!(with_auth.parameters.get("p").unwrap(), "password");
+
+        let client = Client::new("http://localhost:8068", "database");
+        let with_auth = client.with_token("token");
+        assert_eq!(with_auth.parameters.len(), 1);
+        assert_eq!(with_auth.parameters.get("db").unwrap(), "database");
+        assert_eq!(with_auth.token.unwrap(), "token");
     }
 }

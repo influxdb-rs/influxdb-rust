@@ -281,7 +281,11 @@ mod tests {
     }
     #[test]
     fn test_timestamp_from_chrono_date() {
-        let timestamp_from_datetime: Timestamp = Utc.ymd(1970, 1, 1).and_hms(0, 0, 1).into();
+        let timestamp_from_datetime: Timestamp = Utc
+            .with_ymd_and_hms(1970, 1, 1, 0, 0, 1)
+            .single()
+            .unwrap()
+            .into();
         assert_eq!(
             Timestamp::Nanoseconds(MILLIS_PER_SECOND * NANOS_PER_MILLI),
             timestamp_from_datetime

@@ -23,8 +23,8 @@ impl LineProtoTerm<'_> {
     pub fn escape(self) -> String {
         use LineProtoTerm::*;
         match self {
-            Measurement(x) => Self::escape_any(x, &*COMMAS_SPACES),
-            TagKey(x) | FieldKey(x) => Self::escape_any(x, &*COMMAS_SPACES_EQUALS),
+            Measurement(x) => Self::escape_any(x, &COMMAS_SPACES),
+            TagKey(x) | FieldKey(x) => Self::escape_any(x, &COMMAS_SPACES_EQUALS),
             FieldValue(x) => Self::escape_field_value(x),
             TagValue(x) => Self::escape_tag_value(x),
         }
@@ -44,7 +44,7 @@ impl LineProtoTerm<'_> {
             Float(v) => v.to_string(),
             SignedInteger(v) => format!("{}i", v),
             UnsignedInteger(v) => format!("{}u", v),
-            Text(v) => format!(r#""{}""#, Self::escape_any(v, &*QUOTES_SLASHES)),
+            Text(v) => format!(r#""{}""#, Self::escape_any(v, &QUOTES_SLASHES)),
         }
     }
 
@@ -62,7 +62,7 @@ impl LineProtoTerm<'_> {
             Float(v) => format!(r#"{}"#, v),
             SignedInteger(v) => format!(r#"{}"#, v),
             UnsignedInteger(v) => format!(r#"{}"#, v),
-            Text(v) => Self::escape_any(v, &*SLASHES),
+            Text(v) => Self::escape_any(v, &SLASHES),
         }
     }
 

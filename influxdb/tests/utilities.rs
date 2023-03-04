@@ -14,6 +14,7 @@ pub fn assert_result_ok<A: std::fmt::Debug, B: std::fmt::Debug>(result: &Result<
     result.as_ref().expect("assert_result_ok failed");
 }
 
+#[allow(dead_code)]
 #[cfg(not(tarpaulin_include))]
 pub fn create_client<T>(db_name: T) -> Client
 where
@@ -22,6 +23,7 @@ where
     Client::new("http://127.0.0.1:8086", db_name)
 }
 
+#[allow(dead_code)]
 #[cfg(not(tarpaulin_include))]
 pub async fn create_db<T>(name: T) -> Result<String, Error>
 where
@@ -32,6 +34,7 @@ where
     create_client(test_name).query(ReadQuery::new(query)).await
 }
 
+#[allow(dead_code)]
 #[cfg(not(tarpaulin_include))]
 pub async fn delete_db<T>(name: T) -> Result<String, Error>
 where

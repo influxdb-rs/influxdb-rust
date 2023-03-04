@@ -39,7 +39,7 @@ jobs:
         runs-on: ${{ matrix.os }}
         strategy:
             matrix:
-                rust_release: ["1.56", stable, nightly]
+                rust_release: ["1.59", stable, nightly]
                 os: [ubuntu-latest, windows-latest, macOS-latest]
 
         steps:
@@ -50,8 +50,24 @@ jobs:
             - name: Build
               run: cargo build --verbose
 
+    unit_test:
+        name: Unit test (${{ matrix.rust_release }}/${{ matrix.os }})
+        runs-on: ${{ matrix.os }}
+        strategy:
+            matrix:
+                rust_release: ["1.59", stable, nightly]
+                os: [ubuntu-latest, windows-latest, macOS-latest]
+
+        steps:
+            - uses: actions/checkout@v1
+            - uses: dtolnay/rust-toolchain@master
+              with:
+                  toolchain: ${{ matrix.rust_release }}
+            - name: test
+              run: cargo test --lib
+
     integration_test:
-        name: Integration Tests (stable/ubuntu-latest)
+        name: Integration Tests for Influxdb 1.x (stable/ubuntu-latest)
         runs-on: ubuntu-latest
         strategy:
             matrix:
@@ -71,11 +87,33 @@ jobs:
                     INFLUXDB_ADMIN_PASSWORD: password
                     INFLUXDB_USER: nopriv_user
                     INFLUXDB_USER_PASSWORD: password
-
         steps:
             - uses: actions/checkout@v3
             - uses: dtolnay/rust-toolchain@stable
-            - run: cargo test --manifest-path=./influxdb/Cargo.toml --no-default-features --features 'use-serde derive ${{ matrix.http-backend }}' --no-fail-fast
+            - run: cargo test --manifest-path=./influxdb/Cargo.toml --no-default-features --features 'use-serde derive ${{ matrix.http-backend }}' --no-fail-fast --test integration_tests
+
+    integration_test_v2:
+        name: Integration Tests for Influxdb 2.0 (stable/ubuntu-latest)
+        runs-on: ubuntu-latest
+        strategy:
+            matrix:
+                http-backend: [curl-client, h1-client, h1-client-rustls, hyper-client]
+        services:
+            influxdbv2:
+                image: influxdb:2.6
+                ports:
+                    - 9086:8086
+                env:
+                    DOCKER_INFLUXDB_INIT_MODE: setup
+                    DOCKER_INFLUXDB_INIT_USERNAME: admin
+                    DOCKER_INFLUXDB_INIT_PASSWORD: password
+                    DOCKER_INFLUXDB_INIT_ORG: testing
+                    DOCKER_INFLUXDB_INIT_BUCKET: mydb
+                    DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: admintoken
+        steps:
+            - uses: actions/checkout@v1
+            - uses: dtolnay/rust-toolchain@stable
+            - run: cargo test --manifest-path=./influxdb/Cargo.toml --no-default-features --features 'use-serde derive ${{ matrix.http-backend }}' --no-fail-fast --test integration_tests_v2
 
     coverage:
         name: Code Coverage (stable/ubuntu-latest)
