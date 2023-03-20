@@ -1,15 +1,12 @@
 use proc_macro::TokenStream;
-use proc_macro2::TokenStream as TokenStream2;
-use quote::quote;
 
 mod writeable;
+use syn::parse_macro_input;
 use writeable::expand_writeable;
 
-fn krate() -> TokenStream2 {
-    quote!(::influxdb)
-}
-
 #[proc_macro_derive(InfluxDbWriteable, attributes(influxdb))]
-pub fn derive_writeable(tokens: TokenStream) -> TokenStream {
-    expand_writeable(tokens)
+pub fn derive_writeable(input: TokenStream) -> TokenStream {
+    expand_writeable(parse_macro_input!(input))
+        .unwrap_or_else(syn::Error::into_compile_error)
+        .into()
 }
