@@ -2,7 +2,7 @@
 
 [package]
 name = "influxdb_derive"
-version = "0.5.0"
+version = "0.5.1"
 authors = ["Gero Gerke <11deutron11@gmail.com>"]
 edition = "2018"
 description = "Private implementation detail of the influxdb crate"
