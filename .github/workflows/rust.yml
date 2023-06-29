@@ -83,7 +83,7 @@ jobs:
 
   # this tests that all integration tests are successful
   integration_tests:
-    name: Integration Tests (Rust ${{matrix.rust.name}})
+    name: Integration Tests (Rust ${{matrix.rust.name}} with ${{matrix.http-backend}})
     runs-on: ubuntu-latest
     continue-on-error: ${{matrix.rust.nightly}}
     strategy:
