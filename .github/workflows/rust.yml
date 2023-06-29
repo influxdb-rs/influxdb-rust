@@ -7,202 +7,204 @@ on:
   pull_request:
 
 jobs:
-    readmecheck:
-        name: README Format Check
-        runs-on: ubuntu-latest
-        steps:
-            - uses: actions/checkout@v3
-            - uses: dtolnay/rust-toolchain@nightly
-            - run: bash ./auxiliary/update_cargo-readme.sh
-            - run: bash ./auxiliary/check_readme_consistency.sh
+  # this checks that the readme created from rustdoc is up to date
+  readmecheck:
+    name: README Format Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@nightly
+      - run: bash ./auxiliary/update_cargo-readme.sh
+      - run: bash ./auxiliary/check_readme_consistency.sh
 
-    style:
-        name: Style Checks (stable/ubuntu-latest)
-        runs-on: ubuntu-latest
-        steps:
-            - uses: actions/checkout@v3
-            - uses: dtolnay/rust-toolchain@nightly
-              with:
-                  components: rustfmt
-            - name: Check code formatting
-              run: cargo fmt --all -- --check
-            - uses: dtolnay/rust-toolchain@1.63.0
-              with:
-                components: clippy
-            - name: Check Clippy lints (reqwest)
-              run: cargo clippy --manifest-path influxdb/Cargo.toml --all-targets --no-default-features --features use-serde,derive,reqwest-client -- -D warnings
-            - name: Check Clippy lints (surf)
-              run: cargo clippy --manifest-path influxdb/Cargo.toml --all-targets --no-default-features --features use-serde,derive,hyper-client -- -D warnings
+  # this checks that there are no clippy lints
+  clippy:
+    name: Style Check (clippy)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@1.63.0
+        with:
+          components: clippy
+      - name: Check Clippy lints (reqwest)
+        run: cargo clippy --manifest-path influxdb/Cargo.toml --all-targets --no-default-features --features use-serde,derive,reqwest-client -- -D warnings
+      - name: Check Clippy lints (surf)
+        run: cargo clippy --manifest-path influxdb/Cargo.toml --all-targets --no-default-features --features use-serde,derive,hyper-client -- -D warnings
 
-    compile:
-        name: Compile (${{ matrix.rust_release }}/${{ matrix.os }})
-        runs-on: ${{ matrix.os }}
-        strategy:
-            matrix:
-                rust_release: ["1.60", stable, nightly]
-                os: [ubuntu-latest, windows-latest, macOS-latest]
+  # this checks that the code is formatted with rustfmt
+  rustfmt:
+    name: Style Checks (rustfmt)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: rustfmt
+      - name: Check code formatting
+        run: cargo fmt --all -- --check
 
-        steps:
-            - uses: actions/checkout@v3
-            - uses: dtolnay/rust-toolchain@master
-              with:
-                  toolchain: ${{ matrix.rust_release }}
-            - name: Build
-              run: cargo build --verbose
+  unit_tests:
+    name: Unit Tests (Rust ${{matrix.rust.name}} on ${{matrix.os}})
+    runs-on: ${{matrix.os}}
+    continue-on-error: ${{matrix.rust.nightly}}
+    strategy:
+      matrix:
+        rust:
+          - name: MSRV
+            toolchain: "1.60"
+            nightly: false
+          - name: Stable
+            toolchain: stable
+            nightly: false
+          - name: Beta
+            toolchain: beta
+            nightly: false
+          - name: Nightly
+            toolchain: nightly
+            nightly: true
+        os: [ubuntu-latest, windows-latest, macOS-latest]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{matrix.rust.toolchain}}
+      - run: cargo test --lib
 
-    unit_test:
-        name: Unit test (${{ matrix.rust_release }}/${{ matrix.os }})
-        runs-on: ${{ matrix.os }}
-        strategy:
-            matrix:
-                rust_release: ["1.60", stable, nightly]
-                os: [ubuntu-latest, windows-latest, macOS-latest]
+  integration_tests:
+    name: Integration Tests (Rust ${{matrix.rust.name}})
+    runs-on: ubuntu-latest
+    continue-on-error: ${{matrix.rust.nightly}}
+    strategy:
+      matrix:
+        rust:
+          - name: Stable
+            toolchain: stable
+            nightly: false
+        http-backend: [curl-client, h1-client, h1-client-rustls, hyper-client, reqwest-client, reqwest-client-rustls]
+    services:
+      influxdb:
+        image: influxdb:1.8
+        ports:
+          - 8086:8086
+      authed_influxdb:
+        image: influxdb:1.8
+        ports:
+          - 9086:8086
+        env:
+          INFLUXDB_HTTP_AUTH_ENABLED: true
+          INFLUXDB_ADMIN_USER: admin
+          INFLUXDB_ADMIN_PASSWORD: password
+          INFLUXDB_USER: nopriv_user
+          INFLUXDB_USER_PASSWORD: password
+      influxdbv2:
+        image: influxdb:2.6
+        ports:
+          - 9086:8086
+        env:
+          DOCKER_INFLUXDB_INIT_MODE: setup
+          DOCKER_INFLUXDB_INIT_USERNAME: admin
+          DOCKER_INFLUXDB_INIT_PASSWORD: password
+          DOCKER_INFLUXDB_INIT_ORG: testing
+          DOCKER_INFLUXDB_INIT_BUCKET: mydb
+          DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: admintoken
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Run tests
+        run: |
+          for test in integration_tests{,_v2}
+          do
+            cargo test -p influxdb --no-default-features --features 'use-serde derive ${{matrix.http-backend}}' --no-fail-fast --test integration_tests
+          done
 
-        steps:
-            - uses: actions/checkout@v1
-            - uses: dtolnay/rust-toolchain@master
-              with:
-                  toolchain: ${{ matrix.rust_release }}
-            - name: test
-              run: cargo test --lib
+  coverage:
+    name: Code Coverage (stable/ubuntu-latest)
+    runs-on: ubuntu-latest
+    services:
+      influxdb:
+        image: influxdb:1.8
+        ports:
+          - 8086:8086
+      authed_influxdb:
+        image: influxdb:1.8
+        ports:
+          - 9086:8086
+        env:
+          INFLUXDB_HTTP_AUTH_ENABLED: true
+          INFLUXDB_ADMIN_USER: admin
+          INFLUXDB_ADMIN_PASSWORD: password
+          INFLUXDB_USER: nopriv_user
+          INFLUXDB_USER_PASSWORD: password
 
-    integration_test:
-        name: Integration Tests for Influxdb 1.x (stable/ubuntu-latest)
-        runs-on: ubuntu-latest
-        strategy:
-            matrix:
-                http-backend: [curl-client, h1-client, h1-client-rustls, hyper-client, reqwest-client, reqwest-client-rustls]
-        services:
-            influxdb:
-                image: influxdb:1.8
-                ports:
-                    - 8086:8086
-            authed_influxdb:
-                image: influxdb:1.8
-                ports:
-                    - 9086:8086
-                env:
-                    INFLUXDB_HTTP_AUTH_ENABLED: true
-                    INFLUXDB_ADMIN_USER: admin
-                    INFLUXDB_ADMIN_PASSWORD: password
-                    INFLUXDB_USER: nopriv_user
-                    INFLUXDB_USER_PASSWORD: password
-        steps:
-            - uses: actions/checkout@v3
-            - uses: dtolnay/rust-toolchain@stable
-            - run: cargo test --manifest-path=./influxdb/Cargo.toml --no-default-features --features 'use-serde derive ${{ matrix.http-backend }}' --no-fail-fast --test integration_tests
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@stable
 
-    integration_test_v2:
-        name: Integration Tests for Influxdb 2.0 (stable/ubuntu-latest)
-        runs-on: ubuntu-latest
-        strategy:
-            matrix:
-                http-backend: [curl-client, h1-client, h1-client-rustls, hyper-client]
-        services:
-            influxdbv2:
-                image: influxdb:2.6
-                ports:
-                    - 9086:8086
-                env:
-                    DOCKER_INFLUXDB_INIT_MODE: setup
-                    DOCKER_INFLUXDB_INIT_USERNAME: admin
-                    DOCKER_INFLUXDB_INIT_PASSWORD: password
-                    DOCKER_INFLUXDB_INIT_ORG: testing
-                    DOCKER_INFLUXDB_INIT_BUCKET: mydb
-                    DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: admintoken
-        steps:
-            - uses: actions/checkout@v1
-            - uses: dtolnay/rust-toolchain@stable
-            - run: cargo test --manifest-path=./influxdb/Cargo.toml --no-default-features --features 'use-serde derive ${{ matrix.http-backend }}' --no-fail-fast --test integration_tests_v2
+      - name: Get Rust Version
+        id: rust-version
+        run: echo "::set-output name=VERSION::$(cargo -V | head -n1 | awk '{print $2}')"
 
-    coverage:
-        name: Code Coverage (stable/ubuntu-latest)
-        runs-on: ubuntu-latest
-        services:
-            influxdb:
-                image: influxdb:1.8
-                ports:
-                    - 8086:8086
-            authed_influxdb:
-                image: influxdb:1.8
-                ports:
-                    - 9086:8086
-                env:
-                    INFLUXDB_HTTP_AUTH_ENABLED: true
-                    INFLUXDB_ADMIN_USER: admin
-                    INFLUXDB_ADMIN_PASSWORD: password
-                    INFLUXDB_USER: nopriv_user
-                    INFLUXDB_USER_PASSWORD: password
+      - name: Get Tarpaulin Version
+        id: tarpaulin-version
+        run: echo "::set-output name=VERSION::$(wget -qO- 'https://crates.io/api/v1/crates/cargo-tarpaulin' | jq -r '.crate.max_stable_version')"
 
-        steps:
-          - uses: actions/checkout@v3
-          - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/cargo-tarpaulin
+            ~/.cargo/git
+            ~/.cargo/registry
+            target
+          key: ${{ runner.os }}-cargo-${{ steps.rust-version.outputs.VERSION }}-tarpaulin-${{ steps.tarpaulin-version.outputs.VERSION }} }}
 
-          - name: Get Rust Version
-            id: rust-version
-            run: echo "::set-output name=VERSION::$(cargo -V | head -n1 | awk '{print $2}')"
+      - name: Install Tarpaulin
+        run: |
+          ls -lh ~/.cargo/bin
+          test -e ~/.cargo/bin/cargo-tarpaulin || cargo install cargo-tarpaulin --version ${{ steps.tarpaulin-version.outputs.VERSION }}
 
-          - name: Get Tarpaulin Version
-            id: tarpaulin-version
-            run: echo "::set-output name=VERSION::$(wget -qO- 'https://crates.io/api/v1/crates/cargo-tarpaulin' | jq -r '.crate.max_stable_version')"
+      - name: Run Tarpaulin coverage tests
+        run: |
+          cargo tarpaulin -v \
+            --target-dir target/tarpaulin \
+            --workspace \
+            --features use-serde,derive \
+            --exclude-files 'derive/*' \
+            --exclude-files 'target/*' \
+            --ignore-panics --ignore-tests \
+            --out Html --out Json
+        env:
+          RUST_BACKTRACE: 1
+          RUST_LOG: info
 
-          - uses: actions/cache@v3
-            with:
-              path: |
-                ~/.cargo/bin/cargo-tarpaulin
-                ~/.cargo/git
-                ~/.cargo/registry
-                target
-              key: ${{ runner.os }}-cargo-${{ steps.rust-version.outputs.VERSION }}-tarpaulin-${{ steps.tarpaulin-version.outputs.VERSION }} }}
+      - uses: actions/upload-artifact@v3
+        with:
+          name: tarpaulin-report
+          path: |
+            tarpaulin-report.json
+            tarpaulin-report.html
 
-          - name: Install Tarpaulin
-            run: |
-              ls -lh ~/.cargo/bin
-              test -e ~/.cargo/bin/cargo-tarpaulin || cargo install cargo-tarpaulin --version ${{ steps.tarpaulin-version.outputs.VERSION }}
+  pages:
+    runs-on: ubuntu-latest
+    needs:
+      - coverage
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: gh-pages
 
-          - name: Run Tarpaulin coverage tests
-            run: |
-              cargo tarpaulin -v \
-                --target-dir target/tarpaulin \
-                --workspace \
-                --features use-serde,derive \
-                --exclude-files 'derive/*' \
-                --exclude-files 'target/*' \
-                --ignore-panics --ignore-tests \
-                --out Html --out Json
-            env:
-              RUST_BACKTRACE: 1
-              RUST_LOG: info
+      - uses: actions/download-artifact@v3
+        with:
+          name: tarpaulin-report
 
-          - uses: actions/upload-artifact@v3
-            with:
-              name: tarpaulin-report
-              path: |
-                tarpaulin-report.json
-                tarpaulin-report.html
+      - run: |
+          coverage=$(jq '.files | { covered: map(.covered) | add, coverable: map(.coverable) | add } | .covered / .coverable * 10000 | round | . / 100' tarpaulin-report.json)
+          color=$([[ $coverage < 80 ]] && printf yellow || printf brightgreen)
+          wget -qO coverage.svg "https://img.shields.io/badge/coverage-$coverage%25-$color"
 
-    pages:
-        runs-on: ubuntu-latest
-        needs:
-          - coverage
-        if: github.ref == 'refs/heads/main'
-        steps:
-          - uses: actions/checkout@v3
-            with:
-              ref: gh-pages
+          git add coverage.svg tarpaulin-report.html
+          git status
 
-          - uses: actions/download-artifact@v3
-            with:
-              name: tarpaulin-report
-
-          - run: |
-              coverage=$(jq '.files | { covered: map(.covered) | add, coverable: map(.coverable) | add } | .covered / .coverable * 10000 | round | . / 100' tarpaulin-report.json)
-              color=$([[ $coverage < 80 ]] && printf yellow || printf brightgreen)
-              wget -qO coverage.svg "https://img.shields.io/badge/coverage-$coverage%25-$color"
-
-              git add coverage.svg tarpaulin-report.html
-              git status
-
-          - uses: stefanzweifel/git-auto-commit-action@v4
-            with:
-              commit_message: "GitHub Pages for ${{ github.sha }}"
+      - uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: "GitHub Pages for ${{ github.sha }}"
