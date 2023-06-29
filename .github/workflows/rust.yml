@@ -43,8 +43,9 @@ jobs:
       - name: Check code formatting
         run: cargo fmt --all -- --check
 
+  # this tests that all unit and doc tests are successful
   unit_tests:
-    name: Unit Tests (Rust ${{matrix.rust.name}} on ${{matrix.os}})
+    name: Unit and Doc Tests (Rust ${{matrix.rust.name}} on ${{matrix.os}})
     runs-on: ${{matrix.os}}
     continue-on-error: ${{matrix.rust.nightly}}
     strategy:
@@ -68,8 +69,18 @@ jobs:
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{matrix.rust.toolchain}}
+        id: rust-toolchain
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/git
+            ~/.cargo/registry
+            target
+          key: "${{runner.os}} Rust ${{steps.rust-toolchain.outputs.cachekey}}"
       - run: cargo test --lib
+      - run: cargo test --doc
 
+  # this tests that all integration tests are successful
   integration_tests:
     name: Integration Tests (Rust ${{matrix.rust.name}})
     runs-on: ubuntu-latest
@@ -99,7 +110,7 @@ jobs:
       influxdbv2:
         image: influxdb:2.6
         ports:
-          - 9086:8086
+          - 2086:8086
         env:
           DOCKER_INFLUXDB_INIT_MODE: setup
           DOCKER_INFLUXDB_INIT_USERNAME: admin
@@ -110,13 +121,22 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: dtolnay/rust-toolchain@stable
+        id: rust-toolchain
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/git
+            ~/.cargo/registry
+            target
+          key: "${{runner.os}} Rust ${{steps.rust-toolchain.outputs.cachekey}}"
       - name: Run tests
         run: |
           for test in integration_tests{,_v2}
           do
-            cargo test -p influxdb --no-default-features --features 'use-serde derive ${{matrix.http-backend}}' --no-fail-fast --test integration_tests
+            cargo test -p influxdb --no-default-features --features 'use-serde derive ${{matrix.http-backend}}' --no-fail-fast --test $test
           done
 
+  # this uses cargo-tarpaulin to inspect the code coverage
   coverage:
     name: Code Coverage (stable/ubuntu-latest)
     runs-on: ubuntu-latest
@@ -139,15 +159,10 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: dtolnay/rust-toolchain@stable
-
-      - name: Get Rust Version
-        id: rust-version
-        run: echo "::set-output name=VERSION::$(cargo -V | head -n1 | awk '{print $2}')"
-
+        id: rust-toolchain
       - name: Get Tarpaulin Version
         id: tarpaulin-version
-        run: echo "::set-output name=VERSION::$(wget -qO- 'https://crates.io/api/v1/crates/cargo-tarpaulin' | jq -r '.crate.max_stable_version')"
-
+        run: echo "version=$(wget -qO- 'https://crates.io/api/v1/crates/cargo-tarpaulin' | jq -r '.crate.max_stable_version')" >>$GITHUB_OUTPUT
       - uses: actions/cache@v3
         with:
           path: |
@@ -155,13 +170,11 @@ jobs:
             ~/.cargo/git
             ~/.cargo/registry
             target
-          key: ${{ runner.os }}-cargo-${{ steps.rust-version.outputs.VERSION }}-tarpaulin-${{ steps.tarpaulin-version.outputs.VERSION }} }}
-
+          key: "${{runner.os}} Rust ${{steps.rust-version.outputs.version}} tarpaulin ${{steps.tarpaulin-version.outputs.version}}"
       - name: Install Tarpaulin
         run: |
           ls -lh ~/.cargo/bin
-          test -e ~/.cargo/bin/cargo-tarpaulin || cargo install cargo-tarpaulin --version ${{ steps.tarpaulin-version.outputs.VERSION }}
-
+          test -e ~/.cargo/bin/cargo-tarpaulin || cargo install cargo-tarpaulin --version ${{steps.tarpaulin-version.outputs.version}}
       - name: Run Tarpaulin coverage tests
         run: |
           cargo tarpaulin -v \
@@ -175,7 +188,6 @@ jobs:
         env:
           RUST_BACKTRACE: 1
           RUST_LOG: info
-
       - uses: actions/upload-artifact@v3
         with:
           name: tarpaulin-report
@@ -183,6 +195,7 @@ jobs:
             tarpaulin-report.json
             tarpaulin-report.html
 
+  # this uploads the code coverage to github pages
   pages:
     runs-on: ubuntu-latest
     needs:
@@ -192,11 +205,9 @@ jobs:
       - uses: actions/checkout@v3
         with:
           ref: gh-pages
-
       - uses: actions/download-artifact@v3
         with:
           name: tarpaulin-report
-
       - run: |
           coverage=$(jq '.files | { covered: map(.covered) | add, coverable: map(.coverable) | add } | .covered / .coverable * 10000 | round | . / 100' tarpaulin-report.json)
           color=$([[ $coverage < 80 ]] && printf yellow || printf brightgreen)
@@ -204,7 +215,6 @@ jobs:
 
           git add coverage.svg tarpaulin-report.html
           git status
-
       - uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: "GitHub Pages for ${{ github.sha }}"
