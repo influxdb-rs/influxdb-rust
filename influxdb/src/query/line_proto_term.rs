@@ -59,7 +59,7 @@ impl LineProtoTerm<'_> {
                 } else {
                     format!("{}i", v)
                 }
-            },
+            }
             Text(v) => format!(r#""{}""#, Self::escape_any(v, &QUOTES_SLASHES)),
         }
     }
