@@ -163,6 +163,10 @@ where
 
 impl Query for WriteQuery {
     fn build(&self) -> Result<ValidQuery, Error> {
+        self.build_with_opts(false)
+    }
+
+    fn build_with_opts(&self, use_v2: bool) -> Result<ValidQuery, Error> {
         if self.fields.is_empty() {
             return Err(Error::InvalidQueryError {
                 error: "fields cannot be empty".to_string(),
@@ -173,10 +177,20 @@ impl Query for WriteQuery {
             .tags
             .iter()
             .map(|(tag, value)| {
+                let escaped_tag_key = if use_v2 {
+                    LineProtoTerm::TagKey(tag).escape_v2()
+                } else {
+                    LineProtoTerm::TagKey(tag).escape()
+                };
+                let escaped_tag_value = if use_v2 {
+                    LineProtoTerm::TagValue(value).escape_v2()
+                } else {
+                    LineProtoTerm::TagValue(value).escape()
+                };
                 format!(
                     "{tag}={value}",
-                    tag = LineProtoTerm::TagKey(tag).escape(),
-                    value = LineProtoTerm::TagValue(value).escape(),
+                    tag = escaped_tag_key,
+                    value = escaped_tag_value,
                 )
             })
             .collect::<Vec<String>>()
@@ -189,18 +203,34 @@ impl Query for WriteQuery {
             .fields
             .iter()
             .map(|(field, value)| {
+                let escaped_field_key = if use_v2 {
+                    LineProtoTerm::FieldKey(field).escape_v2()
+                } else {
+                    LineProtoTerm::FieldKey(field).escape()
+                };
+                let escaped_field_value = if use_v2 {
+                    LineProtoTerm::FieldValue(value).escape_v2()
+                } else {
+                    LineProtoTerm::FieldValue(value).escape()
+                };
                 format!(
                     "{field}={value}",
-                    field = LineProtoTerm::FieldKey(field).escape(),
-                    value = LineProtoTerm::FieldValue(value).escape(),
+                    field = escaped_field_key,
+                    value = escaped_field_value,
                 )
             })
             .collect::<Vec<String>>()
             .join(",");
 
+        let escaped_measurement = if use_v2 {
+            LineProtoTerm::Measurement(&self.measurement).escape_v2()
+        } else {
+            LineProtoTerm::Measurement(&self.measurement).escape()
+        };
+
         Ok(ValidQuery(format!(
             "{measurement}{tags} {fields} {time}",
-            measurement = LineProtoTerm::Measurement(&self.measurement).escape(),
+            measurement = escaped_measurement,
             tags = tags,
             fields = fields,
             time = self.timestamp
@@ -218,6 +248,17 @@ impl Query for Vec<WriteQuery> {
 
         for q in self {
             let valid_query = q.build()?;
+            qlines.push(valid_query.0);
+        }
+
+        Ok(ValidQuery(qlines.join("\n")))
+    }
+
+    fn build_with_opts(&self, use_v2: bool) -> Result<ValidQuery, Error> {
+        let mut qlines = Vec::new();
+
+        for q in self {
+            let valid_query = q.build_with_opts(use_v2)?;
             qlines.push(valid_query.0);
         }
 
@@ -270,6 +311,22 @@ mod tests {
         assert!(query.is_ok(), "Query was empty");
         assert_eq!(
             query.unwrap(),
+            "weather temperature=82i,wind_strength=3.7,temperature_unsigned=82i 11"
+        );
+    }
+
+    #[test]
+    fn test_write_builder_multiple_fields_with_v2() {
+        let query = Timestamp::Hours(11)
+            .into_query("weather".to_string())
+            .add_field("temperature", 82)
+            .add_field("wind_strength", 3.7)
+            .add_field("temperature_unsigned", 82u64)
+            .build_with_opts(true);
+
+        assert!(query.is_ok(), "Query was empty");
+        assert_eq!(
+            query.unwrap(),
             "weather temperature=82i,wind_strength=3.7,temperature_unsigned=82u 11"
         );
     }
@@ -281,6 +338,18 @@ mod tests {
             .add_field("temperature", 82u64)
             .add_tag("wind_strength", <Option<u64>>::None)
             .build();
+
+        assert!(query.is_ok(), "Query was empty");
+        assert_eq!(query.unwrap(), "weather temperature=82i 11");
+    }
+
+    #[test]
+    fn test_write_builder_optional_fields_with_v2() {
+        let query = Timestamp::Hours(11)
+            .into_query("weather".to_string())
+            .add_field("temperature", 82u64)
+            .add_tag("wind_strength", <Option<u64>>::None)
+            .build_with_opts(true);
 
         assert!(query.is_ok(), "Query was empty");
         assert_eq!(query.unwrap(), "weather temperature=82u 11");

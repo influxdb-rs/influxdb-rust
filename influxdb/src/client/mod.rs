@@ -131,7 +131,7 @@ impl Client {
     /// Add authorization token to [`Client`](crate::Client)
     ///
     /// This is designed for influxdb 2.0's backward-compatible API which
-    /// requires authrozation by default. You can create such token from
+    /// requires authorization by default. You can create such token from
     /// console of influxdb 2.0 .
     pub fn with_token<S>(mut self, token: S) -> Self
     where

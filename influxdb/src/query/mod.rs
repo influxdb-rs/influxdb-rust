@@ -112,12 +112,36 @@ pub trait Query {
     /// ```
     fn build(&self) -> Result<ValidQuery, Error>;
 
+    /// Like [build] but with additional support for unsigned integers in the line protocol.
+    /// Please note, this crate can only interact with InfluxDB 2.0 in compatibility mode
+    /// and does not natively support InfluxDB 2.0.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use influxdb::{Query, Timestamp};
+    /// use influxdb::InfluxDbWriteable;
+    ///
+    /// let use_v2 = true;
+    ///
+    /// let invalid_query = Timestamp::Nanoseconds(0).into_query("measurement").build_with_opts(use_v2);
+    /// assert!(invalid_query.is_err());
+    ///
+    /// let valid_query = Timestamp::Nanoseconds(0).into_query("measurement").add_field("myfield1", 11).build_with_opts(use_v2);
+    /// assert!(valid_query.is_ok());
+    /// ```
+    fn build_with_opts(&self, use_v2: bool) -> Result<ValidQuery, Error>;
+
     fn get_type(&self) -> QueryType;
 }
 
 impl<Q: Query> Query for &Q {
     fn build(&self) -> Result<ValidQuery, Error> {
-        Q::build(self)
+        Q::build_with_opts(self, false)
+    }
+
+    fn build_with_opts(&self, use_v2: bool) -> Result<ValidQuery, Error> {
+        Q::build_with_opts(self, use_v2)
     }
 
     fn get_type(&self) -> QueryType {
@@ -128,6 +152,10 @@ impl<Q: Query> Query for &Q {
 impl<Q: Query> Query for Box<Q> {
     fn build(&self) -> Result<ValidQuery, Error> {
         Q::build(self)
+    }
+
+    fn build_with_opts(&self, use_v2: bool) -> Result<ValidQuery, Error> {
+        Q::build_with_opts(self, use_v2)
     }
 
     fn get_type(&self) -> QueryType {

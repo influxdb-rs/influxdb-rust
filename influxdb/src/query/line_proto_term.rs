@@ -25,12 +25,22 @@ impl LineProtoTerm<'_> {
         match self {
             Measurement(x) => Self::escape_any(x, &COMMAS_SPACES),
             TagKey(x) | FieldKey(x) => Self::escape_any(x, &COMMAS_SPACES_EQUALS),
-            FieldValue(x) => Self::escape_field_value(x),
+            FieldValue(x) => Self::escape_field_value(x, false),
             TagValue(x) => Self::escape_tag_value(x),
         }
     }
 
-    fn escape_field_value(v: &Type) -> String {
+    pub fn escape_v2(self) -> String {
+        use LineProtoTerm::*;
+        match self {
+            Measurement(x) => Self::escape_any(x, &COMMAS_SPACES),
+            TagKey(x) | FieldKey(x) => Self::escape_any(x, &COMMAS_SPACES_EQUALS),
+            FieldValue(x) => Self::escape_field_value(x, true),
+            TagValue(x) => Self::escape_tag_value(x),
+        }
+    }
+
+    fn escape_field_value(v: &Type, use_v2: bool) -> String {
         use Type::*;
         match v {
             Boolean(v) => {
@@ -43,7 +53,13 @@ impl LineProtoTerm<'_> {
             .to_string(),
             Float(v) => v.to_string(),
             SignedInteger(v) => format!("{}i", v),
-            UnsignedInteger(v) => format!("{}u", v),
+            UnsignedInteger(v) => {
+                if use_v2 {
+                    format!("{}u", v)
+                } else {
+                    format!("{}i", v)
+                }
+            }
             Text(v) => format!(r#""{}""#, Self::escape_any(v, &QUOTES_SLASHES)),
         }
     }
@@ -111,6 +127,12 @@ mod test {
 
         assert_eq!(FieldValue(&Type::SignedInteger(0)).escape(), r#"0i"#);
         assert_eq!(FieldValue(&Type::SignedInteger(83)).escape(), r#"83i"#);
+
+        assert_eq!(FieldValue(&Type::UnsignedInteger(0)).escape(), r#"0i"#);
+        assert_eq!(FieldValue(&Type::UnsignedInteger(83)).escape(), r#"83i"#);
+
+        assert_eq!(FieldValue(&Type::UnsignedInteger(0)).escape_v2(), r#"0u"#);
+        assert_eq!(FieldValue(&Type::UnsignedInteger(83)).escape_v2(), r#"83u"#);
 
         assert_eq!(FieldValue(&Type::Text("".into())).escape(), r#""""#);
         assert_eq!(FieldValue(&Type::Text("0".into())).escape(), r#""0""#);

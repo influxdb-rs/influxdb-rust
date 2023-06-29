@@ -38,6 +38,10 @@ impl Query for ReadQuery {
         Ok(ValidQuery(self.queries.join(";")))
     }
 
+    fn build_with_opts(&self, _use_v2: bool) -> Result<ValidQuery, Error> {
+        Ok(ValidQuery(self.queries.join(";")))
+    }
+
     fn get_type(&self) -> QueryType {
         QueryType::ReadQuery
     }
