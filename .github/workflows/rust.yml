@@ -13,10 +13,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: docker://ghcr.io/msrd0/cargo-doc2readme
+      - uses: docker://ghcr.io/msrd0/cargo-doc2readme:nightly
         with:
           entrypoint: cargo
-          args: doc2readme -p influxdb --check
+          args: doc2readme -p influxdb --expand-macros --check
 
   # this checks that there are no clippy lints
   clippy:

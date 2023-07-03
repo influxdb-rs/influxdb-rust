@@ -55,7 +55,7 @@ Add the following to your `Cargo.toml`
 
 
 ```toml
-influxdb = { version = "0.6", features = ["derive"] }
+influxdb = { version = "0.6.0", features = ["derive"] }
 ```
 
 For an example with using Serde deserialization, please refer to [serde_integration][__link4]
@@ -115,58 +115,44 @@ For further examples, check out the Integration Tests in `tests/integration_test
 To communicate with InfluxDB, you can choose the HTTP backend to be used configuring the appropriate feature. We recommend sticking with the default reqwest-based client, unless you really need async-std compatibility.
 
  - **[hyper][__link5]** (through reqwest, used by default), with [rustls][__link6]
-	
-	
 	```toml
-	influxdb = { version = "0.6", features = ["derive"] }
+	influxdb = { version = "0.6.0", features = ["derive"] }
 	```
 	
 	
  - **[hyper][__link7]** (through reqwest), with native TLS (OpenSSL)
-	
-	
 	```toml
-	influxdb = { version = "0.6", default-features = false, features = ["derive", "use-serde", "reqwest-client"] }
+	influxdb = { version = "0.6.0", default-features = false,features = ["derive", "use-serde", "reqwest-client"] }
 	```
 	
 	
  - **[hyper][__link8]** (through surf), use this if you need tokio 0.2 compatibility
-	
-	
 	```toml
-	influxdb = { version = "0.6", default-features = false, features = ["derive", "use-serde", "curl-client"] }
+	influxdb = { version = "0.6.0", default-features = false,features = ["derive", "use-serde", "hyper-client"] }
 	```
 	
 	
  - **[curl][__link9]**, using [libcurl][__link10]
-	
-	
 	```toml
-	influxdb = { version = "0.6", default-features = false, features = ["derive", "use-serde", "curl-client"] }
+	influxdb = { version = "0.6.0", default-features = false,features = ["derive", "use-serde", "curl-client"] }
 	```
 	
 	
  - **[async-h1][__link11]** with native TLS (OpenSSL)
-	
-	
 	```toml
-	influxdb = { version = "0.6", default-features = false, features = ["derive", "use-serde", "h1-client"] }
+	influxdb = { version = "0.6.0", default-features = false,features = ["derive", "use-serde", "h1-client"] }
 	```
 	
 	
  - **[async-h1][__link12]** with [rustls][__link13]
-	
-	
 	```toml
-	influxdb = { version = "0.6", default-features = false, features = ["derive", "use-serde", "h1-client-rustls"] }
+	influxdb = { version = "0.6.0", default-features = false,features = ["derive", "use-serde", "h1-client-rustls"] }
 	```
 	
 	
  - WebAssembly’s `window.fetch`, via `web-sys` and **[wasm-bindgen][__link14]**
-	
-	
 	```toml
-	influxdb = { version = "0.6", default-features = false, features = ["derive", "use-serde", "wasm-client"] }
+	influxdb = { version = "0.6.0", default-features = false,features = ["derive", "use-serde", "wasm-client"] }
 	```
 	
 	
@@ -181,7 +167,7 @@ To communicate with InfluxDB, you can choose the HTTP backend to be used configu
 @ 2020 Gero Gerke and [contributors].
 
  [contributors]: https://github.com/influxdb-rs/influxdb-rust/graphs/contributors
- [__cargo_doc2readme_dependencies_info]: ggGkYW0BYXSEG-eS3ZnLalPKG8RSyE7OgxOuG5N_7FO9S6I9G5Bq0rFyX93cYXKEG8DZnUci3d5sGxfhcfNe4h89G-G2t_n9Ugp6G7G5gnKJ656KYWSBgmhpbmZsdXhkYmUwLjYuMA
+ [__cargo_doc2readme_dependencies_info]: ggGkYW0BYXSEG-eS3ZnLalPKG8RSyE7OgxOuG5N_7FO9S6I9G5Bq0rFyX93cYXKEGyBiJeIUzlcaG-d2lJz85cl_G-crYZ-mhyAvG6Wf1YbqYiItYWSBgmhpbmZsdXhkYmUwLjYuMA
  [__link0]: https://github.com/influxdb-rs/influxdb-rust/blob/main/CONTRIBUTING.md
  [__link1]: https://github.com/influxdb-rs/influxdb-rust/blob/main/CODE_OF_CONDUCT.md
  [__link10]: https://curl.se/libcurl/
