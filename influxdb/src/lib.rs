@@ -20,9 +20,7 @@
 //!
 //! Add the following to your `Cargo.toml`
 //!
-//! ```toml
-//! influxdb = { version = "0.6", features = ["derive"] }
-//! ```
+#![doc = cargo_toml!(indent="", "derive")]
 //!
 //! For an example with using Serde deserialization, please refer to [serde_integration](crate::integrations::serde_integration)
 //!
@@ -80,35 +78,19 @@
 //! To communicate with InfluxDB, you can choose the HTTP backend to be used configuring the appropriate feature. We recommend sticking with the default reqwest-based client, unless you really need async-std compatibility.
 //!
 //! - **[hyper](https://github.com/hyperium/hyper)** (through reqwest, used by default), with [rustls](https://github.com/ctz/rustls)
-//!   ```toml
-//!   influxdb = { version = "0.6", features = ["derive"] }
-//!   ```
-//!
+#![doc = cargo_toml!(indent="\t", "derive")]
 //! - **[hyper](https://github.com/hyperium/hyper)** (through reqwest), with native TLS (OpenSSL)
-//!   ```toml
-//!   influxdb = { version = "0.6", default-features = false, features = ["derive", "use-serde", "reqwest-client"] }
-//!   ```
-//!
+#![doc = cargo_toml!(indent="\t", default-features = false, "derive", "use-serde", "reqwest-client")]
 //! - **[hyper](https://github.com/hyperium/hyper)** (through surf), use this if you need tokio 0.2 compatibility
-//!    ```toml
-//!    influxdb = { version = "0.6", default-features = false, features = ["derive", "use-serde", "curl-client"] }
-//!    ```
+#![doc = cargo_toml!(indent="\t", default-features = false, "derive", "use-serde", "hyper-client")]
 //! - **[curl](https://github.com/alexcrichton/curl-rust)**, using [libcurl](https://curl.se/libcurl/)
-//!    ```toml
-//!    influxdb = { version = "0.6", default-features = false, features = ["derive", "use-serde", "curl-client"] }
-//!    ```
+#![doc = cargo_toml!(indent="\t", default-features = false, "derive", "use-serde", "curl-client")]
 //! - **[async-h1](https://github.com/http-rs/async-h1)** with native TLS (OpenSSL)
-//!    ```toml
-//!    influxdb = { version = "0.6", default-features = false, features = ["derive", "use-serde", "h1-client"] }
-//!    ```
+#![doc = cargo_toml!(indent="\t", default-features = false, "derive", "use-serde", "h1-client")]
 //! - **[async-h1](https://github.com/http-rs/async-h1)** with [rustls](https://github.com/ctz/rustls)
-//!    ```toml
-//!    influxdb = { version = "0.6", default-features = false, features = ["derive", "use-serde", "h1-client-rustls"] }
-//!    ```
+#![doc = cargo_toml!(indent="\t", default-features = false, "derive", "use-serde", "h1-client-rustls")]
 //! - WebAssembly's `window.fetch`, via `web-sys` and **[wasm-bindgen](https://github.com/rustwasm/wasm-bindgen)**
-//!    ```toml
-//!    influxdb = { version = "0.6", default-features = false, features = ["derive", "use-serde", "wasm-client"] }
-//!    ```
+#![doc = cargo_toml!(indent="\t", default-features = false, "derive", "use-serde", "wasm-client")]
 //!
 //! # License
 //!
@@ -117,6 +99,38 @@
 #![allow(clippy::needless_doctest_main)]
 #![allow(clippy::needless_lifetimes)] // False positive in client/mod.rs query fn
 #![forbid(bare_trait_objects)]
+
+macro_rules! cargo_toml {
+    (indent=$indent:literal, $firstfeat:literal $(, $feature:literal)*) => {
+        cargo_toml_private!($indent, "", $firstfeat $(, $feature)*)
+    };
+
+    (indent=$indent:literal, default-features = false, $firstfeat:literal $(, $feature:literal)*) => {
+        cargo_toml_private!($indent, "default-features = false,", $firstfeat $(, $feature)*)
+    };
+}
+
+macro_rules! cargo_toml_private {
+    ($indent:literal, $deffeats:literal, $firstfeat:literal $(, $feature:literal)*) => {
+        concat!(
+            $indent,
+            "```toml\n",
+
+            $indent,
+            "influxdb = { version = \"",
+            env!("CARGO_PKG_VERSION"),
+            "\", ",
+            $deffeats,
+            "features = [",
+            "\"", $firstfeat, "\"",
+            $(", \"", $feature, "\"",)*
+            "] }\n",
+
+            $indent,
+            "```"
+        )
+    };
+}
 
 #[cfg(all(feature = "reqwest", feature = "surf"))]
 compile_error!("You need to choose between reqwest and surf; enabling both is not supported");

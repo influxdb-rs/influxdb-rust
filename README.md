@@ -30,33 +30,36 @@
     </a>
 </p>
 
-This library is a work in progress. This means a feature you might need is not implemented
-yet or could be handled better.
+This library is a work in progress. This means a feature you might need is not implemented yet or could be handled better.
 
-Pull requests are always welcome. See [Contributing](https://github.com/influxdb-rs/influxdb-rust/blob/main/CONTRIBUTING.md) and [Code of Conduct](https://github.com/influxdb-rs/influxdb-rust/blob/main/CODE_OF_CONDUCT.md). For a list of past changes, see [CHANGELOG.md](https://github.com/influxdb-rs/influxdb-rust/blob/main/CHANGELOG.md).
+Pull requests are always welcome. See [Contributing][__link0] and [Code of Conduct][__link1]. For a list of past changes, see [CHANGELOG.md][__link2].
+
 
 ### Currently Supported Features
 
--   Reading and Writing to InfluxDB
--   Optional Serde Support for Deserialization
--   Running multiple queries in one request (e.g. `SELECT * FROM weather_berlin; SELECT * FROM weather_london`)
--   Writing single or multiple measurements in one request (e.g. `WriteQuery` or `Vec<WriteQuery>` argument)
--   Authenticated and Unauthenticated Connections
--   `async`/`await` support
--   `#[derive(InfluxDbWriteable)]` Derive Macro for Writing / Reading into Structs
--   `GROUP BY` support
--   Tokio and async-std support (see example below) or [available backends](https://github.com/influxdb-rs/influxdb-rust/blob/main/influxdb/Cargo.toml)
--   Swappable HTTP backends ([see below](#Choice-of-HTTP-backend))
+ - Reading and Writing to InfluxDB
+ - Optional Serde Support for Deserialization
+ - Running multiple queries in one request (e.g. `SELECT * FROM weather_berlin; SELECT * FROM weather_london`)
+ - Writing single or multiple measurements in one request (e.g. `WriteQuery` or `Vec<WriteQuery>` argument)
+ - Authenticated and Unauthenticated Connections
+ - `async`/`await` support
+ - `#[derive(InfluxDbWriteable)]` Derive Macro for Writing / Reading into Structs
+ - `GROUP BY` support
+ - Tokio and async-std support (see example below) or [available backends][__link3]
+ - Swappable HTTP backends ([see below](#Choice-of-HTTP-backend))
+
 
 ## Quickstart
 
 Add the following to your `Cargo.toml`
 
+
 ```toml
-influxdb = { version = "0.6", features = ["derive"] }
+influxdb = { version = "0.6.0", features = ["derive"] }
 ```
 
-For an example with using Serde deserialization, please refer to [serde_integration](crate::integrations::serde_integration)
+For an example with using Serde deserialization, please refer to [serde_integration][__link4]
+
 
 ```rust
 use influxdb::{Client, Query, Timestamp, ReadQuery};
@@ -104,46 +107,82 @@ async fn main() {
 }
 ```
 
-For further examples, check out the Integration Tests in `tests/integration_tests.rs`
-in the repository.
+For further examples, check out the Integration Tests in `tests/integration_tests.rs` in the repository.
+
 
 ## Choice of HTTP backend
 
 To communicate with InfluxDB, you can choose the HTTP backend to be used configuring the appropriate feature. We recommend sticking with the default reqwest-based client, unless you really need async-std compatibility.
 
-- **[hyper](https://github.com/hyperium/hyper)** (through reqwest, used by default), with [rustls](https://github.com/ctz/rustls)
-  ```toml
-  influxdb = { version = "0.6", features = ["derive"] }
-  ```
+ - **[hyper][__link5]** (through reqwest, used by default), with [rustls][__link6]
+	```toml
+	influxdb = { version = "0.6.0", features = ["derive"] }
+	```
+	
+	
+ - **[hyper][__link7]** (through reqwest), with native TLS (OpenSSL)
+	```toml
+	influxdb = { version = "0.6.0", default-features = false,features = ["derive", "use-serde", "reqwest-client"] }
+	```
+	
+	
+ - **[hyper][__link8]** (through surf), use this if you need tokio 0.2 compatibility
+	```toml
+	influxdb = { version = "0.6.0", default-features = false,features = ["derive", "use-serde", "hyper-client"] }
+	```
+	
+	
+ - **[curl][__link9]**, using [libcurl][__link10]
+	```toml
+	influxdb = { version = "0.6.0", default-features = false,features = ["derive", "use-serde", "curl-client"] }
+	```
+	
+	
+ - **[async-h1][__link11]** with native TLS (OpenSSL)
+	```toml
+	influxdb = { version = "0.6.0", default-features = false,features = ["derive", "use-serde", "h1-client"] }
+	```
+	
+	
+ - **[async-h1][__link12]** with [rustls][__link13]
+	```toml
+	influxdb = { version = "0.6.0", default-features = false,features = ["derive", "use-serde", "h1-client-rustls"] }
+	```
+	
+	
+ - WebAssembly’s `window.fetch`, via `web-sys` and **[wasm-bindgen][__link14]**
+	```toml
+	influxdb = { version = "0.6.0", default-features = false,features = ["derive", "use-serde", "wasm-client"] }
+	```
+	
+	
 
-- **[hyper](https://github.com/hyperium/hyper)** (through reqwest), with native TLS (OpenSSL)
-  ```toml
-  influxdb = { version = "0.6", default-features = false, features = ["derive", "use-serde", "reqwest-client"] }
-  ```
-
-- **[hyper](https://github.com/hyperium/hyper)** (through surf), use this if you need tokio 0.2 compatibility
-   ```toml
-   influxdb = { version = "0.6", default-features = false, features = ["derive", "use-serde", "curl-client"] }
-   ```
-- **[curl](https://github.com/alexcrichton/curl-rust)**, using [libcurl](https://curl.se/libcurl/)
-   ```toml
-   influxdb = { version = "0.6", default-features = false, features = ["derive", "use-serde", "curl-client"] }
-   ```
-- **[async-h1](https://github.com/http-rs/async-h1)** with native TLS (OpenSSL)
-   ```toml
-   influxdb = { version = "0.6", default-features = false, features = ["derive", "use-serde", "h1-client"] }
-   ```
-- **[async-h1](https://github.com/http-rs/async-h1)** with [rustls](https://github.com/ctz/rustls)
-   ```toml
-   influxdb = { version = "0.6", default-features = false, features = ["derive", "use-serde", "h1-client-rustls"] }
-   ```
-- WebAssembly's `window.fetch`, via `web-sys` and **[wasm-bindgen](https://github.com/rustwasm/wasm-bindgen)**
-   ```toml
-   influxdb = { version = "0.6", default-features = false, features = ["derive", "use-serde", "wasm-client"] }
-   ```
 
 ## License
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: MIT][__link15]][__link16]
 
-@ 2020 Gero Gerke and [contributors](https://github.com/influxdb-rs/influxdb-rust/graphs/contributors).
+
+
+@ 2020 Gero Gerke and [contributors].
+
+ [contributors]: https://github.com/influxdb-rs/influxdb-rust/graphs/contributors
+ [__cargo_doc2readme_dependencies_info]: ggGkYW0BYXSEG-eS3ZnLalPKG8RSyE7OgxOuG5N_7FO9S6I9G5Bq0rFyX93cYXKEGyBiJeIUzlcaG-d2lJz85cl_G-crYZ-mhyAvG6Wf1YbqYiItYWSBgmhpbmZsdXhkYmUwLjYuMA
+ [__link0]: https://github.com/influxdb-rs/influxdb-rust/blob/main/CONTRIBUTING.md
+ [__link1]: https://github.com/influxdb-rs/influxdb-rust/blob/main/CODE_OF_CONDUCT.md
+ [__link10]: https://curl.se/libcurl/
+ [__link11]: https://github.com/http-rs/async-h1
+ [__link12]: https://github.com/http-rs/async-h1
+ [__link13]: https://github.com/ctz/rustls
+ [__link14]: https://github.com/rustwasm/wasm-bindgen
+ [__link15]: https://img.shields.io/badge/License-MIT-yellow.svg
+ [__link16]: https://opensource.org/licenses/MIT
+ [__link2]: https://github.com/influxdb-rs/influxdb-rust/blob/main/CHANGELOG.md
+ [__link3]: https://github.com/influxdb-rs/influxdb-rust/blob/main/influxdb/Cargo.toml
+ [__link4]: https://docs.rs/influxdb/0.6.0/influxdb/?search=integrations::serde_integration
+ [__link5]: https://github.com/hyperium/hyper
+ [__link6]: https://github.com/ctz/rustls
+ [__link7]: https://github.com/hyperium/hyper
+ [__link8]: https://github.com/hyperium/hyper
+ [__link9]: https://github.com/alexcrichton/curl-rust
+
