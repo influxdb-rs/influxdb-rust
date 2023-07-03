@@ -13,9 +13,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: dtolnay/rust-toolchain@nightly
-      - run: bash ./auxiliary/update_cargo-readme.sh
-      - run: bash ./auxiliary/check_readme_consistency.sh
+      - uses: docker://ghcr.io/msrd0/cargo-doc2readme
+        with:
+          entrypoint: cargo
+          args: doc2readme -p influxdb --check
 
   # this checks that there are no clippy lints
   clippy:
