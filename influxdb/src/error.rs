@@ -2,7 +2,7 @@
 
 use thiserror::Error;
 
-#[derive(Debug, Error)]
+#[derive(Debug, Eq, PartialEq, Error)]
 pub enum Error {
     #[error("query is invalid: {error}")]
     /// Error happens when a query is invalid
