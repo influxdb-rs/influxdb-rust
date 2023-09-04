@@ -140,7 +140,11 @@ impl Client {
         let url = &format!("{}/query", &self.url);
         let mut parameters = self.parameters.as_ref().clone();
         parameters.insert("q", read_query);
-        let request_builder = self.client.get(url).query(&parameters);
+        let mut request_builder = self.client.get(url);
+        if let Some(ref token) = self.token {
+            request_builder = request_builder.header("Authorization", format!("Token {}", token))
+        }
+        let request_builder = request_builder.query(&parameters);
 
         #[cfg(feature = "surf")]
         let request_builder = request_builder.map_err(|err| Error::UrlConstructionError {
