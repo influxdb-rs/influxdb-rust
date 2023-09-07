@@ -2,6 +2,8 @@ extern crate influxdb;
 
 #[path = "./utilities.rs"]
 mod utilities;
+
+use serde::Deserialize;
 use utilities::{
     assert_result_err, assert_result_ok, create_client, create_db, delete_db, run_test,
 };
@@ -269,6 +271,88 @@ async fn test_write_and_read_field() {
         },
     )
     .await;
+}
+
+/// INTEGRATION TEST
+///
+/// This test case tests the authentication on json reads
+#[async_std::test]
+#[cfg(feature = "use-serde")]
+#[cfg(not(tarpaulin_include))]
+async fn test_json_non_authed_read() {
+    const TEST_NAME: &str = "test_json_non_authed_read";
+
+    run_test(
+        || async move {
+            let client =
+                Client::new("http://127.0.0.1:9086", TEST_NAME).with_auth("admin", "password");
+            let query = format!("CREATE DATABASE {}", TEST_NAME);
+            client
+                .query(ReadQuery::new(query))
+                .await
+                .expect("could not setup db");
+            let non_authed_client = Client::new("http://127.0.0.1:9086", TEST_NAME);
+
+            let read_query = ReadQuery::new("SELECT * FROM weather");
+            let read_result = non_authed_client.json_query(read_query).await;
+            assert_result_err(&read_result);
+            match read_result {
+                Err(Error::AuthorizationError) => {}
+                _ => panic!(
+                    "Should be a AuthorizationError: {}",
+                    read_result.unwrap_err()
+                ),
+            }
+        },
+        || async move {
+            let client =
+                Client::new("http://127.0.0.1:9086", TEST_NAME).with_auth("admin", "password");
+            let query = format!("DROP DATABASE {}", TEST_NAME);
+
+            client
+                .query(ReadQuery::new(query))
+                .await
+                .expect("could not clean up db");
+        },
+    )
+    .await
+}
+
+/// INTEGRATION TEST
+///
+/// This test case tests the authentication on json reads
+#[async_std::test]
+#[cfg(feature = "use-serde")]
+#[cfg(not(tarpaulin_include))]
+async fn test_json_authed_read() {
+    const TEST_NAME: &str = "test_json_authed_read";
+
+    run_test(
+        || async move {
+            let client =
+                Client::new("http://127.0.0.1:9086", TEST_NAME).with_auth("admin", "password");
+            let query = format!("CREATE DATABASE {}", TEST_NAME);
+            client
+                .query(ReadQuery::new(query))
+                .await
+                .expect("could not setup db");
+
+            let read_query = ReadQuery::new("SELECT * FROM weather");
+            let read_result = client.json_query(read_query).await;
+            assert_result_ok(&read_result);
+        },
+        || async move {
+            let client =
+                Client::new("http://127.0.0.1:9086", TEST_NAME).with_auth("admin", "password");
+            let query = format!("DROP DATABASE {}", TEST_NAME);
+
+            client
+                .query(ReadQuery::new(query))
+                .await
+                .expect("could not clean up db");
+        },
+    )
+    .await
 }
 
 /// INTEGRATION TEST
