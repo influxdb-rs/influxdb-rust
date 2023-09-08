@@ -50,7 +50,7 @@ impl<'a> Debug for RedactPassword<'a> {
                 _ => (*k, v.as_str()),
             })
             .collect::<BTreeMap<&'static str, &str>>();
-        f.debug_map().entries(entries.into_iter()).finish()
+        f.debug_map().entries(entries).finish()
     }
 }
 

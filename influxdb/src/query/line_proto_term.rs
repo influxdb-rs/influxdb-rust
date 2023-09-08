@@ -83,7 +83,7 @@ impl LineProtoTerm<'_> {
     }
 
     fn escape_any(s: &str, re: &Regex) -> String {
-        re.replace_all(s, r#"\$0"#).to_string()
+        re.replace_all(s, r"\$0").to_string()
     }
 }
 
@@ -101,11 +101,11 @@ mod test {
 
         assert_eq!(
             TagValue(&Type::Text("this is my special string".into())).escape(),
-            r#"this\ is\ my\ special\ string"#
+            r"this\ is\ my\ special\ string"
         );
         assert_eq!(
             TagValue(&Type::Text("a tag w=i th == tons of escapes".into())).escape(),
-            r#"a\ tag\ w\=i\ th\ \=\=\ tons\ of\ escapes"#
+            r"a\ tag\ w\=i\ th\ \=\=\ tons\ of\ escapes"
         );
         assert_eq!(
             TagValue(&Type::Text("no_escapes".into())).escape(),
@@ -113,11 +113,11 @@ mod test {
         );
         assert_eq!(
             TagValue(&Type::Text("some,commas,here".into())).escape(),
-            r#"some\,commas\,here"#
+            r"some\,commas\,here"
         );
 
         assert_eq!(Measurement(r#"wea", ther"#).escape(), r#"wea"\,\ ther"#);
-        assert_eq!(TagKey(r#"locat\ ,=ion"#).escape(), r#"locat\\ \,\=ion"#);
+        assert_eq!(TagKey(r"locat\ ,=ion").escape(), r"locat\\ \,\=ion");
 
         assert_eq!(FieldValue(&Type::Boolean(true)).escape(), r#"true"#);
         assert_eq!(FieldValue(&Type::Boolean(false)).escape(), r#"false"#);

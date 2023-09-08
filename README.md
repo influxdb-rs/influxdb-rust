@@ -25,8 +25,8 @@
     <a href="https://www.rust-lang.org/en-US/">
         <img src="https://img.shields.io/badge/Made%20with-Rust-orange.svg" alt='Build with Rust' />
     </a>
-    <a href="https://blog.rust-lang.org/2022/04/07/Rust-1.60.0.html">
-        <img src="https://img.shields.io/badge/rustc-1.60+-yellow.svg" alt='Minimum Rust Version: 1.60' />
+    <a href="https://blog.rust-lang.org/2022/08/11/Rust-1.63.0.html">
+        <img src="https://img.shields.io/badge/rustc-1.63+-yellow.svg" alt='Minimum Rust Version: 1.63' />
     </a>
 </p>
 
@@ -167,7 +167,7 @@ To communicate with InfluxDB, you can choose the HTTP backend to be used configu
 @ 2020 Gero Gerke and [contributors].
 
  [contributors]: https://github.com/influxdb-rs/influxdb-rust/graphs/contributors
- [__cargo_doc2readme_dependencies_info]: ggGkYW0BYXSEG-eS3ZnLalPKG8RSyE7OgxOuG5N_7FO9S6I9G5Bq0rFyX93cYXKEG5PjkhkfWGqnG0oaNZtY0rqCG3UxTXMZvJknG2Qnb8mp1lIsYWSBgmhpbmZsdXhkYmUwLjcuMA
+ [__cargo_doc2readme_dependencies_info]: ggGkYW0BYXSEG64av5CnNoNoGw8lPMr2b0MoG44uU0T70vGSG7osgcbjN7SoYXKEG5PjkhkfWGqnG0oaNZtY0rqCG3UxTXMZvJknG2Qnb8mp1lIsYWSBgmhpbmZsdXhkYmUwLjcuMA
  [__link0]: https://github.com/influxdb-rs/influxdb-rust/blob/main/CONTRIBUTING.md
  [__link1]: https://github.com/influxdb-rs/influxdb-rust/blob/main/CODE_OF_CONDUCT.md
  [__link10]: https://curl.se/libcurl/

@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: dtolnay/rust-toolchain@1.63.0
+      - uses: dtolnay/rust-toolchain@1.72.0
         with:
           components: clippy
       - name: Check Clippy lints (reqwest)
@@ -54,7 +54,7 @@ jobs:
       matrix:
         rust:
           - name: MSRV
-            toolchain: "1.60"
+            toolchain: "1.63"
             nightly: false
           - name: Stable
             toolchain: stable
@@ -123,7 +123,9 @@ jobs:
           DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: admintoken
     steps:
       - uses: actions/checkout@v3
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{matrix.rust.toolchain}}
         id: rust-toolchain
       - uses: actions/cache@v3
         with:
