@@ -62,13 +62,12 @@ For an example with using Serde deserialization, please refer to [serde_integrat
 
 
 ```rust
-use influxdb::{Client, Query, Timestamp, ReadQuery};
-use influxdb::InfluxDbWriteable;
 use chrono::{DateTime, Utc};
+use influxdb::{Client, Error, InfluxDbWriteable, ReadQuery, Timestamp};
 
 #[tokio::main]
 // or #[async_std::main] if you prefer
-async fn main() {
+async fn main() -> Result<(), Error> {
     // Connect to db `test` on `http://localhost:8086`
     let client = Client::new("http://localhost:8086", "test");
 
@@ -76,34 +75,34 @@ async fn main() {
     struct WeatherReading {
         time: DateTime<Utc>,
         humidity: i32,
-        #[influxdb(tag)] wind_direction: String,
+        #[influxdb(tag)]
+        wind_direction: String,
     }
 
     // Let's write some data into a measurement called `weather`
-    let weather_readings = vec!(
+    let weather_readings = vec![
         WeatherReading {
             time: Timestamp::Hours(1).into(),
             humidity: 30,
             wind_direction: String::from("north"),
-        }.into_query("weather"),
+        }
+        .into_query("weather"),
         WeatherReading {
             time: Timestamp::Hours(2).into(),
             humidity: 40,
             wind_direction: String::from("west"),
-        }.into_query("weather"),
-    );
+        }
+        .into_query("weather"),
+    ];
 
-    let write_result = client
-        .query(weather_readings)
-        .await;
-    assert!(write_result.is_ok(), "Write result was not okay");
+    client.query(weather_readings).await?;
 
     // Let's see if the data we wrote is there
     let read_query = ReadQuery::new("SELECT * FROM weather");
 
-    let read_result = client.query(read_query).await;
-    assert!(read_result.is_ok(), "Read result was not ok");
-    println!("{}", read_result.unwrap());
+    let read_result = client.query(read_query).await?;
+    println!("{}", read_result);
+    Ok(())
 }
 ```
 
@@ -167,7 +166,7 @@ To communicate with InfluxDB, you can choose the HTTP backend to be used configu
 @ 2020 Gero Gerke and [contributors].
 
  [contributors]: https://github.com/influxdb-rs/influxdb-rust/graphs/contributors
- [__cargo_doc2readme_dependencies_info]: ggGkYW0BYXSEG64av5CnNoNoGw8lPMr2b0MoG44uU0T70vGSG7osgcbjN7SoYXKEG8qCijK3OhAgG9r5dMb74ZyFGy-UgqMKZw5_G6wZmUfHdMJDYWSBgmhpbmZsdXhkYmUwLjcuMQ
+ [__cargo_doc2readme_dependencies_info]: ggGkYW0BYXSEG64av5CnNoNoGw8lPMr2b0MoG44uU0T70vGSG7osgcbjN7SoYXKEGzTIyZ81-O7yGzBPOAorSf5GGwJWIVB6K85jG41Hl-f5lXJVYWSBgmhpbmZsdXhkYmUwLjcuMQ
  [__link0]: https://github.com/influxdb-rs/influxdb-rust/blob/main/CONTRIBUTING.md
  [__link1]: https://github.com/influxdb-rs/influxdb-rust/blob/main/CODE_OF_CONDUCT.md
  [__link10]: https://curl.se/libcurl/
