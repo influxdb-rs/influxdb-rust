@@ -25,7 +25,7 @@
 //! For an example with using Serde deserialization, please refer to [serde_integration](crate::integrations::serde_integration)
 //!
 //! ```rust,no_run
-//! use influxdb::{Client, Query, Timestamp, ReadQuery};
+//! use influxdb::{Client, Timestamp, ReadQuery};
 //! use influxdb::InfluxDbWriteable;
 //! use chrono::{DateTime, Utc};
 //!

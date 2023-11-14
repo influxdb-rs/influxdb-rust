@@ -62,7 +62,7 @@ For an example with using Serde deserialization, please refer to [serde_integrat
 
 
 ```rust
-use influxdb::{Client, Query, Timestamp, ReadQuery};
+use influxdb::{Client, Timestamp, ReadQuery};
 use influxdb::InfluxDbWriteable;
 use chrono::{DateTime, Utc};
 
@@ -167,7 +167,7 @@ To communicate with InfluxDB, you can choose the HTTP backend to be used configu
 @ 2020 Gero Gerke and [contributors].
 
  [contributors]: https://github.com/influxdb-rs/influxdb-rust/graphs/contributors
- [__cargo_doc2readme_dependencies_info]: ggGkYW0BYXSEG64av5CnNoNoGw8lPMr2b0MoG44uU0T70vGSG7osgcbjN7SoYXKEG8qCijK3OhAgG9r5dMb74ZyFGy-UgqMKZw5_G6wZmUfHdMJDYWSBgmhpbmZsdXhkYmUwLjcuMQ
+ [__cargo_doc2readme_dependencies_info]: ggGkYW0BYXSEG64av5CnNoNoGw8lPMr2b0MoG44uU0T70vGSG7osgcbjN7SoYXKEG1WEE9zY5dHaG_H-oHwVY518G_Hz3Ch_FlkHG6679elOy6u-YWSBgmhpbmZsdXhkYmUwLjcuMQ
  [__link0]: https://github.com/influxdb-rs/influxdb-rust/blob/main/CONTRIBUTING.md
  [__link1]: https://github.com/influxdb-rs/influxdb-rust/blob/main/CODE_OF_CONDUCT.md
  [__link10]: https://curl.se/libcurl/
