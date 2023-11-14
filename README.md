@@ -93,17 +93,18 @@ async fn main() {
         }.into_query("weather"),
     );
 
-    let write_result = client
-        .query(weather_readings)
-        .await;
-    assert!(write_result.is_ok(), "Write result was not okay");
+    if let Err(e) = client.query(weather_readings).await {
+        println!("Error writing result: {e}");
+        return;
+    }
 
     // Let's see if the data we wrote is there
     let read_query = ReadQuery::new("SELECT * FROM weather");
 
-    let read_result = client.query(read_query).await;
-    assert!(read_result.is_ok(), "Read result was not ok");
-    println!("{}", read_result.unwrap());
+    match client.query(read_query).await {
+        Ok(read_result) => println!("{}", read_result),
+        Err(e) => println!("Error reading result: {e}"),
+    }
 }
 ```
 
@@ -167,7 +168,7 @@ To communicate with InfluxDB, you can choose the HTTP backend to be used configu
 @ 2020 Gero Gerke and [contributors].
 
  [contributors]: https://github.com/influxdb-rs/influxdb-rust/graphs/contributors
- [__cargo_doc2readme_dependencies_info]: ggGkYW0BYXSEG64av5CnNoNoGw8lPMr2b0MoG44uU0T70vGSG7osgcbjN7SoYXKEG1WEE9zY5dHaG_H-oHwVY518G_Hz3Ch_FlkHG6679elOy6u-YWSBgmhpbmZsdXhkYmUwLjcuMQ
+ [__cargo_doc2readme_dependencies_info]: ggGkYW0BYXSEG64av5CnNoNoGw8lPMr2b0MoG44uU0T70vGSG7osgcbjN7SoYXKEG_D2JHss1jsUG6eXkB7MmDoIG9miwB7MgvlwG_-cxCbQ3T7bYWSBgmhpbmZsdXhkYmUwLjcuMQ
  [__link0]: https://github.com/influxdb-rs/influxdb-rust/blob/main/CONTRIBUTING.md
  [__link1]: https://github.com/influxdb-rs/influxdb-rust/blob/main/CODE_OF_CONDUCT.md
  [__link10]: https://curl.se/libcurl/

@@ -56,17 +56,18 @@
 //!         }.into_query("weather"),
 //!     );
 //!
-//!     let write_result = client
-//!         .query(weather_readings)
-//!         .await;
-//!     assert!(write_result.is_ok(), "Write result was not okay");
+//!     if let Err(e) = client.query(weather_readings).await {
+//!         println!("Error writing result: {e}");
+//!         return;
+//!     }
 //!
 //!     // Let's see if the data we wrote is there
 //!     let read_query = ReadQuery::new("SELECT * FROM weather");
 //!
-//!     let read_result = client.query(read_query).await;
-//!     assert!(read_result.is_ok(), "Read result was not ok");
-//!     println!("{}", read_result.unwrap());
+//!     match client.query(read_query).await {
+//!         Ok(read_result) => println!("{}", read_result),
+//!         Err(e) => println!("Error reading result: {e}"),
+//!     }
 //! }
 //! ```
 //!
