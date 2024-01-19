@@ -141,6 +141,23 @@ impl Client {
         self
     }
 
+    /// Add a retention policy to [`Client`](crate::Client)
+    ///
+    /// This is designed for InfluxDB 2.x's backward-compatible API, which
+    /// maps databases and retention policies to buckets using the **database
+    /// and retention policy (DBRP) mapping service**.
+    /// See [InfluxDB Docs](https://docs.influxdata.com/influxdb/v2/reference/api/influxdb-1x/dbrp/) for more details.
+    #[must_use = "Creating a client is pointless unless you use it"]
+    pub fn with_retention_policy<S>(mut self, retention_policy: S) -> Self
+    where
+        S: Into<String>,
+    {
+        let mut with_retention_policy = self.parameters.as_ref().clone();
+        with_retention_policy.insert("rp", retention_policy.into());
+        self.parameters = Arc::new(with_retention_policy);
+        self
+    }
+
     /// Returns the name of the database the client is using
     pub fn database_name(&self) -> &str {
         // safe to unwrap: we always set the database name in `Self::new`
