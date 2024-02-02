@@ -42,6 +42,41 @@ async fn test_authed_write_and_read() {
     .await;
 }
 
+/// This test case
+#[async_std::test]
+#[cfg(not(tarpaulin))]
+async fn test_rp_write_and_read() {
+    run_test(
+        || async move {
+            let client = Client::new("http://127.0.0.1:2086", "mydb")
+                .with_token("admintoken")
+                .with_retention_policy("autogen");
+
+            let write_query = Timestamp::Hours(11)
+                .into_query("weather")
+                .add_field("temperature", 82);
+            let write_result = client.query(&write_query).await;
+            assert_result_ok(&write_result);
+
+            let read_query = ReadQuery::new("SELECT * FROM weather");
+            let read_result = client.query(read_query).await;
+            assert_result_ok(&read_result);
+            assert!(
+                !read_result.unwrap().contains("error"),
+                "Data contained a database error"
+            );
+        },
+        || async move {
+            let client = Client::new("http://127.0.0.1:2086", "mydb").with_token("admintoken");
+            let read_query = ReadQuery::new("DELETE MEASUREMENT weather");
+            let read_result = client.query(read_query).await;
+            assert_result_ok(&read_result);
+            assert!(!read_result.unwrap().contains("error"), "Teardown failed");
+        },
+    )
+    .await;
+}
+
 /// INTEGRATION TEST
 ///
 /// This test case tests the Authentication

@@ -134,6 +134,18 @@ jobs:
             ~/.cargo/registry
             target
           key: "${{runner.os}} Rust ${{steps.rust-toolchain.outputs.cachekey}}"
+          
+      - name: Setup InfluxDB
+        uses: influxdata/influxdb-action@v3
+        with:
+          influxdb_version: 2.6
+          influxdb_start: false
+          
+      - name: Create Org
+        run: |
+          influx org create --name testing2 --token admintoken --skip-verify --host http://localhost:2086
+          influx bucket create --name mydb --org example-org --token admintoken --skip-verify --host http://localhost:2086
+      
       - name: Run tests
         run: |
           for test in integration_tests{,_v2}
