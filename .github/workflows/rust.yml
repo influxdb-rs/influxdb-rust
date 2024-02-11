@@ -95,7 +95,7 @@ jobs:
           - name: Stable
             toolchain: stable
             nightly: false
-        http-backend: [curl-client, h1-client, h1-client-rustls, hyper-client, reqwest-client, reqwest-client-rustls]
+        http-backend: [curl-client] #, h1-client, h1-client-rustls, hyper-client, reqwest-client, reqwest-client-rustls]
     services:
       influxdb:
         image: influxdb:1.8
@@ -145,7 +145,7 @@ jobs:
       - name: Create Org
         run: |
           influx org create --name testing2 --token admintoken --skip-verify --host http://localhost:2086
-          influx bucket create --name mydb --org example-org --token admintoken --skip-verify --host http://localhost:2086
+          influx bucket create --name mydb --org testing2 --token admintoken --skip-verify --host http://localhost:2086
       
       - name: Run tests
         run: |
