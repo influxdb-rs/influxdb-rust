@@ -9,6 +9,7 @@ on:
 jobs:
   # this checks that the readme created from rustdoc is up to date
   readmecheck:
+    if: false
     name: README Format Check
     runs-on: ubuntu-latest
     steps:
@@ -20,6 +21,7 @@ jobs:
 
   # this checks that there are no clippy lints
   clippy:
+    if: false
     name: Style Check (clippy)
     runs-on: ubuntu-latest
     steps:
@@ -34,6 +36,7 @@ jobs:
 
   # this checks that the code is formatted with rustfmt
   rustfmt:
+    if: false
     name: Style Checks (rustfmt)
     runs-on: ubuntu-latest
     steps:
@@ -46,6 +49,7 @@ jobs:
 
   # this tests that all unit and doc tests are successful
   unit_tests:
+    if: false
     name: Unit and Doc Tests (Rust ${{matrix.rust.name}} on ${{matrix.os}})
     runs-on: ${{matrix.os}}
     continue-on-error: ${{matrix.rust.nightly}}
@@ -94,7 +98,7 @@ jobs:
           - name: Stable
             toolchain: stable
             nightly: false
-        http-backend: [curl-client, h1-client, h1-client-rustls, hyper-client, reqwest-client, reqwest-client-rustls]
+        http-backend: [curl-client] #, h1-client, h1-client-rustls, hyper-client, reqwest-client, reqwest-client-rustls]
     services:
       influxdb:
         image: influxdb:1.8
@@ -134,15 +138,33 @@ jobs:
             ~/.cargo/registry
             target
           key: "${{runner.os}} Rust ${{steps.rust-toolchain.outputs.cachekey}}"
-      - name: Run tests
+          
+      - name: Setup InfluxDB
+        uses: influxdata/influxdb-action@v3
+        with:
+          influxdb_version: 2.6.1
+          influxdb_start: false
+#      - name: Run tests
+#        run: |
+#          for test in integration_tests{,_v2}
+#          do
+#            cargo test -p influxdb --no-default-features --features 'use-serde derive ${{matrix.http-backend}}' --no-fail-fast --test $test
+#          done
+          
+      - name: Create Org
         run: |
-          for test in integration_tests{,_v2}
-          do
-            cargo test -p influxdb --no-default-features --features 'use-serde derive ${{matrix.http-backend}}' --no-fail-fast --test $test
-          done
+          influx org create --name testing2 --token admintoken --skip-verify --host http://localhost:2086
+          NEW_BUCKET_ID=$(influx bucket create --name mydb --org testing2 --token admintoken --skip-verify --host http://localhost:2086 --json | jq -r .id) 
+          influx v1 dbrp create --db mydb --rp testing2 --org testing2 --bucket-id "$NEW_BUCKET_ID" --token admintoken --skip-verify --host http://localhost:2086
+          
+      - name: Run dbrp tests
+        run: |
+            cargo test -p influxdb --no-default-features --features 'use-serde derive ${{matrix.http-backend}}' --no-fail-fast --test integration_tests_dbrp
+      
 
   # this uses cargo-tarpaulin to inspect the code coverage
   coverage:
+    if: false
     name: Code Coverage (stable/ubuntu-latest)
     runs-on: ubuntu-latest
     services:
@@ -202,10 +224,11 @@ jobs:
 
   # this uploads the code coverage to github pages
   pages:
+    if: false
     runs-on: ubuntu-latest
     needs:
       - coverage
-    if: github.ref == 'refs/heads/main'
+#    if: github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v3
         with:

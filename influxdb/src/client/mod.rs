@@ -86,8 +86,11 @@ impl Client {
     {
         let mut parameters = HashMap::<&str, String>::new();
         parameters.insert("db", database.into());
+        let url = url.into();
+        // todo: should probably use actual URL parsing here
+        let url = url.trim_end_matches('/').to_string();
         Client {
-            url: Arc::new(url.into()),
+            url: Arc::new(url),
             parameters: Arc::new(parameters),
             client: HttpClient::new(),
             token: None,
@@ -138,6 +141,23 @@ impl Client {
         S: Into<String>,
     {
         self.token = Some(token.into());
+        self
+    }
+
+    /// Add a retention policy to [`Client`](crate::Client)
+    ///
+    /// This is designed for InfluxDB 2.x's backward-compatible API, which
+    /// maps databases and retention policies to buckets using the **database
+    /// and retention policy (DBRP) mapping service**.
+    /// See [InfluxDB Docs](https://docs.influxdata.com/influxdb/v2/reference/api/influxdb-1x/dbrp/) for more details.
+    #[must_use = "Creating a client is pointless unless you use it"]
+    pub fn with_retention_policy<S>(mut self, retention_policy: S) -> Self
+    where
+        S: Into<String>,
+    {
+        let mut with_retention_policy = self.parameters.as_ref().clone();
+        with_retention_policy.insert("rp", retention_policy.into());
+        self.parameters = Arc::new(with_retention_policy);
         self
     }
 
@@ -247,11 +267,14 @@ impl Client {
                 }
             }
             QueryType::WriteQuery(precision) => {
-                let url = &format!("{}/write", &self.url);
+                let url = &format!("{}write", &self.url);
                 let mut parameters = self.parameters.as_ref().clone();
                 parameters.insert("precision", precision);
 
-                self.client.post(url).body(query.get()).query(&parameters)
+                let body = query.get();
+                println!("body: {}", body);
+
+                self.client.post(url).body(body).query(&parameters)
             }
         };
 
@@ -260,8 +283,10 @@ impl Client {
             error: err.to_string(),
         })?;
 
-        let res = self
-            .auth_if_needed(request_builder)
+        let res = self.auth_if_needed(request_builder);
+        println!("res: {:#?}", res);
+
+        let res = res
             .send()
             .map_err(|err| Error::ConnectionError {
                 error: err.to_string(),

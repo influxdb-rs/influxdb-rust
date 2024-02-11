@@ -1,7 +1,7 @@
 extern crate influxdb;
 
 #[path = "./utilities.rs"]
-mod utilities;
+pub mod utilities;
 use utilities::{assert_result_err, assert_result_ok, run_test};
 
 use influxdb::InfluxDbWriteable;
@@ -9,11 +9,10 @@ use influxdb::{Client, Error, ReadQuery, Timestamp};
 
 /// INTEGRATION TEST
 ///
-
 /// This test case tests the Authentication
 #[async_std::test]
 #[cfg(not(tarpaulin))]
-async fn test_authed_write_and_read() {
+pub async fn test_authed_write_and_read() {
     run_test(
         || async move {
             let client = Client::new("http://127.0.0.1:2086", "mydb").with_token("admintoken");
