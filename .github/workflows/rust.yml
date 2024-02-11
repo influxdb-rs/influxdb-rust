@@ -151,8 +151,8 @@ jobs:
           influx bucket create --name mydb --org testing2 --token admintoken --skip-verify --host http://localhost:2086
       
       - name: Run tests
-        run: |
 #          for test in integration_tests{,_v2}
+        run: |
           for test in integration_tests_v2
           do
             cargo test -p influxdb --no-default-features --features 'use-serde derive ${{matrix.http-backend}}' --no-fail-fast --test $test
