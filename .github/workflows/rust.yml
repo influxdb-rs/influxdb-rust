@@ -154,8 +154,8 @@ jobs:
       - name: Create Org
         run: |
           influx org create --name testing2 --token admintoken --skip-verify --host http://localhost:2086
-          influx bucket create --name mydb --org testing2 --token admintoken --skip-verify --host http://localhost:2086 --json
-          influx v1 dbrp create --db mydb --rp testing2 --org testing2 --token admintoken --skip-verify --host http://localhost:2086
+          NEW_BUCKET_ID=$(influx bucket create --name mydb --org testing2 --token admintoken --skip-verify --host http://localhost:2086 --json | jq .id) 
+          influx v1 dbrp create --db mydb --rp testing2 --org testing2 --bucket-id "$NEW_BUCKET_ID" --token admintoken --skip-verify --host http://localhost:2086
           
       - name: Run dbrp tests
         run: |
