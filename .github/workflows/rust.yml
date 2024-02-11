@@ -138,7 +138,7 @@ jobs:
       - name: Setup InfluxDB
         uses: influxdata/influxdb-action@v3
         with:
-          influxdb_version: 2.6
+          influxdb_version: 2.6.1
           influxdb_start: false
           
       - name: Create Org
