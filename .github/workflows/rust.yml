@@ -144,19 +144,26 @@ jobs:
         with:
           influxdb_version: 2.6.1
           influxdb_start: false
+#      - name: Run tests
+#        run: |
+#          for test in integration_tests{,_v2}
+#          do
+#            cargo test -p influxdb --no-default-features --features 'use-serde derive ${{matrix.http-backend}}' --no-fail-fast --test $test
+#          done
           
       - name: Create Org
         run: |
           influx org create --name testing2 --token admintoken --skip-verify --host http://localhost:2086
-          influx bucket create --name mydb --org testing2 --token admintoken --skip-verify --host http://localhost:2086
-      
-      - name: Run tests
-#          for test in integration_tests{,_v2}
+          influx bucket create --name mydb --org testing2 --token admintoken --skip-verify --host http://localhost:2086 --json
+          influx v1 dbrp create --db mydb --rp testing2 --org testing2 --token admintoken --skip-verify --host http://localhost:2086
+          
+      - name: Run dbrp tests
         run: |
-          for test in integration_tests_v2
+          for test in integration_tests_dbrp
           do
             cargo test -p influxdb --no-default-features --features 'use-serde derive ${{matrix.http-backend}}' --no-fail-fast --test $test
           done
+      
 
   # this uses cargo-tarpaulin to inspect the code coverage
   coverage:

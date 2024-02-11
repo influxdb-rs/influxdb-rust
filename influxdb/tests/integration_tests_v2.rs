@@ -1,7 +1,7 @@
 extern crate influxdb;
 
 #[path = "./utilities.rs"]
-mod utilities;
+pub mod utilities;
 use utilities::{assert_result_err, assert_result_ok, run_test};
 
 use influxdb::InfluxDbWriteable;
@@ -10,29 +10,29 @@ use influxdb::{Client, Error, ReadQuery, Timestamp};
 /// INTEGRATION TEST
 ///
 
-/// This test case tests the Authentication
-#[async_std::test]
-#[cfg(not(tarpaulin))]
-async fn test_authed_write_and_read() {
+pub async fn test_authd_write_and_read_helper(client: &Client) {
+    // run_test needs UnwindSafe
+    let safe_client = std::sync::Mutex::new(client.clone());
     run_test(
-        || async move {
-            let client = Client::new("http://127.0.0.1:2086", "mydb").with_token("admintoken");
-            let write_query = Timestamp::Hours(11)
-                .into_query("weather")
-                .add_field("temperature", 82);
-            let write_result = client.query(&write_query).await;
-            assert_result_ok(&write_result);
+        {
+            || async move {
+                let client = safe_client.lock().unwrap().clone();
+                let write_query = Timestamp::Hours(11)
+                    .into_query("weather")
+                    .add_field("temperature", 82);
+                let write_result = client.query(&write_query).await;
+                assert_result_ok(&write_result);
 
-            let read_query = ReadQuery::new("SELECT * FROM weather");
-            let read_result = client.query(read_query).await;
-            assert_result_ok(&read_result);
-            assert!(
-                !read_result.unwrap().contains("error"),
-                "Data contained a database error"
-            );
+                let read_query = ReadQuery::new("SELECT * FROM weather");
+                let read_result = client.query(read_query).await;
+                assert_result_ok(&read_result);
+                assert!(
+                    !read_result.unwrap().contains("error"),
+                    "Data contained a database error"
+                );
+            }
         },
         || async move {
-            let client = Client::new("http://127.0.0.1:2086", "mydb").with_token("admintoken");
             let read_query = ReadQuery::new("DELETE MEASUREMENT weather");
             let read_result = client.query(read_query).await;
             assert_result_ok(&read_result);
@@ -42,39 +42,12 @@ async fn test_authed_write_and_read() {
     .await;
 }
 
-/// This test case
+/// This test case tests the Authentication
 #[async_std::test]
 #[cfg(not(tarpaulin))]
-async fn test_rp_write_and_read() {
-    run_test(
-        || async move {
-            let client = Client::new("http://127.0.0.1:2086", "mydb")
-                .with_token("admintoken")
-                .with_retention_policy("autogen");
-
-            let write_query = Timestamp::Hours(11)
-                .into_query("weather")
-                .add_field("temperature", 82);
-            let write_result = client.query(&write_query).await;
-            assert_result_ok(&write_result);
-
-            let read_query = ReadQuery::new("SELECT * FROM weather");
-            let read_result = client.query(read_query).await;
-            assert_result_ok(&read_result);
-            assert!(
-                !read_result.unwrap().contains("error"),
-                "Data contained a database error"
-            );
-        },
-        || async move {
-            let client = Client::new("http://127.0.0.1:2086", "mydb").with_token("admintoken");
-            let read_query = ReadQuery::new("DELETE MEASUREMENT weather");
-            let read_result = client.query(read_query).await;
-            assert_result_ok(&read_result);
-            assert!(!read_result.unwrap().contains("error"), "Teardown failed");
-        },
-    )
-    .await;
+pub async fn test_authed_write_and_read() {
+    let client = Client::new("http://127.0.0.1:2086", "mydb").with_token("admintoken");
+    test_authd_write_and_read_helper(&client).await;
 }
 
 /// INTEGRATION TEST
