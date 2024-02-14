@@ -86,11 +86,8 @@ impl Client {
     {
         let mut parameters = HashMap::<&str, String>::new();
         parameters.insert("db", database.into());
-        let url = url.into();
-        // todo: should probably use actual URL parsing here
-        let url = url.trim_end_matches('/').to_string();
         Client {
-            url: Arc::new(url),
+            url: Arc::new(url.into()),
             parameters: Arc::new(parameters),
             client: HttpClient::new(),
             token: None,
@@ -267,14 +264,11 @@ impl Client {
                 }
             }
             QueryType::WriteQuery(precision) => {
-                let url = &format!("{}write", &self.url);
+                let url = &format!("{}/write", &self.url);
                 let mut parameters = self.parameters.as_ref().clone();
                 parameters.insert("precision", precision);
 
-                let body = query.get();
-                println!("body: {}", body);
-
-                self.client.post(url).body(body).query(&parameters)
+                self.client.post(url).body(query.get()).query(&parameters)
             }
         };
 
@@ -283,10 +277,8 @@ impl Client {
             error: err.to_string(),
         })?;
 
-        let res = self.auth_if_needed(request_builder);
-        println!("res: {:#?}", res);
-
-        let res = res
+        let res = self
+            .auth_if_needed(request_builder)
             .send()
             .map_err(|err| Error::ConnectionError {
                 error: err.to_string(),
