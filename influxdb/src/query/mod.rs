@@ -30,7 +30,9 @@ pub mod write_query;
 use std::fmt;
 
 use crate::{Error, ReadQuery, WriteQuery};
-use consts::{MILLIS_PER_SECOND, MINUTES_PER_HOUR, NANOS_PER_MICRO, NANOS_PER_MILLI, SECONDS_PER_MINUTE};
+use consts::{
+    MILLIS_PER_SECOND, MINUTES_PER_HOUR, NANOS_PER_MICRO, NANOS_PER_MILLI, SECONDS_PER_MINUTE,
+};
 
 #[cfg(feature = "derive")]
 pub use influxdb_derive::InfluxDbWriteable;
@@ -230,8 +232,7 @@ pub enum QueryType {
 #[cfg(test)]
 mod tests {
     use super::consts::{
-        MICROS_PER_NANO, MILLIS_PER_SECOND, MINUTES_PER_HOUR, NANOS_PER_MICRO, NANOS_PER_MILLI,
-        SECONDS_PER_MINUTE,
+        MILLIS_PER_SECOND, MINUTES_PER_HOUR, NANOS_PER_MICRO, NANOS_PER_MILLI, SECONDS_PER_MINUTE,
     };
     use crate::query::{Timestamp, ValidQuery};
     use chrono::prelude::{DateTime, TimeZone, Utc};
@@ -302,14 +303,6 @@ mod tests {
     }
     #[test]
     fn test_chrono_datetime_from_timestamp_micros() {
-        let datetime_from_timestamp: DateTime<Utc> = Timestamp::Microseconds(1).into();
-        assert_eq!(
-            Utc.timestamp_nanos((1 / MICROS_PER_NANO).try_into().unwrap()),
-            datetime_from_timestamp
-        )
-    }
-    #[test]
-    fn test_chrono_datetime_from_timestamp_micros_second() {
         let datetime_from_timestamp: DateTime<Utc> = Timestamp::Microseconds(2).into();
         assert_eq!(
             Utc.timestamp_nanos((2 * NANOS_PER_MICRO).try_into().unwrap()),
