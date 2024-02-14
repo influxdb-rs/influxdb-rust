@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: dtolnay/rust-toolchain@1.72.0
+      - uses: dtolnay/rust-toolchain@1.75.0
         with:
           components: clippy
       - name: Check Clippy lints (reqwest)
@@ -54,7 +54,7 @@ jobs:
       matrix:
         rust:
           - name: MSRV
-            toolchain: "1.63"
+            toolchain: "1.65"
             nightly: false
           - name: Stable
             toolchain: stable

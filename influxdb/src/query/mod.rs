@@ -91,7 +91,7 @@ where
     T: TimeZone,
 {
     fn from(date_time: DateTime<T>) -> Self {
-        Timestamp::Nanoseconds(date_time.timestamp_nanos() as u128)
+        Timestamp::Nanoseconds(date_time.timestamp_nanos_opt().unwrap() as u128)
     }
 }
 
