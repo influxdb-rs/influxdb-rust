@@ -267,7 +267,7 @@ impl Query for Vec<WriteQuery> {
 
     fn get_type(&self) -> QueryType {
         QueryType::WriteQuery(
-            self.get(0)
+            self.first()
                 .map(|q| q.get_precision())
                 // use "ms" as placeholder if query is empty
                 .unwrap_or_else(|| "ms".to_owned()),
