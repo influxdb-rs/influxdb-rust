@@ -1,17 +1,14 @@
-//! This library is a work in progress. This means a feature you might need is not implemented
-//! yet or could be handled better.
-//!
 //! Pull requests are always welcome. See [Contributing](https://github.com/influxdb-rs/influxdb-rust/blob/main/CONTRIBUTING.md) and [Code of Conduct](https://github.com/influxdb-rs/influxdb-rust/blob/main/CODE_OF_CONDUCT.md). For a list of past changes, see [CHANGELOG.md](https://github.com/influxdb-rs/influxdb-rust/blob/main/CHANGELOG.md).
 //!
 //! ## Currently Supported Features
 //!
-//! -   Reading and Writing to InfluxDB
-//! -   Optional Serde Support for Deserialization
+//! -   Reading and writing to InfluxDB
+//! -   Optional Serde support for deserialization
 //! -   Running multiple queries in one request (e.g. `SELECT * FROM weather_berlin; SELECT * FROM weather_london`)
 //! -   Writing single or multiple measurements in one request (e.g. `WriteQuery` or `Vec<WriteQuery>` argument)
-//! -   Authenticated and Unauthenticated Connections
+//! -   Authenticated and unauthenticated connections
 //! -   `async`/`await` support
-//! -   `#[derive(InfluxDbWriteable)]` Derive Macro for Writing / Reading into Structs
+//! -   `#[derive(InfluxDbWriteable)]` derive macro for writing / reading into structs
 //! -   `GROUP BY` support
 //! -   Tokio and async-std support (see example below) or [available backends](https://github.com/influxdb-rs/influxdb-rust/blob/main/influxdb/Cargo.toml)
 //! -   Swappable HTTP backends ([see below](#Choice-of-HTTP-backend))
@@ -60,7 +57,7 @@
 //!
 //!     client.query(weather_readings).await?;
 //!
-//!     // Let's see if the data we wrote is there
+//!     // Read back all records
 //!     let read_query = ReadQuery::new("SELECT * FROM weather");
 //!
 //!     let read_result = client.query(read_query).await?;
@@ -69,7 +66,7 @@
 //! }
 //! ```
 //!
-//! For further examples, check out the Integration Tests in `tests/integration_tests.rs`
+//! For further examples, check out the integration tests in `tests/integration_tests.rs`
 //! in the repository.
 //!
 //! # Choice of HTTP backend
@@ -105,7 +102,7 @@ macro_rules! cargo_toml {
     };
 
     (indent=$indent:literal, default-features = false, $firstfeat:literal $(, $feature:literal)*) => {
-        cargo_toml_private!($indent, "default-features = false,", $firstfeat $(, $feature)*)
+        cargo_toml_private!($indent, "default-features = false, ", $firstfeat $(, $feature)*)
     };
 }
 

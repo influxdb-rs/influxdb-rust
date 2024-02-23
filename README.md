@@ -30,20 +30,18 @@
     </a>
 </p>
 
-This library is a work in progress. This means a feature you might need is not implemented yet or could be handled better.
-
 Pull requests are always welcome. See [Contributing][__link0] and [Code of Conduct][__link1]. For a list of past changes, see [CHANGELOG.md][__link2].
 
 
 ### Currently Supported Features
 
- - Reading and Writing to InfluxDB
- - Optional Serde Support for Deserialization
+ - Reading and writing to InfluxDB
+ - Optional Serde support for deserialization
  - Running multiple queries in one request (e.g. `SELECT * FROM weather_berlin; SELECT * FROM weather_london`)
  - Writing single or multiple measurements in one request (e.g. `WriteQuery` or `Vec<WriteQuery>` argument)
- - Authenticated and Unauthenticated Connections
+ - Authenticated and unauthenticated connections
  - `async`/`await` support
- - `#[derive(InfluxDbWriteable)]` Derive Macro for Writing / Reading into Structs
+ - `#[derive(InfluxDbWriteable)]` derive macro for writing / reading into structs
  - `GROUP BY` support
  - Tokio and async-std support (see example below) or [available backends][__link3]
  - Swappable HTTP backends ([see below](#Choice-of-HTTP-backend))
@@ -97,7 +95,7 @@ async fn main() -> Result<(), Error> {
 
     client.query(weather_readings).await?;
 
-    // Let's see if the data we wrote is there
+    // Read back all records
     let read_query = ReadQuery::new("SELECT * FROM weather");
 
     let read_result = client.query(read_query).await?;
@@ -106,7 +104,7 @@ async fn main() -> Result<(), Error> {
 }
 ```
 
-For further examples, check out the Integration Tests in `tests/integration_tests.rs` in the repository.
+For further examples, check out the integration tests in `tests/integration_tests.rs` in the repository.
 
 
 ## Choice of HTTP backend
@@ -121,37 +119,37 @@ To communicate with InfluxDB, you can choose the HTTP backend to be used configu
 	
  - **[hyper][__link7]** (through reqwest), with native TLS (OpenSSL)
 	```toml
-	influxdb = { version = "0.7.2", default-features = false,features = ["derive", "use-serde", "reqwest-client"] }
+	influxdb = { version = "0.7.2", default-features = false, features = ["derive", "use-serde", "reqwest-client"] }
 	```
 	
 	
  - **[hyper][__link8]** (through surf), use this if you need tokio 0.2 compatibility
 	```toml
-	influxdb = { version = "0.7.2", default-features = false,features = ["derive", "use-serde", "hyper-client"] }
+	influxdb = { version = "0.7.2", default-features = false, features = ["derive", "use-serde", "hyper-client"] }
 	```
 	
 	
  - **[curl][__link9]**, using [libcurl][__link10]
 	```toml
-	influxdb = { version = "0.7.2", default-features = false,features = ["derive", "use-serde", "curl-client"] }
+	influxdb = { version = "0.7.2", default-features = false, features = ["derive", "use-serde", "curl-client"] }
 	```
 	
 	
  - **[async-h1][__link11]** with native TLS (OpenSSL)
 	```toml
-	influxdb = { version = "0.7.2", default-features = false,features = ["derive", "use-serde", "h1-client"] }
+	influxdb = { version = "0.7.2", default-features = false, features = ["derive", "use-serde", "h1-client"] }
 	```
 	
 	
  - **[async-h1][__link12]** with [rustls][__link13]
 	```toml
-	influxdb = { version = "0.7.2", default-features = false,features = ["derive", "use-serde", "h1-client-rustls"] }
+	influxdb = { version = "0.7.2", default-features = false, features = ["derive", "use-serde", "h1-client-rustls"] }
 	```
 	
 	
  - WebAssembly’s `window.fetch`, via `web-sys` and **[wasm-bindgen][__link14]**
 	```toml
-	influxdb = { version = "0.7.2", default-features = false,features = ["derive", "use-serde", "wasm-client"] }
+	influxdb = { version = "0.7.2", default-features = false, features = ["derive", "use-serde", "wasm-client"] }
 	```
 	
 	
@@ -163,10 +161,10 @@ To communicate with InfluxDB, you can choose the HTTP backend to be used configu
 
 
 
-@ 2020 Gero Gerke and [contributors].
+@ 2020-2024 Gero Gerke, msrd0 and [contributors].
 
  [contributors]: https://github.com/influxdb-rs/influxdb-rust/graphs/contributors
- [__cargo_doc2readme_dependencies_info]: ggGkYW0BYXSEG_Yk-0hvrVPoG-pGw0Sym8kbG2s5Ga25QGRAG6zgaYax6AfsYXKEG5FQA0msUh34G1V6qHa_8CeQG66nRf4Jd7PiG99LD0P5Tiz5YWSBgmhpbmZsdXhkYmUwLjcuMg
+ [__cargo_doc2readme_dependencies_info]: ggGkYW0BYXSEG_RDmlyxxvyrG0rwcLBKoYdvG5It9hbWNgjUGzjD8iBYfsFFYXKEG_jUEtkcTe33G_OOvfcbq3PhGx42EDLMgbCFGy0-H8MaqaBGYWSBgmhpbmZsdXhkYmUwLjcuMg
  [__link0]: https://github.com/influxdb-rs/influxdb-rust/blob/main/CONTRIBUTING.md
  [__link1]: https://github.com/influxdb-rs/influxdb-rust/blob/main/CODE_OF_CONDUCT.md
  [__link10]: https://curl.se/libcurl/
