@@ -1,5 +1,6 @@
 //! Errors that might happen in the crate
 
+use reqwest::StatusCode;
 use thiserror::Error;
 
 #[derive(Debug, Eq, PartialEq, Error)]
@@ -25,15 +26,10 @@ pub enum Error {
     /// Error which has happened inside InfluxDB
     DatabaseError { error: String },
 
-    #[error("authentication error. No or incorrect credentials")]
-    /// Error happens when no or incorrect credentials are used. `HTTP 401 Unauthorized`
-    AuthenticationError,
-
-    #[error("authorization error. User not authorized")]
-    /// Error happens when the supplied user is not authorized. `HTTP 403 Forbidden`
-    AuthorizationError,
-
     #[error("connection error: {error}")]
     /// Error happens when HTTP request fails
     ConnectionError { error: String },
+
+    #[error("server responded with an error code: {0}")]
+    ApiError(StatusCode),
 }
