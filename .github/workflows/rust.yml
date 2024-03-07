@@ -94,7 +94,7 @@ jobs:
           - name: Stable
             toolchain: stable
             nightly: false
-        http-backend: [curl-client, h1-client, h1-client-rustls, hyper-client, reqwest-client, reqwest-client-rustls]
+        http-backend: [curl-client, h1-client, h1-client-rustls, hyper-client, reqwest-client, reqwest-client-rustls, reqwest-client-native-tls-vendored]
     services:
       influxdb:
         image: influxdb:1.8
