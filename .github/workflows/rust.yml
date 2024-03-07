@@ -28,7 +28,7 @@ jobs:
         with:
           components: clippy
       - name: Check Clippy lints (reqwest)
-        run: cargo clippy --manifest-path influxdb/Cargo.toml --all-targets --no-default-features --features use-serde,derive,reqwest-client -- -D warnings
+        run: cargo clippy --manifest-path influxdb/Cargo.toml --all-targets --no-default-features --features use-serde,derive,reqwest-client-rustls -- -D warnings
       - name: Check Clippy lints (surf)
         run: cargo clippy --manifest-path influxdb/Cargo.toml --all-targets --no-default-features --features use-serde,derive,hyper-client -- -D warnings
 
@@ -94,7 +94,14 @@ jobs:
           - name: Stable
             toolchain: stable
             nightly: false
-        http-backend: [curl-client, h1-client, h1-client-rustls, hyper-client, reqwest-client, reqwest-client-rustls, reqwest-client-native-tls-vendored]
+        http-backend:
+          - curl-client
+          - h1-client
+          - h1-client-rustls
+          - hyper-client
+          - reqwest-client-rustls
+          - reqwest-client-native-tls
+          - reqwest-client-native-tls-vendored
     services:
       influxdb:
         image: influxdb:1.8

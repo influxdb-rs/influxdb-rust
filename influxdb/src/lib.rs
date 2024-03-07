@@ -76,7 +76,9 @@
 //! - **[hyper](https://github.com/hyperium/hyper)** (through reqwest, used by default), with [rustls](https://github.com/ctz/rustls)
 #![doc = cargo_toml!(indent="\t", "derive")]
 //! - **[hyper](https://github.com/hyperium/hyper)** (through reqwest), with native TLS (OpenSSL)
-#![doc = cargo_toml!(indent="\t", default-features = false, "derive", "use-serde", "reqwest-client")]
+#![doc = cargo_toml!(indent="\t", default-features = false, "derive", "use-serde", "reqwest-client-native-tls")]
+//! - **[hyper](https://github.com/hyperium/hyper)** (through reqwest), with vendored native TLS (OpenSSL)
+#![doc = cargo_toml!(indent="\t", default-features = false, "derive", "use-serde", "reqwest-client-native-tls-vendored")]
 //! - **[hyper](https://github.com/hyperium/hyper)** (through surf), use this if you need tokio 0.2 compatibility
 #![doc = cargo_toml!(indent="\t", default-features = false, "derive", "use-serde", "hyper-client")]
 //! - **[curl](https://github.com/alexcrichton/curl-rust)**, using [libcurl](https://curl.se/libcurl/)
