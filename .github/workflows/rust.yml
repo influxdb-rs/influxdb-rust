@@ -72,7 +72,7 @@ jobs:
         with:
           toolchain: ${{matrix.rust.toolchain}}
         id: rust-toolchain
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: |
             ~/.cargo/git
@@ -134,7 +134,7 @@ jobs:
         with:
           toolchain: ${{matrix.rust.toolchain}}
         id: rust-toolchain
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: |
             ~/.cargo/git
@@ -175,7 +175,7 @@ jobs:
       - name: Get Tarpaulin Version
         id: tarpaulin-version
         run: echo "version=$(wget -qO- 'https://crates.io/api/v1/crates/cargo-tarpaulin' | jq -r '.crate.max_stable_version')" >>$GITHUB_OUTPUT
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: |
             ~/.cargo/bin/cargo-tarpaulin
