@@ -21,14 +21,15 @@ lazy_static = "1.4.0"
 regex = "1.3.5"
 reqwest = { version = "0.11.4", default-features = false, optional = true }
 surf = { version = "2.2.0", default-features = false, optional = true }
-serde = { version = "1.0.104", features = ["derive"], optional = true }
+serde = { version = "1.0.186", optional = true }
+serde_derive = { version = "1.0.186", optional = true }
 serde_json = { version = "1.0.48", optional = true }
 thiserror = "1.0"
 
 [features]
-default = ["use-serde", "reqwest-client-rustls"]
-derive = ["influxdb_derive"]
-use-serde = ["serde", "serde_json"]
+default = ["serde", "reqwest-client-rustls"]
+derive = ["dep:influxdb_derive"]
+serde = ["dep:serde", "dep:serde_derive", "dep:serde_json"]
 
 # http clients
 curl-client = ["surf", "surf/curl-client"]

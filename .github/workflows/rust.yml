@@ -28,9 +28,9 @@ jobs:
         with:
           components: clippy
       - name: Check Clippy lints (reqwest)
-        run: cargo clippy --manifest-path influxdb/Cargo.toml --all-targets --no-default-features --features use-serde,derive,reqwest-client-rustls -- -D warnings
+        run: cargo clippy --manifest-path influxdb/Cargo.toml --all-targets --no-default-features --features serde,derive,reqwest-client-rustls -- -D warnings
       - name: Check Clippy lints (surf)
-        run: cargo clippy --manifest-path influxdb/Cargo.toml --all-targets --no-default-features --features use-serde,derive,hyper-client -- -D warnings
+        run: cargo clippy --manifest-path influxdb/Cargo.toml --all-targets --no-default-features --features serde,derive,hyper-client -- -D warnings
 
   # this checks that the code is formatted with rustfmt
   rustfmt:
@@ -145,7 +145,7 @@ jobs:
         run: |
           for test in integration_tests{,_v2}
           do
-            cargo test -p influxdb --no-default-features --features 'use-serde derive ${{matrix.http-backend}}' --no-fail-fast --test $test
+            cargo test -p influxdb --no-default-features --features 'serde derive ${{matrix.http-backend}}' --no-fail-fast --test $test
           done
 
   # this uses cargo-tarpaulin to inspect the code coverage
@@ -192,7 +192,7 @@ jobs:
           cargo tarpaulin -v \
             --target-dir target/tarpaulin \
             --workspace \
-            --features use-serde,derive \
+            --features serde,derive \
             --exclude-files 'derive/*' \
             --exclude-files 'target/*' \
             --ignore-panics --ignore-tests \

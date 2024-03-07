@@ -76,19 +76,19 @@
 //! - **[hyper](https://github.com/hyperium/hyper)** (through reqwest, used by default), with [rustls](https://github.com/ctz/rustls)
 #![doc = cargo_toml!(indent="\t", "derive")]
 //! - **[hyper](https://github.com/hyperium/hyper)** (through reqwest), with native TLS (OpenSSL)
-#![doc = cargo_toml!(indent="\t", default-features = false, "derive", "use-serde", "reqwest-client-native-tls")]
+#![doc = cargo_toml!(indent="\t", default-features = false, "derive", "serde", "reqwest-client-native-tls")]
 //! - **[hyper](https://github.com/hyperium/hyper)** (through reqwest), with vendored native TLS (OpenSSL)
-#![doc = cargo_toml!(indent="\t", default-features = false, "derive", "use-serde", "reqwest-client-native-tls-vendored")]
+#![doc = cargo_toml!(indent="\t", default-features = false, "derive", "serde", "reqwest-client-native-tls-vendored")]
 //! - **[hyper](https://github.com/hyperium/hyper)** (through surf), use this if you need tokio 0.2 compatibility
-#![doc = cargo_toml!(indent="\t", default-features = false, "derive", "use-serde", "hyper-client")]
+#![doc = cargo_toml!(indent="\t", default-features = false, "derive", "serde", "hyper-client")]
 //! - **[curl](https://github.com/alexcrichton/curl-rust)**, using [libcurl](https://curl.se/libcurl/)
-#![doc = cargo_toml!(indent="\t", default-features = false, "derive", "use-serde", "curl-client")]
+#![doc = cargo_toml!(indent="\t", default-features = false, "derive", "serde", "curl-client")]
 //! - **[async-h1](https://github.com/http-rs/async-h1)** with native TLS (OpenSSL)
-#![doc = cargo_toml!(indent="\t", default-features = false, "derive", "use-serde", "h1-client")]
+#![doc = cargo_toml!(indent="\t", default-features = false, "derive", "serde", "h1-client")]
 //! - **[async-h1](https://github.com/http-rs/async-h1)** with [rustls](https://github.com/ctz/rustls)
-#![doc = cargo_toml!(indent="\t", default-features = false, "derive", "use-serde", "h1-client-rustls")]
+#![doc = cargo_toml!(indent="\t", default-features = false, "derive", "serde", "h1-client-rustls")]
 //! - WebAssembly's `window.fetch`, via `web-sys` and **[wasm-bindgen](https://github.com/rustwasm/wasm-bindgen)**
-#![doc = cargo_toml!(indent="\t", default-features = false, "derive", "use-serde", "wasm-client")]
+#![doc = cargo_toml!(indent="\t", default-features = false, "derive", "serde", "wasm-client")]
 //!
 //! # License
 //!
@@ -148,8 +148,8 @@ pub use query::{
     InfluxDbWriteable, Query, QueryType, Timestamp, ValidQuery,
 };
 
-#[cfg(feature = "use-serde")]
+#[cfg(feature = "serde")]
 pub mod integrations {
-    #[cfg(feature = "use-serde")]
+    #[cfg(feature = "serde")]
     pub mod serde_integration;
 }
