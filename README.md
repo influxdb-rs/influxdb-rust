@@ -119,35 +119,41 @@ To communicate with InfluxDB, you can choose the HTTP backend to be used configu
 	
  - **[hyper][__link7]** (through reqwest), with native TLS (OpenSSL)
 	```toml
-	influxdb = { version = "0.7.2", default-features = false, features = ["derive", "use-serde", "reqwest-client"] }
+	influxdb = { version = "0.7.2", default-features = false, features = ["derive", "use-serde", "reqwest-client-native-tls"] }
 	```
 	
 	
- - **[hyper][__link8]** (through surf), use this if you need tokio 0.2 compatibility
+ - **[hyper][__link8]** (through reqwest), with vendored native TLS (OpenSSL)
+	```toml
+	influxdb = { version = "0.7.2", default-features = false, features = ["derive", "use-serde", "reqwest-client-native-tls-vendored"] }
+	```
+	
+	
+ - **[hyper][__link9]** (through surf), use this if you need tokio 0.2 compatibility
 	```toml
 	influxdb = { version = "0.7.2", default-features = false, features = ["derive", "use-serde", "hyper-client"] }
 	```
 	
 	
- - **[curl][__link9]**, using [libcurl][__link10]
+ - **[curl][__link10]**, using [libcurl][__link11]
 	```toml
 	influxdb = { version = "0.7.2", default-features = false, features = ["derive", "use-serde", "curl-client"] }
 	```
 	
 	
- - **[async-h1][__link11]** with native TLS (OpenSSL)
+ - **[async-h1][__link12]** with native TLS (OpenSSL)
 	```toml
 	influxdb = { version = "0.7.2", default-features = false, features = ["derive", "use-serde", "h1-client"] }
 	```
 	
 	
- - **[async-h1][__link12]** with [rustls][__link13]
+ - **[async-h1][__link13]** with [rustls][__link14]
 	```toml
 	influxdb = { version = "0.7.2", default-features = false, features = ["derive", "use-serde", "h1-client-rustls"] }
 	```
 	
 	
- - WebAssembly’s `window.fetch`, via `web-sys` and **[wasm-bindgen][__link14]**
+ - WebAssembly’s `window.fetch`, via `web-sys` and **[wasm-bindgen][__link15]**
 	```toml
 	influxdb = { version = "0.7.2", default-features = false, features = ["derive", "use-serde", "wasm-client"] }
 	```
@@ -157,23 +163,24 @@ To communicate with InfluxDB, you can choose the HTTP backend to be used configu
 
 ## License
 
-[![License: MIT][__link15]][__link16]
+[![License: MIT][__link16]][__link17]
 
 
 
 @ 2020-2024 Gero Gerke, msrd0 and [contributors].
 
  [contributors]: https://github.com/influxdb-rs/influxdb-rust/graphs/contributors
- [__cargo_doc2readme_dependencies_info]: ggGkYW0BYXSEG_RDmlyxxvyrG0rwcLBKoYdvG5It9hbWNgjUGzjD8iBYfsFFYXKEG_jUEtkcTe33G_OOvfcbq3PhGx42EDLMgbCFGy0-H8MaqaBGYWSBgmhpbmZsdXhkYmUwLjcuMg
+ [__cargo_doc2readme_dependencies_info]: ggGkYW0BYXSEG_RDmlyxxvyrG0rwcLBKoYdvG5It9hbWNgjUGzjD8iBYfsFFYXKEG1DulEn7euxHG8tYaxMHih9OG3Xjpd76jUgIG23kKLUzm3NrYWSBgmhpbmZsdXhkYmUwLjcuMg
  [__link0]: https://github.com/influxdb-rs/influxdb-rust/blob/main/CONTRIBUTING.md
  [__link1]: https://github.com/influxdb-rs/influxdb-rust/blob/main/CODE_OF_CONDUCT.md
- [__link10]: https://curl.se/libcurl/
- [__link11]: https://github.com/http-rs/async-h1
+ [__link10]: https://github.com/alexcrichton/curl-rust
+ [__link11]: https://curl.se/libcurl/
  [__link12]: https://github.com/http-rs/async-h1
- [__link13]: https://github.com/ctz/rustls
- [__link14]: https://github.com/rustwasm/wasm-bindgen
- [__link15]: https://img.shields.io/badge/License-MIT-yellow.svg
- [__link16]: https://opensource.org/licenses/MIT
+ [__link13]: https://github.com/http-rs/async-h1
+ [__link14]: https://github.com/ctz/rustls
+ [__link15]: https://github.com/rustwasm/wasm-bindgen
+ [__link16]: https://img.shields.io/badge/License-MIT-yellow.svg
+ [__link17]: https://opensource.org/licenses/MIT
  [__link2]: https://github.com/influxdb-rs/influxdb-rust/blob/main/CHANGELOG.md
  [__link3]: https://github.com/influxdb-rs/influxdb-rust/blob/main/influxdb/Cargo.toml
  [__link4]: https://docs.rs/influxdb/0.7.2/influxdb/?search=integrations::serde_integration
@@ -181,5 +188,5 @@ To communicate with InfluxDB, you can choose the HTTP backend to be used configu
  [__link6]: https://github.com/ctz/rustls
  [__link7]: https://github.com/hyperium/hyper
  [__link8]: https://github.com/hyperium/hyper
- [__link9]: https://github.com/alexcrichton/curl-rust
+ [__link9]: https://github.com/hyperium/hyper
 
