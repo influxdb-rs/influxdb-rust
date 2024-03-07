@@ -7,8 +7,8 @@ use influxdb::InfluxDbWriteable;
 use chrono::{DateTime, Utc};
 use influxdb::{Query, ReadQuery, Timestamp};
 
-#[cfg(feature = "use-serde")]
-use serde::Deserialize;
+#[cfg(feature = "serde")]
+use serde_derive::Deserialize;
 
 use utilities::{assert_result_ok, create_client, create_db, delete_db, run_test};
 
@@ -24,7 +24,7 @@ struct WeatherReading {
 }
 
 #[derive(Debug)]
-#[cfg_attr(feature = "use-serde", derive(Deserialize))]
+#[cfg_attr(feature = "serde", derive(Deserialize))]
 struct WeatherReadingWithoutIgnored {
     time: DateTime<Utc>,
     pressure: i32,
@@ -81,7 +81,7 @@ async fn test_derive_simple_write() {
 ///
 /// This integration tests that writing data and retrieving the data again is working
 #[cfg(feature = "derive")]
-#[cfg(feature = "use-serde")]
+#[cfg(feature = "serde")]
 #[async_std::test]
 #[cfg(not(tarpaulin_include))]
 async fn test_write_and_read_option() {

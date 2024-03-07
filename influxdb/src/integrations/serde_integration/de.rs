@@ -1,8 +1,9 @@
 use super::{Series, TaggedSeries};
 use serde::de::{
-    value, DeserializeSeed, Deserializer, Error, IntoDeserializer, MapAccess, SeqAccess, Visitor,
+    value, Deserialize, DeserializeSeed, Deserializer, Error, IntoDeserializer, MapAccess,
+    SeqAccess, Visitor,
 };
-use serde::Deserialize;
+use serde_derive::Deserialize;
 use std::fmt;
 use std::marker::PhantomData;
 
@@ -416,7 +417,7 @@ mod tests {
 
     #[test]
     fn test_deserialize_borrowed() {
-        use serde::Deserialize;
+        use serde_derive::Deserialize;
 
         // Deserializing a string that cannot be passed through
         // without escaping will result in an error like this:

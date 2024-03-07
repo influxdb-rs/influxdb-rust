@@ -3,7 +3,7 @@ extern crate influxdb;
 #[path = "./utilities.rs"]
 mod utilities;
 
-use serde::Deserialize;
+use serde_derive::Deserialize;
 use utilities::{
     assert_result_err, assert_result_ok, create_client, create_db, delete_db, run_test,
 };
@@ -277,7 +277,7 @@ async fn test_write_and_read_field() {
 ///
 /// This test case tests the authentication on json reads
 #[async_std::test]
-#[cfg(feature = "use-serde")]
+#[cfg(feature = "serde")]
 #[cfg(not(tarpaulin_include))]
 async fn test_json_non_authed_read() {
     const TEST_NAME: &str = "test_json_non_authed_read";
@@ -322,7 +322,7 @@ async fn test_json_non_authed_read() {
 ///
 /// This test case tests the authentication on json reads
 #[async_std::test]
-#[cfg(feature = "use-serde")]
+#[cfg(feature = "serde")]
 #[cfg(not(tarpaulin_include))]
 async fn test_json_authed_read() {
     const TEST_NAME: &str = "test_json_authed_read";
@@ -359,11 +359,9 @@ async fn test_json_authed_read() {
 ///
 /// This integration tests that writing data and retrieving the data again is working
 #[async_std::test]
-#[cfg(feature = "use-serde")]
+#[cfg(feature = "serde")]
 #[cfg(not(tarpaulin_include))]
 async fn test_write_and_read_option() {
-    use serde::Deserialize;
-
     const TEST_NAME: &str = "test_write_and_read_option";
 
     run_test(
@@ -420,11 +418,9 @@ async fn test_write_and_read_option() {
 /// This test case tests whether JSON can be decoded from a InfluxDB response and whether that JSON
 /// is equal to the data which was written to the database
 #[async_std::test]
-#[cfg(feature = "use-serde")]
+#[cfg(feature = "serde")]
 #[cfg(not(tarpaulin_include))]
 async fn test_json_query() {
-    use serde::Deserialize;
-
     const TEST_NAME: &str = "test_json_query";
 
     run_test(
@@ -472,11 +468,9 @@ async fn test_json_query() {
 /// This test case tests whether the response to a GROUP BY can be parsed by
 /// deserialize_next_tagged into a tags struct
 #[async_std::test]
-#[cfg(feature = "use-serde")]
+#[cfg(feature = "serde")]
 #[cfg(not(tarpaulin_include))]
 async fn test_json_query_tagged() {
-    use serde::Deserialize;
-
     const TEST_NAME: &str = "test_json_query_tagged";
 
     run_test(
@@ -538,12 +532,10 @@ async fn test_json_query_tagged() {
 /// (tested with tokio)
 #[tokio::test]
 #[cfg(all(
-    feature = "use-serde",
+    feature = "serde",
     not(any(tarpaulin_include, feature = "hyper-client"))
 ))]
 async fn test_json_query_vec() {
-    use serde::Deserialize;
-
     const TEST_NAME: &str = "test_json_query_vec";
 
     run_test(
@@ -590,11 +582,9 @@ async fn test_json_query_vec() {
 ///
 /// This integration test tests whether using the wrong query method fails building the query
 #[async_std::test]
-#[cfg(feature = "use-serde")]
+#[cfg(feature = "serde")]
 #[cfg(not(tarpaulin_include))]
 async fn test_serde_multi_query() {
-    use serde::Deserialize;
-
     const TEST_NAME: &str = "test_serde_multi_query";
 
     run_test(
@@ -666,7 +656,7 @@ async fn test_serde_multi_query() {
 ///
 /// This integration test tests whether using the wrong query method fails building the query
 #[async_std::test]
-#[cfg(feature = "use-serde")]
+#[cfg(feature = "serde")]
 #[cfg(not(tarpaulin_include))]
 async fn test_wrong_query_errors() {
     let client = create_client("test_name");
