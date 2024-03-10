@@ -16,7 +16,6 @@
 //! ```
 
 use futures_util::TryFutureExt;
-use http::StatusCode;
 #[cfg(feature = "reqwest")]
 use reqwest::{Client as HttpClient, RequestBuilder, Response as HttpResponse};
 use std::collections::{BTreeMap, HashMap};
@@ -301,15 +300,9 @@ impl Client {
 
 pub(crate) fn check_status(res: &HttpResponse) -> Result<(), Error> {
     let status = res.status();
-    match status {
-        StatusCode::OK => Ok(()),
-        code => {
-            if code.as_str().as_bytes()[0] == b'2' {
-                return Ok(());
-            } else {
-                return Err(Error::ApiError(code));
-            }
-        }
+    match status.is_success() {
+        true => Ok(()),
+        false => Err(Error::ApiError(status)),
     }
 }
 

@@ -58,12 +58,14 @@ async fn test_wrong_authed_write_and_read() {
             assert_result_err(&write_result);
             match write_result {
                 Err(Error::ApiError(code)) => {
-                    dbg!(code);
+                    if code.as_u16() != 401_u16 {
+                        panic!(
+                            "Should be an ApiError(401), but code received was: {}",
+                            code
+                        );
+                    };
                 }
-                _ => panic!(
-                    "Should be an AuthorizationError: {}",
-                    write_result.unwrap_err()
-                ),
+                _ => panic!("Should be an ApiError(401): {}", write_result.unwrap_err()),
             }
 
             let read_query = ReadQuery::new("SELECT * FROM weather");
@@ -71,12 +73,14 @@ async fn test_wrong_authed_write_and_read() {
             assert_result_err(&read_result);
             match read_result {
                 Err(Error::ApiError(code)) => {
-                    dbg!(code);
+                    if code.as_u16() != 401_u16 {
+                        panic!(
+                            "Should be an ApiError(401), but code received was: {}",
+                            code
+                        );
+                    };
                 }
-                _ => panic!(
-                    "Should be an AuthorizationError: {}",
-                    read_result.unwrap_err()
-                ),
+                _ => panic!("Should be an ApiError(401): {}", read_result.unwrap_err()),
             }
         },
         || async move {},
@@ -100,12 +104,14 @@ async fn test_non_authed_write_and_read() {
             assert_result_err(&write_result);
             match write_result {
                 Err(Error::ApiError(code)) => {
-                    dbg!(code);
+                    if code.as_u16() != 401_u16 {
+                        panic!(
+                            "Should be an ApiError(401), but code received was: {}",
+                            code
+                        );
+                    };
                 }
-                _ => panic!(
-                    "Should be an AuthorizationError: {}",
-                    write_result.unwrap_err()
-                ),
+                _ => panic!("Should be an ApiError(401): {}", write_result.unwrap_err()),
             }
 
             let read_query = ReadQuery::new("SELECT * FROM weather");
@@ -113,12 +119,14 @@ async fn test_non_authed_write_and_read() {
             assert_result_err(&read_result);
             match read_result {
                 Err(Error::ApiError(code)) => {
-                    dbg!(code);
+                    if code.as_u16() != 401_u16 {
+                        panic!(
+                            "Should be an ApiError(401), but code received was: {}",
+                            code
+                        );
+                    };
                 }
-                _ => panic!(
-                    "Should be an AuthorizationError: {}",
-                    read_result.unwrap_err()
-                ),
+                _ => panic!("Should be an ApiError(401): {}", read_result.unwrap_err()),
             }
         },
         || async move {},
