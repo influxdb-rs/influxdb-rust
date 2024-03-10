@@ -303,7 +303,13 @@ pub(crate) fn check_status(res: &HttpResponse) -> Result<(), Error> {
     let status = res.status();
     match status {
         StatusCode::OK => Ok(()),
-        code => Err(Error::ApiError(code)),
+        code => {
+            if code.as_str().as_bytes()[0] == b'2' {
+                return Ok(());
+            } else {
+                return Err(Error::ApiError(code));
+            }
+        }
     }
 }
 
