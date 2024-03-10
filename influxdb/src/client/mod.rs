@@ -302,7 +302,7 @@ pub(crate) fn check_status(res: &HttpResponse) -> Result<(), Error> {
     let status = res.status();
     match status.is_success() {
         true => Ok(()),
-        false => Err(Error::ApiError(status.into())),
+        false => Err(Error::ApiError(status)),
     }
 }
 

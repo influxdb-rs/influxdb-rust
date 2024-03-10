@@ -1,6 +1,9 @@
 //! Errors that might happen in the crate
 
-use http::StatusCode;
+#[cfg(feature = "reqwest")]
+use reqwest::StatusCode;
+#[cfg(feature = "surf")]
+use surf::StatusCode;
 use thiserror::Error;
 
 #[derive(Debug, Eq, PartialEq, Error)]
