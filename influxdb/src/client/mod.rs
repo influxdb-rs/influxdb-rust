@@ -299,10 +299,10 @@ impl Client {
 }
 
 pub(crate) fn check_status(res: &HttpResponse) -> Result<(), Error> {
-    let status: http::StatusCode = res.status();
+    let status = res.status();
     match status.is_success() {
         true => Ok(()),
-        false => Err(Error::ApiError(status)),
+        false => Err(Error::ApiError(status.into())),
     }
 }
 
