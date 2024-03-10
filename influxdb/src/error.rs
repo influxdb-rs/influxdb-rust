@@ -1,6 +1,6 @@
 //! Errors that might happen in the crate
 
-use reqwest::StatusCode;
+use http::StatusCode;
 use thiserror::Error;
 
 #[derive(Debug, Eq, PartialEq, Error)]
@@ -30,6 +30,7 @@ pub enum Error {
     /// Error happens when HTTP request fails
     ConnectionError { error: String },
 
+    #[cfg(feature = "reqwest")]
     #[error("server responded with an error code: {0}")]
     ApiError(StatusCode),
 }
