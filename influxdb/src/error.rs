@@ -30,7 +30,6 @@ pub enum Error {
     /// Error happens when HTTP request fails
     ConnectionError { error: String },
 
-    #[cfg(feature = "reqwest")]
     #[error("server responded with an error code: {0}")]
     ApiError(StatusCode),
 }
