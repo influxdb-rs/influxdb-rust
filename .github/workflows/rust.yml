@@ -12,7 +12,7 @@ jobs:
     name: README Format Check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: docker://ghcr.io/msrd0/cargo-doc2readme:nightly
         with:
           entrypoint: cargo
@@ -23,21 +23,21 @@ jobs:
     name: Style Check (clippy)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@1.75.0
         with:
           components: clippy
       - name: Check Clippy lints (reqwest)
-        run: cargo clippy --manifest-path influxdb/Cargo.toml --all-targets --no-default-features --features use-serde,derive,reqwest-client -- -D warnings
+        run: cargo clippy --manifest-path influxdb/Cargo.toml --all-targets --no-default-features --features serde,derive,reqwest-client-rustls -- -D warnings
       - name: Check Clippy lints (surf)
-        run: cargo clippy --manifest-path influxdb/Cargo.toml --all-targets --no-default-features --features use-serde,derive,hyper-client -- -D warnings
+        run: cargo clippy --manifest-path influxdb/Cargo.toml --all-targets --no-default-features --features serde,derive,hyper-client -- -D warnings
 
   # this checks that the code is formatted with rustfmt
   rustfmt:
     name: Style Checks (rustfmt)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@nightly
         with:
           components: rustfmt
@@ -67,12 +67,12 @@ jobs:
             nightly: true
         os: [ubuntu-latest, windows-latest, macOS-latest]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{matrix.rust.toolchain}}
         id: rust-toolchain
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: |
             ~/.cargo/git
@@ -94,7 +94,14 @@ jobs:
           - name: Stable
             toolchain: stable
             nightly: false
-        http-backend: [curl-client, h1-client, h1-client-rustls, hyper-client, reqwest-client, reqwest-client-rustls]
+        http-backend:
+          - curl-client
+          - h1-client
+          - h1-client-rustls
+          - hyper-client
+          - reqwest-client-rustls
+          - reqwest-client-native-tls
+          - reqwest-client-native-tls-vendored
     services:
       influxdb:
         image: influxdb:1.8
@@ -122,12 +129,12 @@ jobs:
           DOCKER_INFLUXDB_INIT_BUCKET: mydb
           DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: admintoken
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{matrix.rust.toolchain}}
         id: rust-toolchain
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: |
             ~/.cargo/git
@@ -138,7 +145,7 @@ jobs:
         run: |
           for test in integration_tests{,_v2}
           do
-            cargo test -p influxdb --no-default-features --features 'use-serde derive ${{matrix.http-backend}}' --no-fail-fast --test $test
+            cargo test -p influxdb --no-default-features --features 'serde derive ${{matrix.http-backend}}' --no-fail-fast --test $test
           done
 
   # this uses cargo-tarpaulin to inspect the code coverage
@@ -162,13 +169,13 @@ jobs:
           INFLUXDB_USER_PASSWORD: password
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
         id: rust-toolchain
       - name: Get Tarpaulin Version
         id: tarpaulin-version
         run: echo "version=$(wget -qO- 'https://crates.io/api/v1/crates/cargo-tarpaulin' | jq -r '.crate.max_stable_version')" >>$GITHUB_OUTPUT
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: |
             ~/.cargo/bin/cargo-tarpaulin
@@ -185,7 +192,7 @@ jobs:
           cargo tarpaulin -v \
             --target-dir target/tarpaulin \
             --workspace \
-            --features use-serde,derive \
+            --features serde,derive \
             --exclude-files 'derive/*' \
             --exclude-files 'target/*' \
             --ignore-panics --ignore-tests \
@@ -193,7 +200,7 @@ jobs:
         env:
           RUST_BACKTRACE: 1
           RUST_LOG: info
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: tarpaulin-report
           path: |
@@ -207,10 +214,10 @@ jobs:
       - coverage
     if: github.ref == 'refs/heads/main'
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           ref: gh-pages
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: tarpaulin-report
       - run: |
@@ -220,6 +227,6 @@ jobs:
 
           git add coverage.svg tarpaulin-report.html
           git status
-      - uses: stefanzweifel/git-auto-commit-action@v4
+      - uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "GitHub Pages for ${{ github.sha }}"

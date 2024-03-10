@@ -8,7 +8,7 @@
 //!
 //! ```rust,no_run
 //! use influxdb::{Client, Query};
-//! use serde::Deserialize;
+//! use serde_derive::Deserialize;
 //!
 //! #[derive(Deserialize)]
 //! struct WeatherWithoutCityName {
@@ -47,7 +47,8 @@
 
 mod de;
 
-use serde::{de::DeserializeOwned, Deserialize};
+use serde::de::DeserializeOwned;
+use serde_derive::Deserialize;
 
 use crate::{client::check_status, Client, Error, Query, ReadQuery};
 
