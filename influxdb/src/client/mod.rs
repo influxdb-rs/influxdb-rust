@@ -16,7 +16,6 @@
 //! ```
 
 use futures_util::TryFutureExt;
-use http::StatusCode;
 #[cfg(feature = "reqwest")]
 use reqwest::{Client as HttpClient, RequestBuilder, Response as HttpResponse};
 use std::collections::{BTreeMap, HashMap};
