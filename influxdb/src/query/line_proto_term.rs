@@ -1,15 +1,12 @@
 /// InfluxDB Line Protocol escaping helper module.
 /// https://docs.influxdata.com/influxdb/v1.7/write_protocols/line_protocol_tutorial/
 use crate::Type;
-use lazy_static::lazy_static;
-use regex::Regex;
+use lazy_regex::{lazy_regex, Lazy, Regex};
 
-lazy_static! {
-    pub static ref COMMAS_SPACES: Regex = Regex::new("[, ]").unwrap();
-    pub static ref COMMAS_SPACES_EQUALS: Regex = Regex::new("[, =]").unwrap();
-    pub static ref QUOTES_SLASHES: Regex = Regex::new(r#"["\\]"#).unwrap();
-    pub static ref SLASHES: Regex = Regex::new(r#"(\\|,| |=|")"#).unwrap();
-}
+pub static COMMAS_SPACES: Lazy<Regex> = lazy_regex!("[, ]");
+pub static COMMAS_SPACES_EQUALS: Lazy<Regex> = lazy_regex!("[, =]");
+pub static QUOTES_SLASHES: Lazy<Regex> = lazy_regex!(r#"["\\]"#);
+pub static SLASHES: Lazy<Regex> = lazy_regex!(r#"(\\|,| |=|")"#);
 
 pub enum LineProtoTerm<'a> {
     Measurement(&'a str), // escape commas, spaces
