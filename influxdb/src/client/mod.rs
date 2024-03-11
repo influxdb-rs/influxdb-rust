@@ -281,7 +281,7 @@ impl Client {
         })?;
 
         // todo: improve error parsing without serde
-        if s.contains("\"error\"") {
+        if s.contains("\"error\"") || s.contains("\"Error\"") {
             return Err(Error::DatabaseError {
                 error: format!("influxdb error: \"{}\"", s),
             });
