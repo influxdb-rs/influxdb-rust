@@ -301,13 +301,10 @@ impl Client {
 
 pub(crate) fn check_status(res: &HttpResponse) -> Result<(), Error> {
     let status = res.status();
-    if status == StatusCode::UNAUTHORIZED.as_u16() {
-        Err(Error::AuthorizationError)
-    } else if status == StatusCode::FORBIDDEN.as_u16() {
-        Err(Error::AuthenticationError)
-    } else {
-        Ok(())
+    if !status.is_success() {
+        return Err(Error::ApiError(status));
     }
+    Ok(())
 }
 
 #[cfg(test)]

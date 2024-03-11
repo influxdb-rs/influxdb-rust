@@ -1,5 +1,6 @@
 //! Errors that might happen in the crate
 
+use http::StatusCode;
 use thiserror::Error;
 
 #[derive(Debug, Eq, PartialEq, Error)]
@@ -32,6 +33,10 @@ pub enum Error {
     #[error("authorization error. User not authorized")]
     /// Error happens when the supplied user is not authorized. `HTTP 403 Forbidden`
     AuthorizationError,
+
+    #[error("API error with a status code: {0}")]
+    /// Error happens when API returns non 2xx status code.
+    ApiError(StatusCode),
 
     #[error("connection error: {error}")]
     /// Error happens when HTTP request fails
