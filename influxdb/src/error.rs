@@ -1,6 +1,5 @@
 //! Errors that might happen in the crate
 
-use http::StatusCode;
 use thiserror::Error;
 
 #[derive(Debug, Eq, PartialEq, Error)]
@@ -36,7 +35,7 @@ pub enum Error {
 
     #[error("API error with a status code: {0}")]
     /// Error happens when API returns non 2xx status code.
-    ApiError(StatusCode),
+    ApiError(u16),
 
     #[error("connection error: {error}")]
     /// Error happens when HTTP request fails
