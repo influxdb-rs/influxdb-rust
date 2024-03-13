@@ -140,7 +140,14 @@ async fn test_wrong_authed_write_and_read() {
             let write_result = client.query(write_query).await;
             assert_result_err(&write_result);
             match write_result {
-                Err(Error::AuthorizationError) => {}
+                Err(Error::ApiError(code)) => {
+                    if code != 403 {
+                        panic!(
+                            "Should be an ApiError(403), but code received was: {}",
+                            code
+                        );
+                    }
+                }
                 _ => panic!(
                     "Should be an AuthorizationError: {}",
                     write_result.unwrap_err()
@@ -151,7 +158,14 @@ async fn test_wrong_authed_write_and_read() {
             let read_result = client.query(read_query).await;
             assert_result_err(&read_result);
             match read_result {
-                Err(Error::AuthorizationError) => {}
+                Err(Error::ApiError(code)) => {
+                    if code != 403 {
+                        panic!(
+                            "Should be an ApiError(403), but code received was: {}",
+                            code
+                        );
+                    }
+                }
                 _ => panic!(
                     "Should be an AuthorizationError: {}",
                     read_result.unwrap_err()
@@ -164,7 +178,14 @@ async fn test_wrong_authed_write_and_read() {
             let read_result = client.query(read_query).await;
             assert_result_err(&read_result);
             match read_result {
-                Err(Error::AuthenticationError) => {}
+                Err(Error::ApiError(code)) => {
+                    if code != 401 {
+                        panic!(
+                            "Should be an ApiError(401), but code received was: {}",
+                            code
+                        );
+                    }
+                }
                 _ => panic!(
                     "Should be an AuthenticationError: {}",
                     read_result.unwrap_err()
@@ -208,7 +229,14 @@ async fn test_non_authed_write_and_read() {
             let write_result = non_authed_client.query(write_query).await;
             assert_result_err(&write_result);
             match write_result {
-                Err(Error::AuthorizationError) => {}
+                Err(Error::ApiError(code)) => {
+                    if code != 403 {
+                        panic!(
+                            "Should be an ApiError(403), but code received was: {}",
+                            code
+                        );
+                    }
+                }
                 _ => panic!(
                     "Should be an AuthorizationError: {}",
                     write_result.unwrap_err()
@@ -220,7 +248,14 @@ async fn test_non_authed_write_and_read() {
 
             assert_result_err(&read_result);
             match read_result {
-                Err(Error::AuthorizationError) => {}
+                Err(Error::ApiError(code)) => {
+                    if code != 403 {
+                        panic!(
+                            "Should be an ApiError(403), but code received was: {}",
+                            code
+                        );
+                    }
+                }
                 _ => panic!(
                     "Should be an AuthorizationError: {}",
                     read_result.unwrap_err()
@@ -297,7 +332,14 @@ async fn test_json_non_authed_read() {
             let read_result = non_authed_client.json_query(read_query).await;
             assert_result_err(&read_result);
             match read_result {
-                Err(Error::AuthorizationError) => {}
+                Err(Error::ApiError(code)) => {
+                    if code != 403 {
+                        panic!(
+                            "Should be an ApiError(403), but code received was: {}",
+                            code
+                        );
+                    }
+                }
                 _ => panic!(
                     "Should be a AuthorizationError: {}",
                     read_result.unwrap_err()
