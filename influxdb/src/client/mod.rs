@@ -301,7 +301,11 @@ impl Client {
 pub(crate) fn check_status(res: &HttpResponse) -> Result<(), Error> {
     let status = res.status();
     if !status.is_success() {
-        return Err(Error::ApiError(status));
+        #[cfg(feature = "surf")]
+        let err = Err(Error::ApiError(status.into()));
+        #[cfg(feature = "reqwest")]
+        let err = Err(Error::ApiError(status));
+        return err;
     }
     Ok(())
 }
