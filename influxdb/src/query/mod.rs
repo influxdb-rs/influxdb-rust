@@ -21,7 +21,6 @@
 //! ```
 
 use chrono::prelude::{DateTime, TimeZone, Utc};
-use std::convert::TryInto;
 
 pub mod consts;
 mod line_proto_term;
@@ -47,6 +46,21 @@ pub enum Timestamp {
     Hours(u128),
 }
 
+impl Timestamp {
+    pub fn nanos(&self) -> u128 {
+        match self {
+            Timestamp::Hours(h) => {
+                h * MINUTES_PER_HOUR * SECONDS_PER_MINUTE * MILLIS_PER_SECOND * NANOS_PER_MILLI
+            }
+            Timestamp::Minutes(m) => m * SECONDS_PER_MINUTE * MILLIS_PER_SECOND * NANOS_PER_MILLI,
+            Timestamp::Seconds(s) => s * MILLIS_PER_SECOND * NANOS_PER_MILLI,
+            Timestamp::Milliseconds(millis) => millis * NANOS_PER_MILLI,
+            Timestamp::Microseconds(micros) => micros * NANOS_PER_MICRO,
+            Timestamp::Nanoseconds(nanos) => *nanos,
+        }
+    }
+}
+
 impl fmt::Display for Timestamp {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         use Timestamp::*;
@@ -59,30 +73,7 @@ impl fmt::Display for Timestamp {
 
 impl From<Timestamp> for DateTime<Utc> {
     fn from(ts: Timestamp) -> DateTime<Utc> {
-        match ts {
-            Timestamp::Hours(h) => {
-                let nanos =
-                    h * MINUTES_PER_HOUR * SECONDS_PER_MINUTE * MILLIS_PER_SECOND * NANOS_PER_MILLI;
-                Utc.timestamp_nanos(nanos.try_into().unwrap())
-            }
-            Timestamp::Minutes(m) => {
-                let nanos = m * SECONDS_PER_MINUTE * MILLIS_PER_SECOND * NANOS_PER_MILLI;
-                Utc.timestamp_nanos(nanos.try_into().unwrap())
-            }
-            Timestamp::Seconds(s) => {
-                let nanos = s * MILLIS_PER_SECOND * NANOS_PER_MILLI;
-                Utc.timestamp_nanos(nanos.try_into().unwrap())
-            }
-            Timestamp::Milliseconds(millis) => {
-                let nanos = millis * NANOS_PER_MILLI;
-                Utc.timestamp_nanos(nanos.try_into().unwrap())
-            }
-            Timestamp::Nanoseconds(nanos) => Utc.timestamp_nanos(nanos.try_into().unwrap()),
-            Timestamp::Microseconds(micros) => {
-                let nanos = micros * NANOS_PER_MICRO;
-                Utc.timestamp_nanos(nanos.try_into().unwrap())
-            }
-        }
+        Utc.timestamp_nanos(ts.nanos() as i64)
     }
 }
 
@@ -92,6 +83,18 @@ where
 {
     fn from(date_time: DateTime<T>) -> Self {
         Timestamp::Nanoseconds(date_time.timestamp_nanos_opt().unwrap() as u128)
+    }
+}
+
+impl From<Timestamp> for time::OffsetDateTime {
+    fn from(value: Timestamp) -> Self {
+        time::OffsetDateTime::from_unix_timestamp_nanos(value.nanos() as i128).unwrap()
+    }
+}
+
+impl From<time::OffsetDateTime> for Timestamp {
+    fn from(value: time::OffsetDateTime) -> Self {
+        Timestamp::Nanoseconds(value.unix_timestamp_nanos() as u128)
     }
 }
 
