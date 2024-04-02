@@ -33,7 +33,7 @@ async fn test_authed_write_and_read() {
         },
         || async move {
             let client = Client::new("http://127.0.0.1:2086", "mydb").with_token("admintoken");
-            let read_query = ReadQuery::new("DELETE MEASUREMENT weather");
+            let read_query = ReadQuery::new("DROP MEASUREMENT \"weather\"");
             let read_result = client.query(read_query).await;
             assert_result_ok(&read_result);
             assert!(!read_result.unwrap().contains("error"), "Teardown failed");
