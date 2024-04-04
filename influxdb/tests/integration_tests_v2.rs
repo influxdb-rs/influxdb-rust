@@ -33,7 +33,7 @@ async fn test_authed_write_and_read() {
         },
         || async move {
             let client = Client::new("http://127.0.0.1:2086", "mydb").with_token("admintoken");
-            let read_query = ReadQuery::new("DELETE MEASUREMENT weather");
+            let read_query = ReadQuery::new("DROP MEASUREMENT \"weather\"");
             let read_result = client.query(read_query).await;
             assert_result_ok(&read_result);
             assert!(!read_result.unwrap().contains("error"), "Teardown failed");
@@ -48,6 +48,8 @@ async fn test_authed_write_and_read() {
 #[async_std::test]
 #[cfg(not(tarpaulin))]
 async fn test_wrong_authed_write_and_read() {
+    use http::StatusCode;
+
     run_test(
         || async move {
             let client = Client::new("http://127.0.0.1:2086", "mydb").with_token("falsetoken");
@@ -57,9 +59,9 @@ async fn test_wrong_authed_write_and_read() {
             let write_result = client.query(&write_query).await;
             assert_result_err(&write_result);
             match write_result {
-                Err(Error::AuthorizationError) => {}
+                Err(Error::ApiError(code)) if code == StatusCode::UNAUTHORIZED.as_u16() => {}
                 _ => panic!(
-                    "Should be an AuthorizationError: {}",
+                    "Should be an ApiError(UNAUTHORIZED): {}",
                     write_result.unwrap_err()
                 ),
             }
@@ -68,9 +70,9 @@ async fn test_wrong_authed_write_and_read() {
             let read_result = client.query(&read_query).await;
             assert_result_err(&read_result);
             match read_result {
-                Err(Error::AuthorizationError) => {}
+                Err(Error::ApiError(code)) if code == StatusCode::UNAUTHORIZED.as_u16() => {}
                 _ => panic!(
-                    "Should be an AuthorizationError: {}",
+                    "Should be an ApiError(UNAUTHORIZED): {}",
                     read_result.unwrap_err()
                 ),
             }
@@ -86,6 +88,8 @@ async fn test_wrong_authed_write_and_read() {
 #[async_std::test]
 #[cfg(not(tarpaulin))]
 async fn test_non_authed_write_and_read() {
+    use http::StatusCode;
+
     run_test(
         || async move {
             let non_authed_client = Client::new("http://127.0.0.1:2086", "mydb");
@@ -95,9 +99,9 @@ async fn test_non_authed_write_and_read() {
             let write_result = non_authed_client.query(&write_query).await;
             assert_result_err(&write_result);
             match write_result {
-                Err(Error::AuthorizationError) => {}
+                Err(Error::ApiError(code)) if code == StatusCode::UNAUTHORIZED.as_u16() => {}
                 _ => panic!(
-                    "Should be an AuthorizationError: {}",
+                    "Should be an ApiError(UNAUTHORIZED): {}",
                     write_result.unwrap_err()
                 ),
             }
@@ -106,9 +110,9 @@ async fn test_non_authed_write_and_read() {
             let read_result = non_authed_client.query(&read_query).await;
             assert_result_err(&read_result);
             match read_result {
-                Err(Error::AuthorizationError) => {}
+                Err(Error::ApiError(code)) if code == StatusCode::UNAUTHORIZED.as_u16() => {}
                 _ => panic!(
-                    "Should be an AuthorizationError: {}",
+                    "Should be an ApiError(UNAUTHORIZED): {}",
                     read_result.unwrap_err()
                 ),
             }

@@ -25,13 +25,9 @@ pub enum Error {
     /// Error which has happened inside InfluxDB
     DatabaseError { error: String },
 
-    #[error("authentication error. No or incorrect credentials")]
-    /// Error happens when no or incorrect credentials are used. `HTTP 401 Unauthorized`
-    AuthenticationError,
-
-    #[error("authorization error. User not authorized")]
-    /// Error happens when the supplied user is not authorized. `HTTP 403 Forbidden`
-    AuthorizationError,
+    #[error("API error with a status code: {0}")]
+    /// Error happens when API returns non 2xx status code.
+    ApiError(u16),
 
     #[error("connection error: {error}")]
     /// Error happens when HTTP request fails
