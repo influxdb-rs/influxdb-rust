@@ -93,7 +93,7 @@ impl Client {
         } else {
             parameters.insert("db", database.into());
         }
-        
+
         Client {
             url: Arc::new(url.into()),
             parameters: Arc::new(parameters),
@@ -150,6 +150,10 @@ impl Client {
         self
     }
 
+    /// Add organization to [`Client`](crate::Client)
+    ///
+    /// This is designed for influxdb 2.0's backward-compatible API which
+    /// requires organization by default.
     pub fn with_org<S>(mut self, org: S) -> Self
     where
         S: Into<String>,
