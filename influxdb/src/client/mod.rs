@@ -34,6 +34,7 @@ pub struct Client {
     pub(crate) url: Arc<String>,
     pub(crate) parameters: Arc<HashMap<&'static str, String>>,
     pub(crate) token: Option<String>,
+    pub(crate) org: Option<String>,
     pub(crate) client: HttpClient,
 }
 
@@ -80,16 +81,25 @@ impl Client {
     #[must_use = "Creating a client is pointless unless you use it"]
     pub fn new<S1, S2>(url: S1, database: S2) -> Self
     where
-        S1: Into<String>,
+        S1: Into<String> + Clone,
         S2: Into<String>,
     {
         let mut parameters = HashMap::<&str, String>::new();
-        parameters.insert("db", database.into());
+
+        let url_clone = url.clone(); // Clone url
+
+        if url_clone.into().contains("/api/v2") {
+            parameters.insert("bucket", database.into());
+        } else {
+            parameters.insert("db", database.into());
+        }
+        
         Client {
             url: Arc::new(url.into()),
             parameters: Arc::new(parameters),
             client: HttpClient::new(),
             token: None,
+            org: None,
         }
     }
 
@@ -137,6 +147,14 @@ impl Client {
         S: Into<String>,
     {
         self.token = Some(token.into());
+        self
+    }
+
+    pub fn with_org<S>(mut self, org: S) -> Self
+    where
+        S: Into<String>,
+    {
+        self.org = Some(org.into());
         self
     }
 
@@ -233,7 +251,7 @@ impl Client {
         })?;
 
         let mut parameters = self.parameters.as_ref().clone();
-        let request_builder = match q.get_type() {
+        let mut request_builder = match q.get_type() {
             QueryType::ReadQuery => {
                 let read_query = query.get();
                 let url = &format!("{}/query", &self.url);
@@ -258,6 +276,10 @@ impl Client {
         let request_builder = request_builder.map_err(|err| Error::UrlConstructionError {
             error: err.to_string(),
         })?;
+
+        if let Some(ref org) = self.org {
+            request_builder = request_builder.query(&[("org", org)]);
+        }
 
         let res = self
             .auth_if_needed(request_builder)
