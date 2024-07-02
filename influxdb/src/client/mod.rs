@@ -88,11 +88,7 @@ impl Client {
 
         let url_clone = url.clone(); // Clone url
 
-        if url_clone.into().contains("/api/v2") {
-            parameters.insert("bucket", database.into());
-        } else {
-            parameters.insert("db", database.into());
-        }
+        parameters.insert("bucket", database.into());
 
         Client {
             url: Arc::new(url.into()),
