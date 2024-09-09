@@ -1,11 +1,11 @@
 # How to release this crate
 
-This project consists of two crates which need to be published to crates.io in the correct order. Additonally, there's some steps one's likely to miss when releasing.
+This project consists of two crates which need to be published to crates.io in the correct order. Additionally, there's some steps one's likely to miss when releasing.
 
 ## Pre-Release-Checklist
 
 - [ ] `influxdb/Cargo.toml` and `influxdb-derive/Cargo.toml`: Bumped `influxdb` and `influxdb-derive` versions to new version number?
-- [ ] `influxdb/Cargo.toml`: Changed `influxdb` dependecy on `influxdb-derive` to new version number?
+- [ ] `influxdb/Cargo.toml`: Changed `influxdb` dependency on `influxdb-derive` to new version number?
 - [ ] `CHANGELOG.md`: Remove all entries from the unreleased section
 - [ ] `CHANGELOG.md`: Add new Section for the new version number with subsections `Added`, `Changed` and `Fixed`.
 - [ ] `CHANGELOG.md`: For each commit since the last release commit `Release vX.Y.Z`, added a changelog entry in the correct section linking to the author and PR in this format?

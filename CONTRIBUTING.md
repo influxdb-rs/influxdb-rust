@@ -139,7 +139,7 @@ Please open an issue if you have suggestions for new labels.
 | Issue label          | List issues                                                                                  | Description                                                                            |
 | -------------------- | -------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
 | `Type: Bug`          | [search](https://github.com/influxdb-rs/influxdb-rust/labels/Status%3A%20Type%20Bug)           | Applied to issues reporting bugs.                                                      |
-| `Type: Chore`        | [search](https://github.com/influxdb-rs/influxdb-rust/labels/Status%3A%20Type%20Chore)         | Applied to issues and pull requests regarding miscellaneous tasks around the reposity. |
+| `Type: Chore`        | [search](https://github.com/influxdb-rs/influxdb-rust/labels/Status%3A%20Type%20Chore)         | Applied to issues and pull requests regarding miscellaneous tasks around the repository. |
 | `Type: Enhancement`  | [search](https://github.com/influxdb-rs/influxdb-rust/labels/Status%3A%20Type%20Enhancement)   | Applied to issues and pull requests where an existing feature is improved.             |
 | `Type: Governance`   | [search](https://github.com/influxdb-rs/influxdb-rust/labels/Status%3A%20Type%20Governance)    | Applied to issues pull requests regarding repository governance.                       |
 | `Type: New Feature`  | [search](https://github.com/influxdb-rs/influxdb-rust/labels/status%3a%20Type%20New%20Feature) | Applied to issues and pull requests requesting or implementing new features.           |  |

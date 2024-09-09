@@ -533,7 +533,7 @@ async fn test_json_query_tagged() {
 
 /// INTEGRATION TEST
 ///
-/// This test case tests whether JSON can be decoded from a InfluxDB response and wether that JSON
+/// This test case tests whether JSON can be decoded from a InfluxDB response and whether that JSON
 /// is equal to the data which was written to the database
 /// (tested with tokio)
 #[tokio::test]
