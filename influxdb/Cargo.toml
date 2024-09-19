@@ -11,7 +11,7 @@ license = "MIT"
 readme = "README.md"
 include = ["src/**/*", "tests/**/*", "Cargo.toml", "LICENSE"]
 repository = "https://github.com/influxdb-rs/influxdb-rust"
-rust-version = "1.70"
+rust-version = "1.65"
 
 [dependencies]
 chrono = { version = "0.4.23", features = ["serde"], default-features = false }
@@ -44,4 +44,4 @@ wasm-client = ["surf", "surf/wasm-client"]
 [dev-dependencies]
 async-std = { version = "1.6.5", features = ["attributes", "tokio02", "tokio1"] }
 indoc = "1.0"
-tokio = { version = "1.7", features = ["macros", "rt-multi-thread"] }
+tokio = { version = "=1.25.0", features = ["macros", "rt-multi-thread"] }
