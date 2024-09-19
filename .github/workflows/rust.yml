@@ -24,6 +24,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # When changing this Rust version, please also update .github/PULL_REQUEST_TEMPLATE.md
+      # so contributors know which version of Rust to use for clippy checks.
       - uses: dtolnay/rust-toolchain@1.75.0
         with:
           components: clippy
