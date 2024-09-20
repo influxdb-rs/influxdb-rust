@@ -41,6 +41,6 @@ reqwest-client-native-tls-vendored = ["reqwest", "reqwest/native-tls-vendored"]
 wasm-client = ["surf", "surf/wasm-client"]
 
 [dev-dependencies]
-async-std = { version = "1.6.5", features = ["attributes", "tokio02", "tokio1"] }
-indoc = "1.0"
+async-std = { version = "1.13.0", features = ["attributes", "tokio02", "tokio1"] }
+indoc = "2.0"
 tokio = { version = "1.7", features = ["macros", "rt-multi-thread"] }
