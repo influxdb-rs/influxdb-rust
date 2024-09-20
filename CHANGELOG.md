@@ -72,7 +72,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 -  Batch write support ([@sunng87](https://github.com/sunng87) in [#87](https://github.com/influxdb-rs/influxdb-rust/pull/87))
 
-    Build a query containing mutliple rows to be inserted
+    Build a query containing multiple rows to be inserted
     ```
     let q0 = Timestamp::Hours(11)
         .into_query("weather")
