@@ -92,6 +92,7 @@ jobs:
             ~/.cargo/registry
             target
           key: "${{runner.os}} Rust ${{steps.rust-toolchain.outputs.cachekey}}"
+        if: matrix.rust.name != 'MSRV'
       # ... and on msrv runs, use another
       - uses: actions/cache@v4
         with:
@@ -100,6 +101,7 @@ jobs:
             ~/.cargo/registry
             target
           key: "${{runner.os}} Rust ${{steps.msrv-toolchain.outputs.cachekey}}"
+        if: matrix.rust.name == 'MSRV'
       # finally we can run tests
       - run: cargo test --lib --locked
       - run: cargo test --doc --locked
