@@ -3,6 +3,13 @@
 [workspace]
 members = ["influxdb", "influxdb_derive", "benches"]
 
+[workspace.package]
+authors = ["Gero Gerke <11deutron11@gmail.com>", "Dominic <git@msrd0.de>"]
+edition = "2018"
+rust-version = "1.65"
+license = "MIT"
+repository = "https://github.com/influxdb-rs/influxdb-rust"
+
 [patch.crates-io]
 influxdb = { path = "./influxdb" }
 influxdb_derive = { path = "./influxdb_derive" }

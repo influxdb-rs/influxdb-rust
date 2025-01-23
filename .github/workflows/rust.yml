@@ -67,6 +67,9 @@ jobs:
       fail-fast: false
       matrix:
         rust:
+          - name: MSRV
+            toolchain: stable
+            nightly: false
           - name: Stable
             toolchain: stable
             nightly: false
@@ -79,19 +82,34 @@ jobs:
         os: [ubuntu-latest, windows-latest, macOS-latest]
     steps:
       - uses: actions/checkout@v4
+      # on non-msrv runs, just download rust
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{matrix.rust.toolchain}}
         id: rust-toolchain
+        if: matrix.rust.name != 'MSRV'
+      # on msrv runs, use stable to generate Cargo.lock then downgrade
+      - uses: dtolnay/rust-toolchain@stable
+        if: matrix.rust.name == 'MSRV'
+      - run: cargo --config 'resolver.incompatible-rust-versions="fallback"' update
+      - run: echo "rust-version=$(tomlq -r '.workspace.package."rust-version"' Cargo.toml)" >>$GITHUB_OUTPUT
+        id: msrv
+        if: matrix.rust.name == 'MSRV'
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{steps.msrv.outputs.rust-version}}
+        id: rust-toolchain
+        if: matrix.rust.name == 'MSRV'
+      # the rest is independent of whether msrv is used
       - uses: actions/cache@v4
         with:
           path: |
             ~/.cargo/git
             ~/.cargo/registry
             target
-          key: "${{matrix.rust.toolchain}} on ${{runner.os}} Rust ${{steps.rust-toolchain.outputs.cachekey}}"
-      - run: cargo test --lib
-      - run: cargo test --doc
+          key: "${{runner.os}} Rust ${{steps.rust-toolchain.outputs.cachekey}}"
+      - run: cargo test --lib --locked
+      - run: cargo test --doc --locked
 
   # this tests that all integration tests are successful
   integration_tests:
