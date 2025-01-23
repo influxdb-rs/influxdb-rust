@@ -53,9 +53,6 @@ jobs:
       fail-fast: false
       matrix:
         rust:
-          - name: MSRV
-            toolchain: stable
-            nightly: false
           - name: Stable
             toolchain: stable
             nightly: false
@@ -66,6 +63,12 @@ jobs:
             toolchain: nightly
             nightly: true
         os: [ubuntu-latest, windows-latest, macOS-latest]
+      include:
+        - rust:
+            name: MSRV
+            toolchain: stable
+            nightly: false
+          os: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@master
