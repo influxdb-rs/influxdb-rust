@@ -74,7 +74,7 @@ jobs:
         id: rust-toolchain
       - run: cargo --config 'resolver.incompatible-rust-versions="fallback"' update
       # on msrv runs, downgrade rust after generating the Cargo.lock file
-      - run: apt -y update && apt -y install --no-install-recommends yq
+      - run: sudo apt -y update && sudo apt -y install --no-install-recommends yq
         if: matrix.rust.name == 'MSRV'
       - run: echo "rust-version=$(tomlq -r '.workspace.package."rust-version"' Cargo.toml)" >>$GITHUB_OUTPUT
         id: msrv
