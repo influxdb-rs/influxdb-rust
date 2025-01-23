@@ -82,15 +82,11 @@ jobs:
         os: [ubuntu-latest, windows-latest, macOS-latest]
     steps:
       - uses: actions/checkout@v4
-      # on non-msrv runs, just download rust
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{matrix.rust.toolchain}}
         id: rust-toolchain
-        if: matrix.rust.name != 'MSRV'
       # on msrv runs, use stable to generate Cargo.lock then downgrade
-      - uses: dtolnay/rust-toolchain@stable
-        if: matrix.rust.name == 'MSRV'
       - run: cargo --config 'resolver.incompatible-rust-versions="fallback"' update
       - run: echo "rust-version=$(tomlq -r '.workspace.package."rust-version"' Cargo.toml)" >>$GITHUB_OUTPUT
         id: msrv
@@ -98,9 +94,9 @@ jobs:
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{steps.msrv.outputs.rust-version}}
-        id: rust-toolchain
+        id: msrv-toolchain
         if: matrix.rust.name == 'MSRV'
-      # the rest is independent of whether msrv is used
+      # on non-msrv runs, use one cache key ...
       - uses: actions/cache@v4
         with:
           path: |
@@ -108,6 +104,15 @@ jobs:
             ~/.cargo/registry
             target
           key: "${{runner.os}} Rust ${{steps.rust-toolchain.outputs.cachekey}}"
+      # ... and on msrv runs, use another
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/git
+            ~/.cargo/registry
+            target
+          key: "${{runner.os}} Rust ${{steps.msrv-toolchain.outputs.cachekey}}"
+      # finally we can run tests
       - run: cargo test --lib --locked
       - run: cargo test --doc --locked
 
