@@ -26,7 +26,7 @@
         <img src="https://img.shields.io/badge/Made%20with-Rust-orange.svg" alt='Build with Rust' />
     </a>
     <a href="https://github.com/rust-lang/rust/releases/tag/1.65.0">
-        <img src="https://img.shields.io/badge/rustc-1.65.0-yellow.svg" alt='Minimum Rust Version: 1.65.0' />
+        <img src="https://img.shields.io/badge/rustc-1.65.0+-yellow.svg" alt='Minimum Rust Version: 1.65.0' />
     </a>
 </p>
 
@@ -155,7 +155,7 @@ To communicate with InfluxDB, you can choose the HTTP backend to be used configu
 @ 2020-2024 Gero Gerke, msrd0 and [contributors].
 
  [contributors]: https://github.com/influxdb-rs/influxdb-rust/graphs/contributors
- [__cargo_doc2readme_dependencies_info]: ggGkYW0BYXSEGwiasFGzPvV5Gy6Y1oQPkGrqG7b_RpkdOEifG73obN0GCeV7YXKEG1LaAVLASZMqG5J2qfpyCvbMG_Rohh5BobOmG0DqLv5454SZYWSBgmhpbmZsdXhkYmUwLjcuMg
+ [__cargo_doc2readme_dependencies_info]: ggGkYW0BYXSEGzJ_QpW55zB1G0S-TER-rIfLG2gXv8EYBG3jG1nuXXn-kdx-YXKEG1LaAVLASZMqG5J2qfpyCvbMG_Rohh5BobOmG0DqLv5454SZYWSBgmhpbmZsdXhkYmUwLjcuMg
  [__link0]: https://github.com/influxdb-rs/influxdb-rust/blob/main/CONTRIBUTING.md
  [__link1]: https://github.com/influxdb-rs/influxdb-rust/blob/main/CODE_OF_CONDUCT.md
  [__link10]: https://github.com/alexcrichton/curl-rust
