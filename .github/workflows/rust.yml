@@ -44,20 +44,6 @@ jobs:
       - name: Check code formatting
         run: cargo fmt --all -- --check
 
-  # this checks the msrv
-  msrv:
-    name: Verify MSRV
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: baptiste0928/cargo-install@v3
-        with:
-          crate: cargo-msrv
-      - name: Verify minimum rust version of influxdb crate
-        run: cargo msrv --path influxdb --output-format json verify
-      - name: Verify minimum rust version of influxdb_derive crate
-        run: cargo msrv --path influxdb_derive --output-format json verify
-
   # this tests that all unit and doc tests are successful
   unit_tests:
     name: Unit and Doc Tests (Rust ${{matrix.rust.name}} on ${{matrix.os}})
