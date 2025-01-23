@@ -72,8 +72,10 @@ jobs:
         with:
           toolchain: ${{matrix.rust.toolchain}}
         id: rust-toolchain
-      # on msrv runs, use stable to generate Cargo.lock then downgrade
       - run: cargo --config 'resolver.incompatible-rust-versions="fallback"' update
+      # on msrv runs, downgrade rust after generating the Cargo.lock file
+      - run: apk -y update && apk -y install --no-install-recommends yq
+        if: matrix.rust.name == 'MSRV'
       - run: echo "rust-version=$(tomlq -r '.workspace.package."rust-version"' Cargo.toml)" >>$GITHUB_OUTPUT
         id: msrv
         if: matrix.rust.name == 'MSRV'
