@@ -4,7 +4,7 @@
 members = ["influxdb", "influxdb_derive", "benches"]
 
 [workspace.package]
-authors = ["Gero Gerke <11deutron11@gmail.com>", "Dominic <git@msrd0.de>"]
+authors = ["Gero Gerke <git@gero.dev>", "Dominic <git@msrd0.de>"]
 edition = "2018"
 # always put fully qualified version here, e.g. 1.65.0 (**NOT** 1.65)
 rust-version = "1.65"
