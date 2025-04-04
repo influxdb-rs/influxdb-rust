@@ -3,15 +3,15 @@
 [package]
 name = "influxdb_derive"
 version = "0.5.1"
-authors = ["Gero Gerke <11deutron11@gmail.com>"]
-edition = "2018"
+authors.workspace = true
+edition.workspace = true
+rust-version.workspace = true
 description = "Private implementation detail of the influxdb crate"
 keywords = ["influxdb", "database", "influx", "derive"]
-license = "MIT"
+license.workspace = true
 readme = "README.md"
 include = ["src/**/*", "tests/**/*", "Cargo.toml", "LICENSE"]
-repository = "https://github.com/influxdb-rs/influxdb-rust"
-rust-version = "1.70"
+repository.workspace = true
 
 [lib]
 proc-macro = true
