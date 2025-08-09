@@ -5,6 +5,7 @@
 use crate::query::line_proto_term::LineProtoTerm;
 use crate::query::{QueryType, ValidQuery};
 use crate::{Error, Query, Timestamp};
+use chrono::{DateTime, TimeZone};
 use std::fmt::{Display, Formatter};
 
 pub trait WriteType {
@@ -152,6 +153,20 @@ impl From<&str> for Type {
         Type::Text(b.into())
     }
 }
+
+impl<Tz: TimeZone> From<DateTime<Tz>> for Type {
+    fn from(dt: DateTime<Tz>) -> Self {
+        match dt.timestamp_nanos_opt() {
+            Some(nanos) => Type::SignedInteger(nanos),
+            None => {
+                // For dates before 1677-09-21, or after
+                // 2262-04-11, we're just going to return 0.
+                Type::SignedInteger(0)
+            }
+        }
+    }
+}
+
 impl<T> From<&T> for Type
 where
     T: Copy + Into<Type>,
