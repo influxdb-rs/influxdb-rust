@@ -4,7 +4,7 @@ mod utilities;
 #[cfg(feature = "derive")]
 use influxdb::InfluxDbWriteable;
 
-use chrono::{DateTime, Utc};
+use chrono::{Date, DateTime, Utc};
 use influxdb::{Query, ReadQuery, Timestamp};
 
 #[cfg(feature = "serde")]
@@ -15,6 +15,20 @@ use utilities::{assert_result_ok, create_client, create_db, delete_db, run_test}
 #[derive(Debug, PartialEq)]
 #[cfg_attr(feature = "derive", derive(InfluxDbWriteable))]
 struct WeatherReading {
+    time: DateTime<Utc>,
+    #[influxdb(ignore)]
+    humidity: i32,
+    pressure: i32,
+    #[influxdb(tag)]
+    wind_strength: Option<u64>,
+}
+
+#[derive(Debug, PartialEq)]
+#[cfg_attr(feature = "derive", derive(InfluxDbWriteable))]
+struct WeatherReadingWithNonstandardTime {
+    #[influxdb(time)]
+    reading_time: DateTime<Utc>,
+    #[influxdb(ignore)]
     time: DateTime<Utc>,
     #[influxdb(ignore)]
     humidity: i32,
@@ -34,6 +48,23 @@ struct WeatherReadingWithoutIgnored {
 #[test]
 fn test_build_query() {
     let weather_reading = WeatherReading {
+        time: Timestamp::Hours(1).into(),
+        humidity: 30,
+        pressure: 100,
+        wind_strength: Some(5),
+    };
+    let query = weather_reading.into_query("weather_reading");
+    let query = query.build().unwrap();
+    assert_eq!(
+        query.get(),
+        "weather_reading,wind_strength=5 pressure=100i 3600000000000"
+    );
+}
+
+#[test]
+fn test_build_nonstandard_query() {
+    let weather_reading = WeatherReadingWithNonstandardTime {
+        reading_time: Timestamp::Hours(1).into(),
         time: Timestamp::Hours(1).into(),
         humidity: 30,
         pressure: 100,
