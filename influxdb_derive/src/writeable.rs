@@ -21,6 +21,7 @@ mod kw {
     custom_keyword!(ignore);
 }
 
+#[allow(dead_code)] // TODO do we need to store the keywords?
 enum FieldAttr {
     Tag(kw::tag),
     Ignore(kw::ignore),

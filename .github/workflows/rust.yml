@@ -24,13 +24,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@1.75.0
+      - uses: dtolnay/rust-toolchain@1.88.0
         with:
           components: clippy
+      - name: Update Cargo.lock
+        run: cargo --config 'resolver.incompatible-rust-versions="fallback"' update
       - name: Check Clippy lints (reqwest)
-        run: cargo clippy --manifest-path influxdb/Cargo.toml --all-targets --no-default-features --features serde,derive,reqwest-client-rustls -- -D warnings
+        run: cargo clippy --manifest-path influxdb/Cargo.toml --locked --all-targets --no-default-features --features serde,derive,reqwest-client-rustls -- -D warnings
       - name: Check Clippy lints (surf)
-        run: cargo clippy --manifest-path influxdb/Cargo.toml --all-targets --no-default-features --features serde,derive,hyper-client -- -D warnings
+        run: cargo clippy --manifest-path influxdb/Cargo.toml --locked --all-targets --no-default-features --features serde,derive,hyper-client -- -D warnings
 
   # this checks that the code is formatted with rustfmt
   rustfmt:

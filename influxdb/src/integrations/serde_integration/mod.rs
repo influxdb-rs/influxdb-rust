@@ -71,7 +71,7 @@ impl DatabaseQueryResult {
     {
         serde_json::from_value::<Return<T>>(self.results.remove(0)).map_err(|err| {
             Error::DeserializationError {
-                error: format!("could not deserialize: {}", err),
+                error: format!("could not deserialize: {err}"),
             }
         })
     }
@@ -85,7 +85,7 @@ impl DatabaseQueryResult {
     {
         serde_json::from_value::<TaggedReturn<TAG, T>>(self.results.remove(0)).map_err(|err| {
             Error::DeserializationError {
-                error: format!("could not deserialize: {}", err),
+                error: format!("could not deserialize: {err}"),
             }
         })
     }
@@ -123,7 +123,7 @@ pub struct TaggedSeries<TAG, T> {
 impl Client {
     pub async fn json_query(&self, q: ReadQuery) -> Result<DatabaseQueryResult, Error> {
         let query = q.build().map_err(|err| Error::InvalidQueryError {
-            error: format!("{}", err),
+            error: err.to_string(),
         })?;
 
         let read_query = query.get();
@@ -131,9 +131,7 @@ impl Client {
 
         if !read_query_lower.contains("select") && !read_query_lower.contains("show") {
             let error = Error::InvalidQueryError {
-                error: String::from(
-                    "Only SELECT and SHOW queries supported with JSON deserialization",
-                ),
+                error: "Only SELECT and SHOW queries supported with JSON deserialization".into(),
             };
             return Err(error);
         }
@@ -143,7 +141,7 @@ impl Client {
         parameters.insert("q", read_query);
         let mut request_builder = self.client.get(url);
         if let Some(ref token) = self.token {
-            request_builder = request_builder.header("Authorization", format!("Token {}", token))
+            request_builder = request_builder.header("Authorization", format!("Token {token}"))
         }
         let request_builder = request_builder.query(&parameters);
 
@@ -179,7 +177,7 @@ impl Client {
         // Json has another structure, let's try actually parsing it to the type we're deserializing
         serde_json::from_slice::<DatabaseQueryResult>(&body).map_err(|err| {
             Error::DeserializationError {
-                error: format!("serde error: {}", err),
+                error: format!("serde error: {err}"),
             }
         })
     }

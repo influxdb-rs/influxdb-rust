@@ -13,6 +13,9 @@ readme = "README.md"
 include = ["src/**/*", "tests/**/*", "Cargo.toml", "LICENSE"]
 repository.workspace = true
 
+[lints]
+workspace = true
+
 [dependencies]
 chrono = { version = "0.4.23", features = ["serde"], default-features = false }
 futures-util = "0.3.17"
