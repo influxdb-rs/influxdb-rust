@@ -2,7 +2,7 @@
 
 [workspace]
 members = ["influxdb", "influxdb_derive", "benches"]
-resolver = "3"
+resolver = "2"
 
 [workspace.package]
 authors = ["Gero Gerke <git@gero.dev>", "Dominic <git@msrd0.de>"]
