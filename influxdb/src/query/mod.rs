@@ -52,7 +52,7 @@ impl fmt::Display for Timestamp {
         use Timestamp::*;
         match self {
             Nanoseconds(ts) | Microseconds(ts) | Milliseconds(ts) | Seconds(ts) | Minutes(ts)
-            | Hours(ts) => write!(f, "{}", ts),
+            | Hours(ts) => write!(f, "{ts}"),
         }
     }
 }

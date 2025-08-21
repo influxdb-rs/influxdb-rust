@@ -57,9 +57,9 @@ impl LineProtoTerm<'_> {
         use Type::*;
         match v {
             Boolean(v) => Self::escape_boolean(v),
-            Float(v) => format!(r#"{}"#, v),
-            SignedInteger(v) => format!(r#"{}"#, v),
-            UnsignedInteger(v) => format!(r#"{}"#, v),
+            Float(v) => format!(r#"{v}"#),
+            SignedInteger(v) => format!(r#"{v}"#),
+            UnsignedInteger(v) => format!(r#"{v}"#),
             Text(v) => Self::escape_any(v, &SLASHES),
         }
     }
@@ -95,7 +95,7 @@ impl LineProtoTerm<'_> {
     /// https://docs.influxdata.com/influxdb/cloud/reference/syntax/line-protocol/#integer
     ///     Signed 64-bit integers. Trailing i on the number specifies an integer.
     fn escape_signed_integer(v: &i64) -> String {
-        format!("{}i", v)
+        format!("{v}i")
     }
 
     /// Escapes a Rust u64 to InfluxDB Line Protocol
@@ -107,9 +107,9 @@ impl LineProtoTerm<'_> {
     /// https://docs.influxdata.com/influxdb/v1/write_protocols/line_protocol_tutorial/#data-types
     fn escape_unsigned_integer(v: &u64, use_v2: bool) -> String {
         if use_v2 {
-            format!("{}u", v)
+            format!("{v}u")
         } else {
-            format!("{}i", v)
+            format!("{v}i")
         }
     }
 }

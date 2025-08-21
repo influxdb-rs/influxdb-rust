@@ -122,11 +122,11 @@ impl Display for Type {
         use Type::*;
 
         match self {
-            Boolean(x) => write!(f, "{}", x),
-            Float(x) => write!(f, "{}", x),
-            SignedInteger(x) => write!(f, "{}", x),
-            UnsignedInteger(x) => write!(f, "{}", x),
-            Text(text) => write!(f, "{text}", text = text),
+            Boolean(x) => write!(f, "{x}"),
+            Float(x) => write!(f, "{x}"),
+            SignedInteger(x) => write!(f, "{x}"),
+            UnsignedInteger(x) => write!(f, "{x}"),
+            Text(text) => write!(f, "{text}"),
         }
     }
 }
@@ -187,11 +187,7 @@ impl Query for WriteQuery {
                 } else {
                     LineProtoTerm::TagValue(value).escape()
                 };
-                format!(
-                    "{tag}={value}",
-                    tag = escaped_tag_key,
-                    value = escaped_tag_value,
-                )
+                format!("{escaped_tag_key}={escaped_tag_value}")
             })
             .collect::<Vec<String>>()
             .join(",");
@@ -213,11 +209,7 @@ impl Query for WriteQuery {
                 } else {
                     LineProtoTerm::FieldValue(value).escape()
                 };
-                format!(
-                    "{field}={value}",
-                    field = escaped_field_key,
-                    value = escaped_field_value,
-                )
+                format!("{escaped_field_key}={escaped_field_value}")
             })
             .collect::<Vec<String>>()
             .join(",");

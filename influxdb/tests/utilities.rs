@@ -30,7 +30,7 @@ where
     T: Into<String>,
 {
     let test_name = name.into();
-    let query = format!("CREATE DATABASE {}", test_name);
+    let query = format!("CREATE DATABASE {test_name}");
     create_client(test_name).query(ReadQuery::new(query)).await
 }
 
@@ -41,7 +41,7 @@ where
     T: Into<String>,
 {
     let test_name = name.into();
-    let query = format!("DROP DATABASE {}", test_name);
+    let query = format!("DROP DATABASE {test_name}");
     create_client(test_name).query(ReadQuery::new(query)).await
 }
 
