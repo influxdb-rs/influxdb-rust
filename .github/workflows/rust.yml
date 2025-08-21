@@ -113,7 +113,7 @@ jobs:
 
   # this tests that all integration tests are successful
   integration_tests:
-    name: Integration Tests (Rust ${{matrix.rust.name}} with ${{matrix.http-backend}})
+    name: Integration Tests (Rust ${{matrix.rust.name}} with ${{matrix.http-backend}} and ${{matrix.time-lib}})
     runs-on: ubuntu-latest
     continue-on-error: ${{matrix.rust.nightly}}
     strategy:
@@ -124,10 +124,6 @@ jobs:
             toolchain: stable
             nightly: false
         http-backend:
-          - curl-client
-          - h1-client
-          - h1-client-rustls
-          - hyper-client
           - reqwest-client-rustls
           - reqwest-client-native-tls
           - reqwest-client-native-tls-vendored
@@ -172,9 +168,17 @@ jobs:
           key: "${{runner.os}} Rust ${{steps.rust-toolchain.outputs.cachekey}}"
       - name: Run tests
         run: |
+          set -euo pipefail
+
+          FEATURES="serde derive chrono time ${HTTP_BACKEND}"
+
           for test in integration_tests{,_v2}
           do
-            cargo test -p influxdb --no-default-features --features 'chrono time serde derive ${{matrix.http-backend}}' --no-fail-fast --test $test
+            cargo test -p influxdb \
+              --no-default-features \
+              --features "$FEATURES" \
+              --no-fail-fast \
+              --test "$test"
           done
 
   # this uses cargo-tarpaulin to inspect the code coverage
