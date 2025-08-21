@@ -22,7 +22,7 @@ futures-util = "0.3.17"
 http = "0.2.4"
 influxdb_derive = { version = "0.5.1", optional = true }
 lazy-regex = "3.1"
-reqwest = { version = "0.11.4", default-features = false, optional = true }
+reqwest = { version = "0.11.4", default-features = false }
 serde = { version = "1.0.186", optional = true }
 serde_derive = { version = "1.0.186", optional = true }
 serde_json = { version = "1.0.48", optional = true }
