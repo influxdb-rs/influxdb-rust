@@ -34,9 +34,9 @@ derive = ["dep:influxdb_derive"]
 serde = ["dep:serde", "dep:serde_derive", "dep:serde_json"]
 
 # http clients
-reqwest-client-rustls = ["reqwest", "reqwest/rustls-tls-webpki-roots"]
-reqwest-client-native-tls = ["reqwest", "reqwest/native-tls-alpn"]
-reqwest-client-native-tls-vendored = ["reqwest", "reqwest/native-tls-vendored"]
+reqwest-client-rustls = ["reqwest/rustls-tls-webpki-roots"]
+reqwest-client-native-tls = ["reqwest/native-tls-alpn"]
+reqwest-client-native-tls-vendored = ["reqwest/native-tls-vendored"]
 
 [dev-dependencies]
 indoc = "1.0"
