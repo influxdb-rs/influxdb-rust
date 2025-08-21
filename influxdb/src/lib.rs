@@ -78,14 +78,6 @@
 #![doc = cargo_toml!(indent="\t", default-features = false, "derive", "serde", "reqwest-client-native-tls")]
 //! - **[hyper](https://github.com/hyperium/hyper)** (through reqwest), with vendored native TLS (OpenSSL)
 #![doc = cargo_toml!(indent="\t", default-features = false, "derive", "serde", "reqwest-client-native-tls-vendored")]
-//! - **[curl](https://github.com/alexcrichton/curl-rust)**, using [libcurl](https://curl.se/libcurl/)
-#![doc = cargo_toml!(indent="\t", default-features = false, "derive", "serde", "curl-client")]
-//! - **[async-h1](https://github.com/http-rs/async-h1)** with native TLS (OpenSSL)
-#![doc = cargo_toml!(indent="\t", default-features = false, "derive", "serde", "h1-client")]
-//! - **[async-h1](https://github.com/http-rs/async-h1)** with [rustls](https://github.com/ctz/rustls)
-#![doc = cargo_toml!(indent="\t", default-features = false, "derive", "serde", "h1-client-rustls")]
-//! - WebAssembly's `window.fetch`, via `web-sys` and **[wasm-bindgen](https://github.com/rustwasm/wasm-bindgen)**
-#![doc = cargo_toml!(indent="\t", default-features = false, "derive", "serde", "wasm-client")]
 //!
 //! # License
 //!

@@ -121,43 +121,17 @@ To communicate with InfluxDB, you can choose the HTTP backend to be used configu
   influxdb = { version = "0.7.2", default-features = false, features = ["derive", "serde", "reqwest-client-native-tls-vendored"] }
   ```
 
-* **[curl][__link9]**, using [libcurl][__link10]
-  ```toml
-  influxdb = { version = "0.7.2", default-features = false, features = ["derive", "serde", "curl-client"] }
-  ```
-
-* **[async-h1][__link11]** with native TLS (OpenSSL)
-  ```toml
-  influxdb = { version = "0.7.2", default-features = false, features = ["derive", "serde", "h1-client"] }
-  ```
-
-* **[async-h1][__link12]** with [rustls][__link13]
-  ```toml
-  influxdb = { version = "0.7.2", default-features = false, features = ["derive", "serde", "h1-client-rustls"] }
-  ```
-
-* WebAssembly’s `window.fetch`, via `web-sys` and **[wasm-bindgen][__link14]**
-  ```toml
-  influxdb = { version = "0.7.2", default-features = false, features = ["derive", "serde", "wasm-client"] }
-  ```
-
 ## License
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)][__link15]
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)][__link9]
 
 
 @ 2020-2024 Gero Gerke, msrd0 and [contributors].
 
  [contributors]: https://github.com/influxdb-rs/influxdb-rust/graphs/contributors
- [__cargo_doc2readme_dependencies_info]: ggGkYW0CYXSEGzJ_QpW55zB1G0S-TER-rIfLG2gXv8EYBG3jG1nuXXn-kdx-YXKEG4NMwSc-atpuGyQ3O7T4Ur42GzFqIg36Zfn7G7roc8ix9SwDYWSBgmhpbmZsdXhkYmUwLjcuMg
+ [__cargo_doc2readme_dependencies_info]: ggGkYW0CYXSEGzJ_QpW55zB1G0S-TER-rIfLG2gXv8EYBG3jG1nuXXn-kdx-YXKEG8LHWNBBuXgSGz-2Lrx4E_kTG0bJiXb6A8zNG9GhXhvU8L0xYWSBgmhpbmZsdXhkYmUwLjcuMg
  [__link0]: https://github.com/influxdb-rs/influxdb-rust/blob/main/CONTRIBUTING.md
  [__link1]: https://github.com/influxdb-rs/influxdb-rust/blob/main/CODE_OF_CONDUCT.md
- [__link10]: https://curl.se/libcurl/
- [__link11]: https://github.com/http-rs/async-h1
- [__link12]: https://github.com/http-rs/async-h1
- [__link13]: https://github.com/ctz/rustls
- [__link14]: https://github.com/rustwasm/wasm-bindgen
- [__link15]: https://opensource.org/licenses/MIT
  [__link2]: https://github.com/influxdb-rs/influxdb-rust/blob/main/CHANGELOG.md
  [__link3]: https://github.com/influxdb-rs/influxdb-rust/blob/main/influxdb/Cargo.toml
  [__link4]: https://docs.rs/influxdb/0.7.2/influxdb/?search=integrations::serde_integration
@@ -165,5 +139,5 @@ To communicate with InfluxDB, you can choose the HTTP backend to be used configu
  [__link6]: https://github.com/ctz/rustls
  [__link7]: https://github.com/hyperium/hyper
  [__link8]: https://github.com/hyperium/hyper
- [__link9]: https://github.com/alexcrichton/curl-rust
+ [__link9]: https://opensource.org/licenses/MIT
 
