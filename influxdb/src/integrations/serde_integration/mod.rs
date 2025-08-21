@@ -152,8 +152,7 @@ impl Client {
                 error: err.to_string(),
             })?;
         check_status(&res)?;
-
-        #[cfg(feature = "reqwest")]
+        
         let body = res.bytes();
 
         let body = body.await.map_err(|err| Error::ProtocolError {

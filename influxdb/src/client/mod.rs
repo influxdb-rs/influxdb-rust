@@ -16,7 +16,6 @@
 //! ```
 
 use futures_util::TryFutureExt;
-#[cfg(feature = "reqwest")]
 use reqwest::{Client as HttpClient, RequestBuilder, Response as HttpResponse};
 use std::collections::{BTreeMap, HashMap};
 use std::fmt::{self, Debug, Formatter};
@@ -166,7 +165,6 @@ impl Client {
         const BUILD_HEADER: &str = "X-Influxdb-Build";
         const VERSION_HEADER: &str = "X-Influxdb-Version";
 
-        #[cfg(feature = "reqwest")]
         let (build, version) = {
             let hdrs = res.headers();
             (
@@ -256,7 +254,6 @@ impl Client {
             .await?;
         check_status(&res)?;
 
-        #[cfg(feature = "reqwest")]
         let body = res.text();
 
         let s = body.await.map_err(|_| Error::DeserializationError {
