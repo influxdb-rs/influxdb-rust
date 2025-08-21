@@ -26,7 +26,6 @@
 //! use influxdb::{Client, Error, InfluxDbWriteable, ReadQuery, Timestamp};
 //!
 //! #[tokio::main]
-//! // or #[async_std::main] if you prefer
 //! async fn main() -> Result<(), Error> {
 //!     // Connect to db `test` on `http://localhost:8086`
 //!     let client = Client::new("http://localhost:8086", "test");

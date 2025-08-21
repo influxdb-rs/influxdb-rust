@@ -122,10 +122,6 @@ jobs:
             toolchain: stable
             nightly: false
         http-backend:
-          - curl-client
-          - h1-client
-          - h1-client-rustls
-          - hyper-client
           - reqwest-client-rustls
           - reqwest-client-native-tls
           - reqwest-client-native-tls-vendored

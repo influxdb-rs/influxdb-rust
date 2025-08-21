@@ -194,7 +194,7 @@ impl Client {
     /// use influxdb::InfluxDbWriteable;
     /// use std::time::{SystemTime, UNIX_EPOCH};
     ///
-    /// # #[async_std::main]
+    /// # #[tokio::main]
     /// # async fn main() -> Result<(), influxdb::Error> {
     /// let start = SystemTime::now();
     /// let since_the_epoch = start
