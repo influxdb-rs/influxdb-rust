@@ -50,7 +50,7 @@ impl LineProtoTerm<'_> {
     }
 
     /// Serializes Tag Values. InfluxDB stores tag values as strings, so we format everything to string.
-    /// 
+    ///
     /// V2: https://docs.influxdata.com/influxdb/cloud/reference/syntax/line-protocol/#tag-set
     /// V1: https://docs.influxdata.com/influxdb/v1/write_protocols/line_protocol_tutorial/#data-types
     fn escape_tag_value(v: &Type) -> String {
@@ -78,20 +78,15 @@ impl LineProtoTerm<'_> {
     }
 
     /// Escapes a Rust bool to InfluxDB Line Protocol
-    /// 
+    ///
     /// https://docs.influxdata.com/influxdb/cloud/reference/syntax/line-protocol/#boolean
     ///     Stores true or false values.
     fn escape_boolean(v: &bool) -> String {
-        if *v {
-            "true"
-        } else {
-            "false"
-        }
-        .to_string()
+        if *v { "true" } else { "false" }.to_string()
     }
 
     /// Escapes a Rust i64 to InfluxDB Line Protocol
-    /// 
+    ///
     /// https://docs.influxdata.com/influxdb/cloud/reference/syntax/line-protocol/#integer
     ///     Signed 64-bit integers. Trailing i on the number specifies an integer.
     fn escape_signed_integer(v: &i64) -> String {
@@ -99,10 +94,10 @@ impl LineProtoTerm<'_> {
     }
 
     /// Escapes a Rust u64 to InfluxDB Line Protocol
-    /// 
+    ///
     /// https://docs.influxdata.com/influxdb/cloud/reference/syntax/line-protocol/#uinteger
     ///     Unsigned 64-bit integers. Trailing u on the number specifies an unsigned integer.
-    /// 
+    ///
     /// InfluxDB version 1 does not know unsigned, we fallback to (signed) integer:
     /// https://docs.influxdata.com/influxdb/v1/write_protocols/line_protocol_tutorial/#data-types
     fn escape_unsigned_integer(v: &u64, use_v2: bool) -> String {
