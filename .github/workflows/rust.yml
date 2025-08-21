@@ -108,12 +108,12 @@ jobs:
           key: "${{runner.os}} Rust ${{steps.msrv-toolchain.outputs.cachekey}}"
         if: matrix.rust.name == 'MSRV'
       # finally we can run tests
-      - run: cargo test --lib --locked
-      - run: cargo test --doc --locked
+      - run: cargo test --lib --locked --features 'chrono time serde derive'
+      - run: cargo test --doc --locked --features 'chrono time serde derive'
 
   # this tests that all integration tests are successful
   integration_tests:
-    name: Integration Tests (Rust ${{matrix.rust.name}} with ${{matrix.http-backend}} and ${{matrix.time-lib}})
+    name: Integration Tests (Rust ${{matrix.rust.name}} with ${{matrix.http-backend}})
     runs-on: ubuntu-latest
     continue-on-error: ${{matrix.rust.nightly}}
     strategy:
