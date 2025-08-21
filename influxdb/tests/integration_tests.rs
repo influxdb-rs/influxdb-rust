@@ -520,10 +520,7 @@ async fn test_json_query_tagged() {
 /// is equal to the data which was written to the database
 /// (tested with tokio)
 #[tokio::test]
-#[cfg(all(
-    feature = "serde",
-    not(any(tarpaulin_include))
-))]
+#[cfg(all(feature = "serde", not(any(tarpaulin_include))))]
 async fn test_json_query_vec() {
     const TEST_NAME: &str = "test_json_query_vec";
 
