@@ -145,11 +145,6 @@ impl Client {
         }
         let request_builder = request_builder.query(&parameters);
 
-        #[cfg(feature = "surf")]
-        let request_builder = request_builder.map_err(|err| Error::UrlConstructionError {
-            error: err.to_string(),
-        })?;
-
         let res = request_builder
             .send()
             .await
@@ -160,10 +155,6 @@ impl Client {
 
         #[cfg(feature = "reqwest")]
         let body = res.bytes();
-        #[cfg(feature = "surf")]
-        let mut res = res;
-        #[cfg(feature = "surf")]
-        let body = res.body_bytes();
 
         let body = body.await.map_err(|err| Error::ProtocolError {
             error: err.to_string(),

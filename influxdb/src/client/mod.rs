@@ -21,8 +21,6 @@ use reqwest::{Client as HttpClient, RequestBuilder, Response as HttpResponse};
 use std::collections::{BTreeMap, HashMap};
 use std::fmt::{self, Debug, Formatter};
 use std::sync::Arc;
-#[cfg(feature = "surf")]
-use surf::{Client as HttpClient, RequestBuilder, Response as HttpResponse};
 
 use crate::query::QueryType;
 use crate::Error;
@@ -178,11 +176,6 @@ impl Client {
             )
         };
 
-        #[cfg(feature = "surf")]
-        let build = res.header(BUILD_HEADER).map(|value| value.as_str());
-        #[cfg(feature = "surf")]
-        let version = res.header(VERSION_HEADER).map(|value| value.as_str());
-
         Ok((build.unwrap().to_owned(), version.unwrap().to_owned()))
     }
 
@@ -254,11 +247,6 @@ impl Client {
             }
         };
 
-        #[cfg(feature = "surf")]
-        let request_builder = request_builder.map_err(|err| Error::UrlConstructionError {
-            error: err.to_string(),
-        })?;
-
         let res = self
             .auth_if_needed(request_builder)
             .send()
@@ -270,10 +258,6 @@ impl Client {
 
         #[cfg(feature = "reqwest")]
         let body = res.text();
-        #[cfg(feature = "surf")]
-        let mut res = res;
-        #[cfg(feature = "surf")]
-        let body = res.body_string();
 
         let s = body.await.map_err(|_| Error::DeserializationError {
             error: "response could not be converted to UTF-8".into(),
