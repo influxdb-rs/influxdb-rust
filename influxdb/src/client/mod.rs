@@ -23,18 +23,30 @@ use std::fmt::{self, Debug, Formatter};
 use std::sync::Arc;
 #[cfg(feature = "surf")]
 use surf::{Client as HttpClient, RequestBuilder, Response as HttpResponse};
+use std::marker::PhantomData;
 
 use crate::query::QueryType;
 use crate::Error;
 use crate::Query;
 
+/// Marker type for InfluxDB Version 1
+#[derive(Clone)]
+pub struct InfluxVersion1;
+/// Marker type for InfluxDB Version 2
+#[derive(Clone)]
+pub struct InfluxVersion2;
+/// Marker type for InfluxDB Version 3
+#[derive(Clone)]
+pub struct InfluxVersion3;
+
 #[derive(Clone)]
 /// Internal Representation of a Client
-pub struct Client {
+pub struct Client<V, H = reqwest::Client> {
     pub(crate) url: Arc<String>,
     pub(crate) parameters: Arc<HashMap<&'static str, String>>,
     pub(crate) token: Option<String>,
-    pub(crate) client: HttpClient,
+    pub(crate) client: H,
+    _version: PhantomData<V>,
 }
 
 struct RedactPassword<'a>(&'a HashMap<&'static str, String>);
@@ -53,7 +65,7 @@ impl<'a> Debug for RedactPassword<'a> {
     }
 }
 
-impl Debug for Client {
+impl<V, H> Debug for Client<V, H> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         f.debug_struct("Client")
             .field("url", &self.url)
@@ -62,7 +74,7 @@ impl Debug for Client {
     }
 }
 
-impl Client {
+impl<V> Client<V, reqwest::Client> {
     /// Instantiates a new [`Client`](crate::Client)
     ///
     /// # Arguments
@@ -90,6 +102,7 @@ impl Client {
             parameters: Arc::new(parameters),
             client: HttpClient::new(),
             token: None,
+            _version: PhantomData,
         }
     }
 
@@ -308,12 +321,15 @@ pub(crate) fn check_status(res: &HttpResponse) -> Result<(), Error> {
 
 #[cfg(test)]
 mod tests {
+
+    use crate::client::InfluxVersion1;
+
     use super::Client;
     use indoc::indoc;
 
     #[test]
     fn test_client_debug_redacted_password() {
-        let client = Client::new("https://localhost:8086", "db").with_auth("user", "pass");
+        let client: Client<InfluxVersion1> = Client::new("https://localhost:8086", "db").with_auth("user", "pass");
         let actual = format!("{client:#?}");
         let expected = indoc! { r#"
             Client {
@@ -331,14 +347,14 @@ mod tests {
 
     #[test]
     fn test_fn_database() {
-        let client = Client::new("http://localhost:8068", "database");
+        let client: Client<InfluxVersion1> = Client::new("http://localhost:8068", "database");
         assert_eq!(client.database_name(), "database");
         assert_eq!(client.database_url(), "http://localhost:8068");
     }
 
     #[test]
     fn test_with_auth() {
-        let client = Client::new("http://localhost:8068", "database");
+        let client: Client<InfluxVersion1> = Client::new("http://localhost:8068", "database");
         assert_eq!(client.parameters.len(), 1);
         assert_eq!(client.parameters.get("db").unwrap(), "database");
 
@@ -348,7 +364,7 @@ mod tests {
         assert_eq!(with_auth.parameters.get("u").unwrap(), "username");
         assert_eq!(with_auth.parameters.get("p").unwrap(), "password");
 
-        let client = Client::new("http://localhost:8068", "database");
+        let client: Client<InfluxVersion1> = Client::new("http://localhost:8068", "database");
         let with_auth = client.with_token("token");
         assert_eq!(with_auth.parameters.len(), 1);
         assert_eq!(with_auth.parameters.get("db").unwrap(), "database");
