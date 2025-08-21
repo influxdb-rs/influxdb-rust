@@ -9,7 +9,6 @@ use influxdb::{Client, Error, ReadQuery, Timestamp};
 
 /// INTEGRATION TEST
 ///
-
 /// This test case tests the Authentication
 #[async_std::test]
 #[cfg(not(tarpaulin))]

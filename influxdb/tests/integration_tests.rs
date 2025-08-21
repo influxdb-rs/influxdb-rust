@@ -25,7 +25,7 @@ async fn test_ping_influx_db_async_std() {
     assert!(!build.is_empty(), "Build should not be empty");
     assert!(!version.is_empty(), "Build should not be empty");
 
-    println!("build: {} version: {}", build, version);
+    println!("build: {build} version: {version}");
 }
 
 /// INTEGRATION TEST
@@ -42,7 +42,7 @@ async fn test_ping_influx_db_tokio() {
     assert!(!build.is_empty(), "Build should not be empty");
     assert!(!version.is_empty(), "Build should not be empty");
 
-    println!("build: {} version: {}", build, version);
+    println!("build: {build} version: {version}");
 }
 
 /// INTEGRATION TEST
@@ -78,7 +78,7 @@ async fn test_authed_write_and_read() {
         || async move {
             let client =
                 Client::new("http://127.0.0.1:9086", TEST_NAME).with_auth("admin", "password");
-            let query = format!("CREATE DATABASE {}", TEST_NAME);
+            let query = format!("CREATE DATABASE {TEST_NAME}");
             client
                 .query(ReadQuery::new(query))
                 .await
@@ -103,7 +103,7 @@ async fn test_authed_write_and_read() {
         || async move {
             let client =
                 Client::new("http://127.0.0.1:9086", TEST_NAME).with_auth("admin", "password");
-            let query = format!("DROP DATABASE {}", TEST_NAME);
+            let query = format!("DROP DATABASE {TEST_NAME}");
 
             client
                 .query(ReadQuery::new(query))
@@ -128,7 +128,7 @@ async fn test_wrong_authed_write_and_read() {
         || async move {
             let client =
                 Client::new("http://127.0.0.1:9086", TEST_NAME).with_auth("admin", "password");
-            let query = format!("CREATE DATABASE {}", TEST_NAME);
+            let query = format!("CREATE DATABASE {TEST_NAME}");
             client
                 .query(ReadQuery::new(query))
                 .await
@@ -176,7 +176,7 @@ async fn test_wrong_authed_write_and_read() {
         || async move {
             let client =
                 Client::new("http://127.0.0.1:9086", TEST_NAME).with_auth("admin", "password");
-            let query = format!("DROP DATABASE {}", TEST_NAME);
+            let query = format!("DROP DATABASE {TEST_NAME}");
             client
                 .query(ReadQuery::new(query))
                 .await
@@ -200,7 +200,7 @@ async fn test_non_authed_write_and_read() {
         || async move {
             let client =
                 Client::new("http://127.0.0.1:9086", TEST_NAME).with_auth("admin", "password");
-            let query = format!("CREATE DATABASE {}", TEST_NAME);
+            let query = format!("CREATE DATABASE {TEST_NAME}");
             client
                 .query(ReadQuery::new(query))
                 .await
@@ -234,7 +234,7 @@ async fn test_non_authed_write_and_read() {
         || async move {
             let client =
                 Client::new("http://127.0.0.1:9086", TEST_NAME).with_auth("admin", "password");
-            let query = format!("DROP DATABASE {}", TEST_NAME);
+            let query = format!("DROP DATABASE {TEST_NAME}");
             client
                 .query(ReadQuery::new(query))
                 .await
@@ -292,7 +292,7 @@ async fn test_json_non_authed_read() {
         || async move {
             let client =
                 Client::new("http://127.0.0.1:9086", TEST_NAME).with_auth("admin", "password");
-            let query = format!("CREATE DATABASE {}", TEST_NAME);
+            let query = format!("CREATE DATABASE {TEST_NAME}");
             client
                 .query(ReadQuery::new(query))
                 .await
@@ -313,7 +313,7 @@ async fn test_json_non_authed_read() {
         || async move {
             let client =
                 Client::new("http://127.0.0.1:9086", TEST_NAME).with_auth("admin", "password");
-            let query = format!("DROP DATABASE {}", TEST_NAME);
+            let query = format!("DROP DATABASE {TEST_NAME}");
 
             client
                 .query(ReadQuery::new(query))
@@ -337,7 +337,7 @@ async fn test_json_authed_read() {
         || async move {
             let client =
                 Client::new("http://127.0.0.1:9086", TEST_NAME).with_auth("admin", "password");
-            let query = format!("CREATE DATABASE {}", TEST_NAME);
+            let query = format!("CREATE DATABASE {TEST_NAME}");
             client
                 .query(ReadQuery::new(query))
                 .await
@@ -350,7 +350,7 @@ async fn test_json_authed_read() {
         || async move {
             let client =
                 Client::new("http://127.0.0.1:9086", TEST_NAME).with_auth("admin", "password");
-            let query = format!("DROP DATABASE {}", TEST_NAME);
+            let query = format!("DROP DATABASE {TEST_NAME}");
 
             client
                 .query(ReadQuery::new(query))

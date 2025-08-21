@@ -49,12 +49,12 @@ impl LineProtoTerm<'_> {
             }
             .to_string(),
             Float(v) => v.to_string(),
-            SignedInteger(v) => format!("{}i", v),
+            SignedInteger(v) => format!("{v}i"),
             UnsignedInteger(v) => {
                 if use_v2 {
-                    format!("{}u", v)
+                    format!("{v}u")
                 } else {
-                    format!("{}i", v)
+                    format!("{v}i")
                 }
             }
             Text(v) => format!(r#""{}""#, Self::escape_any(v, &QUOTES_SLASHES)),
@@ -71,10 +71,10 @@ impl LineProtoTerm<'_> {
                     "false"
                 }
             }
-            .to_string(),
-            Float(v) => format!(r#"{}"#, v),
-            SignedInteger(v) => format!(r#"{}"#, v),
-            UnsignedInteger(v) => format!(r#"{}"#, v),
+            .into(),
+            Float(v) => v.to_string(),
+            SignedInteger(v) => v.to_string(),
+            UnsignedInteger(v) => v.to_string(),
             Text(v) => Self::escape_any(v, &SLASHES),
         }
     }

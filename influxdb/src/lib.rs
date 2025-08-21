@@ -94,10 +94,6 @@
 //!
 //! [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-#![allow(clippy::needless_doctest_main)]
-#![allow(clippy::needless_lifetimes)] // False positive in client/mod.rs query fn
-#![forbid(bare_trait_objects)]
-
 macro_rules! cargo_toml {
     (indent=$indent:literal, $firstfeat:literal $(, $feature:literal)*) => {
         cargo_toml_private!($indent, "", $firstfeat $(, $feature)*)
@@ -107,6 +103,7 @@ macro_rules! cargo_toml {
         cargo_toml_private!($indent, "default-features = false, ", $firstfeat $(, $feature)*)
     };
 }
+use cargo_toml;
 
 macro_rules! cargo_toml_private {
     ($indent:literal, $deffeats:literal, $firstfeat:literal $(, $feature:literal)*) => {
@@ -129,6 +126,7 @@ macro_rules! cargo_toml_private {
         )
     };
 }
+use cargo_toml_private;
 
 #[cfg(all(feature = "reqwest", feature = "surf"))]
 compile_error!("You need to choose between reqwest and surf; enabling both is not supported");

@@ -2,6 +2,23 @@
 
 [workspace]
 members = ["influxdb", "influxdb_derive", "benches"]
+resolver = "2"
+
+[workspace.package]
+authors = ["Gero Gerke <git@gero.dev>", "Dominic <git@msrd0.de>"]
+edition = "2018"
+rust-version = "1.65"
+license = "MIT"
+repository = "https://github.com/influxdb-rs/influxdb-rust"
+
+[workspace.lints.rust]
+bare_trait_objects = "forbid"
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(tarpaulin)', 'cfg(tarpaulin_include)'] }
+
+[workspace.lints.clippy]
+multiple_bound_locations = "allow" # clippy has wrong opinions
+needless_doctest_main = "allow"
+needless_lifetimes = "allow" # False positive in client/mod.rs query fn
 
 [patch.crates-io]
 influxdb = { path = "./influxdb" }

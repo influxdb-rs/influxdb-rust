@@ -3,15 +3,18 @@
 [package]
 name = "influxdb"
 version = "0.7.2"
-authors = ["Gero Gerke <11deutron11@gmail.com>"]
-edition = "2018"
+authors.workspace = true
+edition.workspace = true
+rust-version.workspace = true
 description = "InfluxDB Driver for Rust"
 keywords = ["influxdb", "database", "influx"]
-license = "MIT"
+license.workspace = true
 readme = "README.md"
 include = ["src/**/*", "tests/**/*", "Cargo.toml", "LICENSE"]
-repository = "https://github.com/influxdb-rs/influxdb-rust"
-rust-version = "1.70"
+repository.workspace = true
+
+[lints]
+workspace = true
 
 [dependencies]
 chrono = { version = "0.4.23", features = ["serde"], default-features = false }

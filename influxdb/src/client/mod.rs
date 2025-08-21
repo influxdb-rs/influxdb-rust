@@ -162,7 +162,7 @@ impl Client {
             .send()
             .await
             .map_err(|err| Error::ProtocolError {
-                error: format!("{}", err),
+                error: err.to_string(),
             })?;
 
         const BUILD_HEADER: &str = "X-Influxdb-Build";
@@ -276,13 +276,13 @@ impl Client {
         let body = res.body_string();
 
         let s = body.await.map_err(|_| Error::DeserializationError {
-            error: "response could not be converted to UTF-8".to_string(),
+            error: "response could not be converted to UTF-8".into(),
         })?;
 
         // todo: improve error parsing without serde
         if s.contains("\"error\"") || s.contains("\"Error\"") {
             return Err(Error::DatabaseError {
-                error: format!("influxdb error: \"{}\"", s),
+                error: format!("influxdb error: {s:?}"),
             });
         }
 
@@ -291,7 +291,7 @@ impl Client {
 
     fn auth_if_needed(&self, rb: RequestBuilder) -> RequestBuilder {
         if let Some(ref token) = self.token {
-            rb.header("Authorization", format!("Token {}", token))
+            rb.header("Authorization", format!("Token {token}"))
         } else {
             rb
         }
@@ -314,7 +314,7 @@ mod tests {
     #[test]
     fn test_client_debug_redacted_password() {
         let client = Client::new("https://localhost:8086", "db").with_auth("user", "pass");
-        let actual = format!("{:#?}", client);
+        let actual = format!("{client:#?}");
         let expected = indoc! { r#"
             Client {
                 url: "https://localhost:8086",
