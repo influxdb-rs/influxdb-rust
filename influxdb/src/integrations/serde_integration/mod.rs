@@ -21,7 +21,7 @@
 //!     weather: WeatherWithoutCityName,
 //! }
 //!
-//! # #[async_std::main]
+//! # #[tokio::main]
 //! # async fn main() -> Result<(), influxdb::Error> {
 //! let client = Client::new("http://localhost:8086", "test");
 //! let query = Query::raw_read_query(
@@ -152,7 +152,7 @@ impl Client {
                 error: err.to_string(),
             })?;
         check_status(&res)?;
-        
+
         let body = res.bytes();
 
         let body = body.await.map_err(|err| Error::ProtocolError {
