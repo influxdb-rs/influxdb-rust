@@ -167,6 +167,8 @@ jobs:
             target
           key: "${{runner.os}} Rust ${{steps.rust-toolchain.outputs.cachekey}}"
       - name: Run tests
+        env:
+          HTTP_BACKEND: ${{ matrix.http-backend }}
         run: |
           set -euo pipefail
 
