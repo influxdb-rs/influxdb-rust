@@ -1,0 +1,27 @@
+version: '3'
+services:
+  influxdb:
+      image: influxdb:1.8
+      ports:
+        - 8086:8086
+  authed_influxdb:
+    image: influxdb:1.8
+    ports:
+      - 9086:8086
+    environment:
+      INFLUXDB_HTTP_AUTH_ENABLED: true
+      INFLUXDB_ADMIN_USER: admin
+      INFLUXDB_ADMIN_PASSWORD: password
+      INFLUXDB_USER: nopriv_user
+      INFLUXDB_USER_PASSWORD: password
+  influxdbv2:
+    image: influxdb:2.6
+    ports:
+      - 2086:8086
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: admin
+      DOCKER_INFLUXDB_INIT_PASSWORD: password
+      DOCKER_INFLUXDB_INIT_ORG: testing
+      DOCKER_INFLUXDB_INIT_BUCKET: mydb
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: admintoken

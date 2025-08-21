@@ -25,7 +25,7 @@ async fn test_ping_influx_db_async_std() {
     assert!(!build.is_empty(), "Build should not be empty");
     assert!(!version.is_empty(), "Build should not be empty");
 
-    println!("build: {} version: {}", build, version);
+    println!("build: {build} version: {version}");
 }
 
 /// INTEGRATION TEST
@@ -42,7 +42,7 @@ async fn test_ping_influx_db_tokio() {
     assert!(!build.is_empty(), "Build should not be empty");
     assert!(!version.is_empty(), "Build should not be empty");
 
-    println!("build: {} version: {}", build, version);
+    println!("build: {build} version: {version}");
 }
 
 /// INTEGRATION TEST
@@ -78,7 +78,7 @@ async fn test_authed_write_and_read() {
         || async move {
             let client =
                 Client::new("http://127.0.0.1:9086", TEST_NAME).with_auth("admin", "password");
-            let query = format!("CREATE DATABASE {}", TEST_NAME);
+            let query = format!("CREATE DATABASE {TEST_NAME}");
             client
                 .query(ReadQuery::new(query))
                 .await
@@ -103,7 +103,7 @@ async fn test_authed_write_and_read() {
         || async move {
             let client =
                 Client::new("http://127.0.0.1:9086", TEST_NAME).with_auth("admin", "password");
-            let query = format!("DROP DATABASE {}", TEST_NAME);
+            let query = format!("DROP DATABASE {TEST_NAME}");
 
             client
                 .query(ReadQuery::new(query))
@@ -120,13 +120,15 @@ async fn test_authed_write_and_read() {
 #[async_std::test]
 #[cfg(not(tarpaulin_include))]
 async fn test_wrong_authed_write_and_read() {
+    use http::StatusCode;
+
     const TEST_NAME: &str = "test_wrong_authed_write_and_read";
 
     run_test(
         || async move {
             let client =
                 Client::new("http://127.0.0.1:9086", TEST_NAME).with_auth("admin", "password");
-            let query = format!("CREATE DATABASE {}", TEST_NAME);
+            let query = format!("CREATE DATABASE {TEST_NAME}");
             client
                 .query(ReadQuery::new(query))
                 .await
@@ -140,9 +142,9 @@ async fn test_wrong_authed_write_and_read() {
             let write_result = client.query(write_query).await;
             assert_result_err(&write_result);
             match write_result {
-                Err(Error::AuthorizationError) => {}
+                Err(Error::ApiError(code)) if code == StatusCode::UNAUTHORIZED.as_u16() => {}
                 _ => panic!(
-                    "Should be an AuthorizationError: {}",
+                    "Should be an ApiError(UNAUTHORIZED): {}",
                     write_result.unwrap_err()
                 ),
             }
@@ -151,9 +153,9 @@ async fn test_wrong_authed_write_and_read() {
             let read_result = client.query(read_query).await;
             assert_result_err(&read_result);
             match read_result {
-                Err(Error::AuthorizationError) => {}
+                Err(Error::ApiError(code)) if code == StatusCode::UNAUTHORIZED.as_u16() => {}
                 _ => panic!(
-                    "Should be an AuthorizationError: {}",
+                    "Should be an ApiError(UNAUTHORIZED): {}",
                     read_result.unwrap_err()
                 ),
             }
@@ -164,9 +166,9 @@ async fn test_wrong_authed_write_and_read() {
             let read_result = client.query(read_query).await;
             assert_result_err(&read_result);
             match read_result {
-                Err(Error::AuthenticationError) => {}
+                Err(Error::ApiError(code)) if code == StatusCode::FORBIDDEN.as_u16() => {}
                 _ => panic!(
-                    "Should be an AuthenticationError: {}",
+                    "Should be an ApiError(UNAUTHENTICATED): {}",
                     read_result.unwrap_err()
                 ),
             }
@@ -174,7 +176,7 @@ async fn test_wrong_authed_write_and_read() {
         || async move {
             let client =
                 Client::new("http://127.0.0.1:9086", TEST_NAME).with_auth("admin", "password");
-            let query = format!("DROP DATABASE {}", TEST_NAME);
+            let query = format!("DROP DATABASE {TEST_NAME}");
             client
                 .query(ReadQuery::new(query))
                 .await
@@ -190,13 +192,15 @@ async fn test_wrong_authed_write_and_read() {
 #[async_std::test]
 #[cfg(not(tarpaulin_include))]
 async fn test_non_authed_write_and_read() {
+    use http::StatusCode;
+
     const TEST_NAME: &str = "test_non_authed_write_and_read";
 
     run_test(
         || async move {
             let client =
                 Client::new("http://127.0.0.1:9086", TEST_NAME).with_auth("admin", "password");
-            let query = format!("CREATE DATABASE {}", TEST_NAME);
+            let query = format!("CREATE DATABASE {TEST_NAME}");
             client
                 .query(ReadQuery::new(query))
                 .await
@@ -208,9 +212,9 @@ async fn test_non_authed_write_and_read() {
             let write_result = non_authed_client.query(write_query).await;
             assert_result_err(&write_result);
             match write_result {
-                Err(Error::AuthorizationError) => {}
+                Err(Error::ApiError(code)) if code == StatusCode::UNAUTHORIZED.as_u16() => {}
                 _ => panic!(
-                    "Should be an AuthorizationError: {}",
+                    "Should be an ApiError(UNAUTHORIZED): {}",
                     write_result.unwrap_err()
                 ),
             }
@@ -220,9 +224,9 @@ async fn test_non_authed_write_and_read() {
 
             assert_result_err(&read_result);
             match read_result {
-                Err(Error::AuthorizationError) => {}
+                Err(Error::ApiError(code)) if code == StatusCode::UNAUTHORIZED.as_u16() => {}
                 _ => panic!(
-                    "Should be an AuthorizationError: {}",
+                    "Should be an ApiError(UNAUTHORIZED): {}",
                     read_result.unwrap_err()
                 ),
             }
@@ -230,7 +234,7 @@ async fn test_non_authed_write_and_read() {
         || async move {
             let client =
                 Client::new("http://127.0.0.1:9086", TEST_NAME).with_auth("admin", "password");
-            let query = format!("DROP DATABASE {}", TEST_NAME);
+            let query = format!("DROP DATABASE {TEST_NAME}");
             client
                 .query(ReadQuery::new(query))
                 .await
@@ -280,13 +284,15 @@ async fn test_write_and_read_field() {
 #[cfg(feature = "serde")]
 #[cfg(not(tarpaulin_include))]
 async fn test_json_non_authed_read() {
+    use http::StatusCode;
+
     const TEST_NAME: &str = "test_json_non_authed_read";
 
     run_test(
         || async move {
             let client =
                 Client::new("http://127.0.0.1:9086", TEST_NAME).with_auth("admin", "password");
-            let query = format!("CREATE DATABASE {}", TEST_NAME);
+            let query = format!("CREATE DATABASE {TEST_NAME}");
             client
                 .query(ReadQuery::new(query))
                 .await
@@ -297,9 +303,9 @@ async fn test_json_non_authed_read() {
             let read_result = non_authed_client.json_query(read_query).await;
             assert_result_err(&read_result);
             match read_result {
-                Err(Error::AuthorizationError) => {}
+                Err(Error::ApiError(code)) if code == StatusCode::UNAUTHORIZED.as_u16() => {}
                 _ => panic!(
-                    "Should be a AuthorizationError: {}",
+                    "Should be an ApiError(UNAUTHORIZED): {}",
                     read_result.unwrap_err()
                 ),
             }
@@ -307,7 +313,7 @@ async fn test_json_non_authed_read() {
         || async move {
             let client =
                 Client::new("http://127.0.0.1:9086", TEST_NAME).with_auth("admin", "password");
-            let query = format!("DROP DATABASE {}", TEST_NAME);
+            let query = format!("DROP DATABASE {TEST_NAME}");
 
             client
                 .query(ReadQuery::new(query))
@@ -331,7 +337,7 @@ async fn test_json_authed_read() {
         || async move {
             let client =
                 Client::new("http://127.0.0.1:9086", TEST_NAME).with_auth("admin", "password");
-            let query = format!("CREATE DATABASE {}", TEST_NAME);
+            let query = format!("CREATE DATABASE {TEST_NAME}");
             client
                 .query(ReadQuery::new(query))
                 .await
@@ -344,7 +350,7 @@ async fn test_json_authed_read() {
         || async move {
             let client =
                 Client::new("http://127.0.0.1:9086", TEST_NAME).with_auth("admin", "password");
-            let query = format!("DROP DATABASE {}", TEST_NAME);
+            let query = format!("DROP DATABASE {TEST_NAME}");
 
             client
                 .query(ReadQuery::new(query))
@@ -527,7 +533,7 @@ async fn test_json_query_tagged() {
 
 /// INTEGRATION TEST
 ///
-/// This test case tests whether JSON can be decoded from a InfluxDB response and wether that JSON
+/// This test case tests whether JSON can be decoded from a InfluxDB response and whether that JSON
 /// is equal to the data which was written to the database
 /// (tested with tokio)
 #[tokio::test]
