@@ -31,8 +31,6 @@ jobs:
         run: cargo --config 'resolver.incompatible-rust-versions="fallback"' update
       - name: Check Clippy lints (reqwest)
         run: cargo clippy --manifest-path influxdb/Cargo.toml --locked --all-targets --no-default-features --features chrono,time,serde,derive,reqwest-client-rustls -- -D warnings
-      - name: Check Clippy lints (surf)
-        run: cargo clippy --manifest-path influxdb/Cargo.toml --locked --all-targets --no-default-features --features chrono,time,serde,derive,hyper-client -- -D warnings
 
   # this checks that the code is formatted with rustfmt
   rustfmt:

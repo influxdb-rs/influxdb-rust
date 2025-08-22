@@ -22,7 +22,7 @@ futures-util = "0.3.17"
 http = "0.2.4"
 influxdb_derive = { version = "0.5.1", optional = true }
 lazy-regex = "3.1"
-reqwest = { version = "0.11.4", default-features = false, optional = true }
+reqwest = { version = "0.11.4", default-features = false }
 serde = { version = "1.0.186", optional = true }
 serde_derive = { version = "1.0.186", optional = true }
 serde_json = { version = "1.0.48", optional = true }
@@ -36,20 +36,14 @@ derive = ["dep:influxdb_derive"]
 serde = ["dep:serde", "dep:serde_derive", "dep:serde_json"]
 
 # http clients
-curl-client = ["surf", "surf/curl-client"]
-h1-client = ["surf", "surf/h1-client"]
-h1-client-rustls = ["surf", "surf/h1-client-rustls"]
-hyper-client = ["surf", "surf/hyper-client"]
-reqwest-client-rustls = ["reqwest", "reqwest/rustls-tls-webpki-roots"]
-reqwest-client-native-tls = ["reqwest", "reqwest/native-tls-alpn"]
-reqwest-client-native-tls-vendored = ["reqwest", "reqwest/native-tls-vendored"]
-wasm-client = ["surf", "surf/wasm-client"]
+reqwest-client-rustls = ["reqwest/rustls-tls-webpki-roots"]
+reqwest-client-native-tls = ["reqwest/native-tls-alpn"]
+reqwest-client-native-tls-vendored = ["reqwest/native-tls-vendored"]
 
 # etc
 time = ["dep:time"]
 chrono = ["dep:chrono"]
 
 [dev-dependencies]
-async-std = { version = "1.6.5", features = ["attributes", "tokio02", "tokio1"] }
 indoc = "1.0"
 tokio = { version = "1.7", features = ["macros", "rt-multi-thread"] }

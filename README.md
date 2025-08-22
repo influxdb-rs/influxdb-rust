@@ -60,7 +60,6 @@ use chrono::{DateTime, Utc};
 use influxdb::{Client, Error, InfluxDbWriteable, ReadQuery, Timestamp};
 
 #[tokio::main]
-// or #[async_std::main] if you prefer
 async fn main() -> Result<(), Error> {
     // Connect to db `test` on `http://localhost:8086`
     let client = Client::new("http://localhost:8086", "test");
@@ -122,49 +121,17 @@ To communicate with InfluxDB, you can choose the HTTP backend to be used configu
   influxdb = { version = "0.7.2", default-features = false, features = ["derive", "serde", "reqwest-client-native-tls-vendored"] }
   ```
 
-* **[hyper][__link9]** (through surf), use this if you need tokio 0.2 compatibility
-  ```toml
-  influxdb = { version = "0.7.2", default-features = false, features = ["derive", "serde", "hyper-client"] }
-  ```
-
-* **[curl][__link10]**, using [libcurl][__link11]
-  ```toml
-  influxdb = { version = "0.7.2", default-features = false, features = ["derive", "serde", "curl-client"] }
-  ```
-
-* **[async-h1][__link12]** with native TLS (OpenSSL)
-  ```toml
-  influxdb = { version = "0.7.2", default-features = false, features = ["derive", "serde", "h1-client"] }
-  ```
-
-* **[async-h1][__link13]** with [rustls][__link14]
-  ```toml
-  influxdb = { version = "0.7.2", default-features = false, features = ["derive", "serde", "h1-client-rustls"] }
-  ```
-
-* WebAssembly’s `window.fetch`, via `web-sys` and **[wasm-bindgen][__link15]**
-  ```toml
-  influxdb = { version = "0.7.2", default-features = false, features = ["derive", "serde", "wasm-client"] }
-  ```
-
 ## License
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)][__link16]
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)][__link9]
 
 
 @ 2020-2024 Gero Gerke, msrd0 and [contributors].
 
  [contributors]: https://github.com/influxdb-rs/influxdb-rust/graphs/contributors
- [__cargo_doc2readme_dependencies_info]: ggGkYW0CYXSEGzJ_QpW55zB1G0S-TER-rIfLG2gXv8EYBG3jG1nuXXn-kdx-YXKEG1LaAVLASZMqG5J2qfpyCvbMG_Rohh5BobOmG0DqLv5454SZYWSBgmhpbmZsdXhkYmUwLjcuMg
+ [__cargo_doc2readme_dependencies_info]: ggGkYW0CYXSEGzJ_QpW55zB1G0S-TER-rIfLG2gXv8EYBG3jG1nuXXn-kdx-YXKEG8LHWNBBuXgSGz-2Lrx4E_kTG0bJiXb6A8zNG9GhXhvU8L0xYWSBgmhpbmZsdXhkYmUwLjcuMg
  [__link0]: https://github.com/influxdb-rs/influxdb-rust/blob/main/CONTRIBUTING.md
  [__link1]: https://github.com/influxdb-rs/influxdb-rust/blob/main/CODE_OF_CONDUCT.md
- [__link10]: https://github.com/alexcrichton/curl-rust
- [__link11]: https://curl.se/libcurl/
- [__link12]: https://github.com/http-rs/async-h1
- [__link13]: https://github.com/http-rs/async-h1
- [__link14]: https://github.com/ctz/rustls
- [__link15]: https://github.com/rustwasm/wasm-bindgen
- [__link16]: https://opensource.org/licenses/MIT
  [__link2]: https://github.com/influxdb-rs/influxdb-rust/blob/main/CHANGELOG.md
  [__link3]: https://github.com/influxdb-rs/influxdb-rust/blob/main/influxdb/Cargo.toml
  [__link4]: https://docs.rs/influxdb/0.7.2/influxdb/?search=integrations::serde_integration
@@ -172,5 +139,5 @@ To communicate with InfluxDB, you can choose the HTTP backend to be used configu
  [__link6]: https://github.com/ctz/rustls
  [__link7]: https://github.com/hyperium/hyper
  [__link8]: https://github.com/hyperium/hyper
- [__link9]: https://github.com/hyperium/hyper
+ [__link9]: https://opensource.org/licenses/MIT
 
