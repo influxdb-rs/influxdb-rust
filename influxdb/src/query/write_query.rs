@@ -5,7 +5,6 @@
 use crate::query::line_proto_term::LineProtoTerm;
 use crate::query::{QueryType, ValidQuery};
 use crate::{Error, Query, Timestamp};
-use chrono::{DateTime, TimeZone};
 use std::fmt::{Display, Formatter};
 
 pub trait WriteType {
@@ -154,8 +153,9 @@ impl From<&str> for Type {
     }
 }
 
-impl<Tz: TimeZone> From<DateTime<Tz>> for Type {
-    fn from(dt: DateTime<Tz>) -> Self {
+#[cfg(feature = "chrono")]
+impl<Tz: chrono::TimeZone> From<chrono::DateTime<Tz>> for Type {
+    fn from(dt: chrono::DateTime<Tz>) -> Self {
         match dt.timestamp_nanos_opt() {
             Some(nanos) => Type::SignedInteger(nanos),
             None => {
