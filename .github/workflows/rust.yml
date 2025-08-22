@@ -30,9 +30,9 @@ jobs:
       - name: Update Cargo.lock
         run: cargo --config 'resolver.incompatible-rust-versions="fallback"' update
       - name: Check Clippy lints (reqwest)
-        run: cargo clippy --manifest-path influxdb/Cargo.toml --locked --all-targets --no-default-features --features serde,derive,reqwest-client-rustls -- -D warnings
+        run: cargo clippy --manifest-path influxdb/Cargo.toml --locked --all-targets --no-default-features --features chrono,time,serde,derive,reqwest-client-rustls -- -D warnings
       - name: Check Clippy lints (surf)
-        run: cargo clippy --manifest-path influxdb/Cargo.toml --locked --all-targets --no-default-features --features serde,derive,hyper-client -- -D warnings
+        run: cargo clippy --manifest-path influxdb/Cargo.toml --locked --all-targets --no-default-features --features chrono,time,serde,derive,hyper-client -- -D warnings
 
   # this checks that the code is formatted with rustfmt
   rustfmt:
@@ -108,8 +108,8 @@ jobs:
           key: "${{runner.os}} Rust ${{steps.msrv-toolchain.outputs.cachekey}}"
         if: matrix.rust.name == 'MSRV'
       # finally we can run tests
-      - run: cargo test --lib --locked
-      - run: cargo test --doc --locked
+      - run: cargo test --lib --locked --features 'chrono time serde derive'
+      - run: cargo test --doc --locked --features 'chrono time serde derive'
 
   # this tests that all integration tests are successful
   integration_tests:
@@ -124,10 +124,6 @@ jobs:
             toolchain: stable
             nightly: false
         http-backend:
-          - curl-client
-          - h1-client
-          - h1-client-rustls
-          - hyper-client
           - reqwest-client-rustls
           - reqwest-client-native-tls
           - reqwest-client-native-tls-vendored
@@ -172,10 +168,12 @@ jobs:
           key: "${{runner.os}} Rust ${{steps.rust-toolchain.outputs.cachekey}}"
       - name: Run tests
         run: |
-          for test in integration_tests{,_v2}
-          do
-            cargo test -p influxdb --no-default-features --features 'serde derive ${{matrix.http-backend}}' --no-fail-fast --test $test
-          done
+          cargo test -p influxdb \
+            --no-default-features \
+            --features "serde derive chrono time ${{matrix.http-backend}}" \
+            --no-fail-fast \
+            --test integration_tests \
+            --test integration_tests_v2
 
   # this uses cargo-tarpaulin to inspect the code coverage
   coverage:
@@ -221,7 +219,7 @@ jobs:
           cargo tarpaulin -v \
             --target-dir target/tarpaulin \
             --workspace \
-            --features serde,derive \
+            --features chrono,time,serde,derive \
             --exclude-files 'derive/*' \
             --exclude-files 'target/*' \
             --ignore-panics --ignore-tests \
