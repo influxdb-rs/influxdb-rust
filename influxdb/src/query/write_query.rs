@@ -152,6 +152,28 @@ impl From<&str> for Type {
         Type::Text(b.into())
     }
 }
+
+#[cfg(feature = "chrono")]
+impl<Tz: chrono::TimeZone> From<chrono::DateTime<Tz>> for Type {
+    fn from(dt: chrono::DateTime<Tz>) -> Self {
+        match dt.timestamp_nanos_opt() {
+            Some(nanos) => Type::SignedInteger(nanos),
+            None => {
+                // For dates before 1677-09-21, or after
+                // 2262-04-11, we're just going to return 0.
+                Type::SignedInteger(0)
+            }
+        }
+    }
+}
+
+#[cfg(feature = "time")]
+impl From<time::UtcDateTime> for Type {
+    fn from(dt: time::UtcDateTime) -> Self {
+        Type::SignedInteger(dt.unix_timestamp_nanos().try_into().unwrap_or(0))
+    }
+}
+
 impl<T> From<&T> for Type
 where
     T: Copy + Into<Type>,
