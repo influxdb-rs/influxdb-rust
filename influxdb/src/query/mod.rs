@@ -70,19 +70,19 @@ impl fmt::Display for Timestamp {
 }
 
 #[cfg(feature = "chrono")]
-impl From<Timestamp> for chrono::prelude::DateTime<chrono::prelude::Utc> {
-    fn from(ts: Timestamp) -> chrono::prelude::DateTime<chrono::prelude::Utc> {
-        use chrono::prelude::TimeZone;
-        chrono::prelude::Utc.timestamp_nanos(ts.nanos() as i64)
+impl From<Timestamp> for chrono::DateTime<chrono::Utc> {
+    fn from(ts: Timestamp) -> chrono::DateTime<chrono::Utc> {
+        use chrono::TimeZone as _;
+        chrono::Utc.timestamp_nanos(ts.nanos() as i64)
     }
 }
 
 #[cfg(feature = "chrono")]
-impl<T> From<chrono::prelude::DateTime<T>> for Timestamp
+impl<T> From<chrono::DateTime<T>> for Timestamp
 where
-    T: chrono::prelude::TimeZone,
+    T: chrono::TimeZone,
 {
-    fn from(date_time: chrono::prelude::DateTime<T>) -> Self {
+    fn from(date_time: chrono::DateTime<T>) -> Self {
         Timestamp::Nanoseconds(date_time.timestamp_nanos_opt().unwrap() as u128)
     }
 }
