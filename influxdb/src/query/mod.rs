@@ -88,6 +88,20 @@ where
 }
 
 #[cfg(feature = "time")]
+impl From<Timestamp> for time::UtcDateTime {
+    fn from(value: Timestamp) -> Self {
+        time::UtcDateTime::from_unix_timestamp_nanos(value.nanos() as i128).unwrap()
+    }
+}
+
+#[cfg(feature = "time")]
+impl From<time::UtcDateTime> for Timestamp {
+    fn from(value: time::UtcDateTime) -> Self {
+        Timestamp::Nanoseconds(value.unix_timestamp_nanos() as u128)
+    }
+}
+
+#[cfg(feature = "time")]
 impl From<Timestamp> for time::OffsetDateTime {
     fn from(value: Timestamp) -> Self {
         time::OffsetDateTime::from_unix_timestamp_nanos(value.nanos() as i128).unwrap()

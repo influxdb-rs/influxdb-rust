@@ -28,7 +28,7 @@ serde_derive = { version = "1.0.186", optional = true }
 serde_json = { version = "1.0.48", optional = true }
 surf = { version = "2.2.0", default-features = false, optional = true }
 thiserror = "1.0"
-time = { version = "0.3.34", optional = true }
+time = { version = "0.3.39", optional = true }
 
 [features]
 default = ["serde", "reqwest-client-rustls"]
