@@ -4,7 +4,7 @@ mod utilities;
 #[cfg(feature = "derive")]
 use influxdb::InfluxDbWriteable;
 
-use chrono::{Date, DateTime, Utc};
+use chrono::{DateTime, Utc};
 use influxdb::{Query, ReadQuery, Timestamp};
 
 #[cfg(feature = "serde")]
