@@ -16,6 +16,11 @@ repository.workspace = true
 [lints]
 workspace = true
 
+[[test]]
+name = "derive_integration_tests"
+path = "tests/derive_integration_tests.rs"
+required-features = ["chrono"]
+
 [dependencies]
 chrono = { version = "0.4.23", features = ["serde"], default-features = false, optional = true }
 futures-util = "0.3.17"

@@ -1,6 +1,4 @@
-//! Read Query Builder returned by Query::raw_read_query
-//!
-//! Can only be instantiated by using Query::raw_read_query
+//! Read Query Builder
 
 use crate::query::{QueryType, ValidQuery};
 use crate::{Error, Query};
@@ -49,7 +47,8 @@ impl Query for ReadQuery {
 
 #[cfg(test)]
 mod tests {
-    use crate::query::{Query, QueryType, ReadQuery};
+    use super::ReadQuery;
+    use crate::query::{Query, QueryType};
 
     #[test]
     fn test_read_builder_single_query() {

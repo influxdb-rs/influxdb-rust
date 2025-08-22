@@ -7,7 +7,7 @@
 //! `name`, InfluxDB provides alongside query results.
 //!
 //! ```rust,no_run
-//! use influxdb::{Client, Query};
+//! use influxdb::{Client, Query as _, ReadQuery};
 //! use serde_derive::Deserialize;
 //!
 //! #[derive(Deserialize)]
@@ -24,7 +24,7 @@
 //! # #[tokio::main]
 //! # async fn main() -> Result<(), influxdb::Error> {
 //! let client = Client::new("http://localhost:8086", "test");
-//! let query = Query::raw_read_query(
+//! let query = ReadQuery::new(
 //!     "SELECT temperature FROM /weather_[a-z]*$/ WHERE time > now() - 1m ORDER BY DESC",
 //! );
 //! let mut db_result = client.json_query(query).await?;

@@ -4,7 +4,7 @@
 //! # Examples
 //!
 //! ```rust
-//! use influxdb::{Query, Timestamp};
+//! use influxdb::{ReadQuery, Query as _, Timestamp};
 //! use influxdb::InfluxDbWriteable;
 //!
 //! let write_query = Timestamp::Nanoseconds(0).into_query("measurement")
@@ -14,7 +14,7 @@
 //!
 //! assert!(write_query.is_ok());
 //!
-//! let read_query = Query::raw_read_query("SELECT * FROM weather")
+//! let read_query = ReadQuery::new("SELECT * FROM weather")
 //!     .build();
 //!
 //! assert!(read_query.is_ok());
@@ -26,7 +26,7 @@ pub mod read_query;
 pub mod write_query;
 use std::fmt;
 
-use crate::{Error, ReadQuery, WriteQuery};
+use crate::{Error, WriteQuery};
 use consts::{
     MILLIS_PER_SECOND, MINUTES_PER_HOUR, NANOS_PER_MICRO, NANOS_PER_MILLI, SECONDS_PER_MINUTE,
 };
@@ -195,25 +195,6 @@ impl InfluxDbWriteable for Timestamp {
     }
 }
 
-impl dyn Query {
-    /// Returns a [`ReadQuery`](crate::ReadQuery) builder.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use influxdb::Query;
-    ///
-    /// Query::raw_read_query("SELECT * FROM weather"); // Is of type [`ReadQuery`](crate::ReadQuery)
-    /// ```
-    #[deprecated(since = "0.5.0", note = "Use ReadQuery::new instead")]
-    pub fn raw_read_query<S>(read_query: S) -> ReadQuery
-    where
-        S: Into<String>,
-    {
-        ReadQuery::new(read_query)
-    }
-}
-
 #[derive(Debug)]
 #[doc(hidden)]
 pub struct ValidQuery(String);
@@ -255,7 +236,6 @@ mod tests {
         MILLIS_PER_SECOND, MINUTES_PER_HOUR, NANOS_PER_MICRO, NANOS_PER_MILLI, SECONDS_PER_MINUTE,
     };
     use crate::query::{Timestamp, ValidQuery};
-    use std::convert::TryInto;
     #[test]
     fn test_equality_str() {
         assert_eq!(ValidQuery::from("hello"), "hello");
