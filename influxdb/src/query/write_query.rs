@@ -167,6 +167,13 @@ impl<Tz: chrono::TimeZone> From<chrono::DateTime<Tz>> for Type {
     }
 }
 
+#[cfg(feature = "time")]
+impl From<time::UtcDateTime> for Type {
+    fn from(dt: time::UtcDateTime) -> Self {
+        Type::SignedInteger(dt.unix_timestamp_nanos().try_into().unwrap_or(0))
+    }
+}
+
 impl<T> From<&T> for Type
 where
     T: Copy + Into<Type>,
