@@ -172,7 +172,7 @@ jobs:
             --no-default-features \
             --features "serde derive chrono time ${{matrix.http-backend}}" \
             --no-fail-fast \
-            --test integration_tests
+            --test integration_tests \
             --test integration_tests_v2
 
   # this uses cargo-tarpaulin to inspect the code coverage
