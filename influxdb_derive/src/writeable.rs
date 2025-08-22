@@ -1,6 +1,5 @@
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
-use std::convert::TryFrom;
 use syn::{
     parse::{Parse, ParseStream},
     punctuated::Punctuated,

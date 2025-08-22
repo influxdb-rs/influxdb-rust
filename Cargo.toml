@@ -6,7 +6,7 @@ resolver = "2"
 
 [workspace.package]
 authors = ["Gero Gerke <git@gero.dev>", "Dominic <git@msrd0.de>"]
-edition = "2018"
+edition = "2021"
 rust-version = "1.67.1"
 license = "MIT"
 repository = "https://github.com/influxdb-rs/influxdb-rust"
