@@ -7,7 +7,7 @@
 //! `name`, InfluxDB provides alongside query results.
 //!
 //! ```rust,no_run
-//! use influxdb::{Client, Query};
+//! use influxdb::{Client, Query as _, ReadQuery};
 //! use serde_derive::Deserialize;
 //!
 //! #[derive(Deserialize)]

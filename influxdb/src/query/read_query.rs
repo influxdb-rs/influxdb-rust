@@ -47,7 +47,8 @@ impl Query for ReadQuery {
 
 #[cfg(test)]
 mod tests {
-    use crate::query::{Query, QueryType, ReadQuery};
+    use super::ReadQuery;
+    use crate::query::{Query, QueryType};
 
     #[test]
     fn test_read_builder_single_query() {

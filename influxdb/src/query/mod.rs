@@ -4,7 +4,7 @@
 //! # Examples
 //!
 //! ```rust
-//! use influxdb::{ReadQuery, Timestamp};
+//! use influxdb::{ReadQuery, Query as _, Timestamp};
 //! use influxdb::InfluxDbWriteable;
 //!
 //! let write_query = Timestamp::Nanoseconds(0).into_query("measurement")
@@ -26,7 +26,7 @@ pub mod read_query;
 pub mod write_query;
 use std::fmt;
 
-use crate::{Error, ReadQuery, WriteQuery};
+use crate::{Error, WriteQuery};
 use consts::{
     MILLIS_PER_SECOND, MINUTES_PER_HOUR, NANOS_PER_MICRO, NANOS_PER_MILLI, SECONDS_PER_MINUTE,
 };
