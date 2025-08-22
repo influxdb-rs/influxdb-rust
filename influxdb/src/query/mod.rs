@@ -4,7 +4,7 @@
 //! # Examples
 //!
 //! ```rust
-//! use influxdb::{Query, Timestamp};
+//! use influxdb::{ReadQuery, Timestamp};
 //! use influxdb::InfluxDbWriteable;
 //!
 //! let write_query = Timestamp::Nanoseconds(0).into_query("measurement")
@@ -14,7 +14,7 @@
 //!
 //! assert!(write_query.is_ok());
 //!
-//! let read_query = Query::raw_read_query("SELECT * FROM weather")
+//! let read_query = ReadQuery::new("SELECT * FROM weather")
 //!     .build();
 //!
 //! assert!(read_query.is_ok());
@@ -192,25 +192,6 @@ pub trait InfluxDbWriteable {
 impl InfluxDbWriteable for Timestamp {
     fn into_query<I: Into<String>>(self, name: I) -> WriteQuery {
         WriteQuery::new(self, name.into())
-    }
-}
-
-impl dyn Query {
-    /// Returns a [`ReadQuery`](crate::ReadQuery) builder.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use influxdb::Query;
-    ///
-    /// Query::raw_read_query("SELECT * FROM weather"); // Is of type [`ReadQuery`](crate::ReadQuery)
-    /// ```
-    #[deprecated(since = "0.5.0", note = "Use ReadQuery::new instead")]
-    pub fn raw_read_query<S>(read_query: S) -> ReadQuery
-    where
-        S: Into<String>,
-    {
-        ReadQuery::new(read_query)
     }
 }
 
