@@ -30,9 +30,9 @@ jobs:
       - name: Update Cargo.lock
         run: cargo --config 'resolver.incompatible-rust-versions="fallback"' update
       - name: Check Clippy lints (reqwest)
-        run: cargo clippy --manifest-path influxdb/Cargo.toml --all-targets --no-default-features --features chrono,time,serde,derive,reqwest-client-rustls -- -D warnings
+        run: cargo clippy --manifest-path influxdb/Cargo.toml --locked --all-targets --no-default-features --features chrono,time,serde,derive,reqwest-client-rustls -- -D warnings
       - name: Check Clippy lints (surf)
-        run: cargo clippy --manifest-path influxdb/Cargo.toml --all-targets --no-default-features --features chrono,time,serde,derive,hyper-client -- -D warnings
+        run: cargo clippy --manifest-path influxdb/Cargo.toml --locked --all-targets --no-default-features --features chrono,time,serde,derive,hyper-client -- -D warnings
 
   # this checks that the code is formatted with rustfmt
   rustfmt:
@@ -167,21 +167,13 @@ jobs:
             target
           key: "${{runner.os}} Rust ${{steps.rust-toolchain.outputs.cachekey}}"
       - name: Run tests
-        env:
-          HTTP_BACKEND: ${{ matrix.http-backend }}
         run: |
-          set -euo pipefail
-
-          FEATURES="serde derive chrono time ${HTTP_BACKEND}"
-
-          for test in integration_tests{,_v2}
-          do
-            cargo test -p influxdb \
-              --no-default-features \
-              --features "$FEATURES" \
-              --no-fail-fast \
-              --test "$test"
-          done
+          cargo test -p influxdb \
+            --no-default-features \
+            --features "serde derive chrono time ${{matrix.http-backend}}" \
+            --no-fail-fast \
+            --test integration_tests
+            --test integration_tests_v2
 
   # this uses cargo-tarpaulin to inspect the code coverage
   coverage:
