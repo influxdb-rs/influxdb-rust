@@ -26,7 +26,6 @@
 //! use influxdb::{Client, Error, InfluxDbWriteable, ReadQuery, Timestamp};
 //!
 //! #[tokio::main]
-//! // or #[async_std::main] if you prefer
 //! async fn main() -> Result<(), Error> {
 //!     // Connect to db `test` on `http://localhost:8086`
 //!     let client = Client::new("http://localhost:8086", "test");
@@ -79,24 +78,10 @@
 #![doc = cargo_toml!(indent="\t", default-features = false, "derive", "serde", "reqwest-client-native-tls")]
 //! - **[hyper](https://github.com/hyperium/hyper)** (through reqwest), with vendored native TLS (OpenSSL)
 #![doc = cargo_toml!(indent="\t", default-features = false, "derive", "serde", "reqwest-client-native-tls-vendored")]
-//! - **[hyper](https://github.com/hyperium/hyper)** (through surf), use this if you need tokio 0.2 compatibility
-#![doc = cargo_toml!(indent="\t", default-features = false, "derive", "serde", "hyper-client")]
-//! - **[curl](https://github.com/alexcrichton/curl-rust)**, using [libcurl](https://curl.se/libcurl/)
-#![doc = cargo_toml!(indent="\t", default-features = false, "derive", "serde", "curl-client")]
-//! - **[async-h1](https://github.com/http-rs/async-h1)** with native TLS (OpenSSL)
-#![doc = cargo_toml!(indent="\t", default-features = false, "derive", "serde", "h1-client")]
-//! - **[async-h1](https://github.com/http-rs/async-h1)** with [rustls](https://github.com/ctz/rustls)
-#![doc = cargo_toml!(indent="\t", default-features = false, "derive", "serde", "h1-client-rustls")]
-//! - WebAssembly's `window.fetch`, via `web-sys` and **[wasm-bindgen](https://github.com/rustwasm/wasm-bindgen)**
-#![doc = cargo_toml!(indent="\t", default-features = false, "derive", "serde", "wasm-client")]
 //!
 //! # License
 //!
 //! [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
-#![allow(clippy::needless_doctest_main)]
-#![allow(clippy::needless_lifetimes)] // False positive in client/mod.rs query fn
-#![forbid(bare_trait_objects)]
 
 macro_rules! cargo_toml {
     (indent=$indent:literal, $firstfeat:literal $(, $feature:literal)*) => {
@@ -107,6 +92,7 @@ macro_rules! cargo_toml {
         cargo_toml_private!($indent, "default-features = false, ", $firstfeat $(, $feature)*)
     };
 }
+use cargo_toml;
 
 macro_rules! cargo_toml_private {
     ($indent:literal, $deffeats:literal, $firstfeat:literal $(, $feature:literal)*) => {
@@ -129,12 +115,7 @@ macro_rules! cargo_toml_private {
         )
     };
 }
-
-#[cfg(all(feature = "reqwest", feature = "surf"))]
-compile_error!("You need to choose between reqwest and surf; enabling both is not supported");
-
-#[cfg(not(any(feature = "reqwest", feature = "surf")))]
-compile_error!("You need to choose an http client; consider not disabling default features");
+use cargo_toml_private;
 
 mod client;
 mod error;

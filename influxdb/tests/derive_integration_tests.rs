@@ -82,7 +82,7 @@ fn test_build_nonstandard_query() {
 /// INTEGRATION TEST
 ///
 /// This integration tests that writing data and retrieving the data again is working
-#[async_std::test]
+#[tokio::test]
 #[cfg(not(tarpaulin_include))]
 async fn test_derive_simple_write() {
     const TEST_NAME: &str = "test_derive_simple_write";
@@ -113,7 +113,7 @@ async fn test_derive_simple_write() {
 /// This integration tests that writing data and retrieving the data again is working
 #[cfg(feature = "derive")]
 #[cfg(feature = "serde")]
-#[async_std::test]
+#[tokio::test]
 #[cfg(not(tarpaulin_include))]
 async fn test_write_and_read_option() {
     const TEST_NAME: &str = "test_write_and_read_option";
@@ -135,7 +135,7 @@ async fn test_write_and_read_option() {
 
             let query = ReadQuery::new("SELECT time, pressure, wind_strength FROM weather_reading");
             let result = client.json_query(query).await.and_then(|mut db_result| {
-                println!("{:?}", db_result);
+                println!("{db_result:?}");
                 db_result.deserialize_next::<WeatherReadingWithoutIgnored>()
             });
             assert_result_ok(&result);

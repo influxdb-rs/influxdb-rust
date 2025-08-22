@@ -9,9 +9,8 @@ use influxdb::{Client, Error, ReadQuery, Timestamp};
 
 /// INTEGRATION TEST
 ///
-
 /// This test case tests the Authentication
-#[async_std::test]
+#[tokio::test]
 #[cfg(not(tarpaulin))]
 async fn test_authed_write_and_read() {
     run_test(
@@ -45,7 +44,7 @@ async fn test_authed_write_and_read() {
 /// INTEGRATION TEST
 ///
 /// This test case tests the Authentication
-#[async_std::test]
+#[tokio::test]
 #[cfg(not(tarpaulin))]
 async fn test_wrong_authed_write_and_read() {
     use http::StatusCode;
@@ -85,7 +84,7 @@ async fn test_wrong_authed_write_and_read() {
 /// INTEGRATION TEST
 ///
 /// This test case tests the Authentication
-#[async_std::test]
+#[tokio::test]
 #[cfg(not(tarpaulin))]
 async fn test_non_authed_write_and_read() {
     use http::StatusCode;

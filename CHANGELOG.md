@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+ - `<dyn Query>::raw_read_query`, deprecated in 0.5.0, was removed
+
 ## [0.7.2] - 2024-02-14
 
 ### Fixed

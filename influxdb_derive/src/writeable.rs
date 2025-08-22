@@ -1,6 +1,5 @@
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
-use std::convert::TryFrom;
 use syn::{
     parse::{Parse, ParseStream},
     punctuated::Punctuated,
@@ -23,6 +22,7 @@ mod kw {
     custom_keyword!(ignore);
 }
 
+#[allow(dead_code)] // TODO do we need to store the keywords?
 enum FieldAttr {
     Time(kw::time),
     Tag(kw::tag),
