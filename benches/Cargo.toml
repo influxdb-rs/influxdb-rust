@@ -10,7 +10,7 @@ edition = "2018"
 chrono = { version = "0.4.11", features = ["serde"] }
 futures = "0.3.4"
 influxdb = { path = "../influxdb", features = ["derive"] }
-tokio = { version =  "0.2.22", features = ["macros", "rt-threaded", "sync"] }
+tokio = { version =  "1.38.0", features = ["macros", "rt-multi-thread", "sync"] }
 
 [[bench]]
 name = "client"
