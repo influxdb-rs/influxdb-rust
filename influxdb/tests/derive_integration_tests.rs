@@ -23,6 +23,20 @@ struct WeatherReading {
     wind_strength: Option<u64>,
 }
 
+#[derive(Debug, PartialEq)]
+#[cfg_attr(feature = "derive", derive(InfluxDbWriteable))]
+struct WeatherReadingWithNonstandardTime {
+    #[influxdb(time)]
+    reading_time: DateTime<Utc>,
+    #[influxdb(ignore)]
+    time: DateTime<Utc>,
+    #[influxdb(ignore)]
+    humidity: i32,
+    pressure: i32,
+    #[influxdb(tag)]
+    wind_strength: Option<u64>,
+}
+
 #[derive(Debug)]
 #[cfg_attr(feature = "serde", derive(Deserialize))]
 struct WeatherReadingWithoutIgnored {
@@ -47,11 +61,28 @@ fn test_build_query() {
     );
 }
 
+#[test]
+fn test_build_nonstandard_query() {
+    let weather_reading = WeatherReadingWithNonstandardTime {
+        reading_time: Timestamp::Hours(1).into(),
+        time: Timestamp::Hours(1).into(),
+        humidity: 30,
+        pressure: 100,
+        wind_strength: Some(5),
+    };
+    let query = weather_reading.into_query("weather_reading");
+    let query = query.build().unwrap();
+    assert_eq!(
+        query.get(),
+        "weather_reading,wind_strength=5 pressure=100i 3600000000000"
+    );
+}
+
 #[cfg(feature = "derive")]
 /// INTEGRATION TEST
 ///
 /// This integration tests that writing data and retrieving the data again is working
-#[async_std::test]
+#[tokio::test]
 #[cfg(not(tarpaulin_include))]
 async fn test_derive_simple_write() {
     const TEST_NAME: &str = "test_derive_simple_write";
@@ -82,7 +113,7 @@ async fn test_derive_simple_write() {
 /// This integration tests that writing data and retrieving the data again is working
 #[cfg(feature = "derive")]
 #[cfg(feature = "serde")]
-#[async_std::test]
+#[tokio::test]
 #[cfg(not(tarpaulin_include))]
 async fn test_write_and_read_option() {
     const TEST_NAME: &str = "test_write_and_read_option";

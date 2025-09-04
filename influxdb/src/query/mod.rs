@@ -4,7 +4,7 @@
 //! # Examples
 //!
 //! ```rust
-//! use influxdb::{Query, Timestamp};
+//! use influxdb::{ReadQuery, Query as _, Timestamp};
 //! use influxdb::InfluxDbWriteable;
 //!
 //! let write_query = Timestamp::Nanoseconds(0).into_query("measurement")
@@ -14,14 +14,11 @@
 //!
 //! assert!(write_query.is_ok());
 //!
-//! let read_query = Query::raw_read_query("SELECT * FROM weather")
+//! let read_query = ReadQuery::new("SELECT * FROM weather")
 //!     .build();
 //!
 //! assert!(read_query.is_ok());
 //! ```
-
-use chrono::prelude::{DateTime, TimeZone, Utc};
-use std::convert::TryInto;
 
 pub mod consts;
 mod line_proto_term;
@@ -29,7 +26,7 @@ pub mod read_query;
 pub mod write_query;
 use std::fmt;
 
-use crate::{Error, ReadQuery, WriteQuery};
+use crate::{Error, WriteQuery};
 use consts::{
     MILLIS_PER_SECOND, MINUTES_PER_HOUR, NANOS_PER_MICRO, NANOS_PER_MILLI, SECONDS_PER_MINUTE,
 };
@@ -47,6 +44,21 @@ pub enum Timestamp {
     Hours(u128),
 }
 
+impl Timestamp {
+    pub fn nanos(&self) -> u128 {
+        match self {
+            Timestamp::Hours(h) => {
+                h * MINUTES_PER_HOUR * SECONDS_PER_MINUTE * MILLIS_PER_SECOND * NANOS_PER_MILLI
+            }
+            Timestamp::Minutes(m) => m * SECONDS_PER_MINUTE * MILLIS_PER_SECOND * NANOS_PER_MILLI,
+            Timestamp::Seconds(s) => s * MILLIS_PER_SECOND * NANOS_PER_MILLI,
+            Timestamp::Milliseconds(millis) => millis * NANOS_PER_MILLI,
+            Timestamp::Microseconds(micros) => micros * NANOS_PER_MICRO,
+            Timestamp::Nanoseconds(nanos) => *nanos,
+        }
+    }
+}
+
 impl fmt::Display for Timestamp {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         use Timestamp::*;
@@ -57,41 +69,49 @@ impl fmt::Display for Timestamp {
     }
 }
 
-impl From<Timestamp> for DateTime<Utc> {
-    fn from(ts: Timestamp) -> DateTime<Utc> {
-        match ts {
-            Timestamp::Hours(h) => {
-                let nanos =
-                    h * MINUTES_PER_HOUR * SECONDS_PER_MINUTE * MILLIS_PER_SECOND * NANOS_PER_MILLI;
-                Utc.timestamp_nanos(nanos.try_into().unwrap())
-            }
-            Timestamp::Minutes(m) => {
-                let nanos = m * SECONDS_PER_MINUTE * MILLIS_PER_SECOND * NANOS_PER_MILLI;
-                Utc.timestamp_nanos(nanos.try_into().unwrap())
-            }
-            Timestamp::Seconds(s) => {
-                let nanos = s * MILLIS_PER_SECOND * NANOS_PER_MILLI;
-                Utc.timestamp_nanos(nanos.try_into().unwrap())
-            }
-            Timestamp::Milliseconds(millis) => {
-                let nanos = millis * NANOS_PER_MILLI;
-                Utc.timestamp_nanos(nanos.try_into().unwrap())
-            }
-            Timestamp::Nanoseconds(nanos) => Utc.timestamp_nanos(nanos.try_into().unwrap()),
-            Timestamp::Microseconds(micros) => {
-                let nanos = micros * NANOS_PER_MICRO;
-                Utc.timestamp_nanos(nanos.try_into().unwrap())
-            }
-        }
+#[cfg(feature = "chrono")]
+impl From<Timestamp> for chrono::DateTime<chrono::Utc> {
+    fn from(ts: Timestamp) -> chrono::DateTime<chrono::Utc> {
+        use chrono::TimeZone as _;
+        chrono::Utc.timestamp_nanos(ts.nanos() as i64)
     }
 }
 
-impl<T> From<DateTime<T>> for Timestamp
+#[cfg(feature = "chrono")]
+impl<T> From<chrono::DateTime<T>> for Timestamp
 where
-    T: TimeZone,
+    T: chrono::TimeZone,
 {
-    fn from(date_time: DateTime<T>) -> Self {
+    fn from(date_time: chrono::DateTime<T>) -> Self {
         Timestamp::Nanoseconds(date_time.timestamp_nanos_opt().unwrap() as u128)
+    }
+}
+
+#[cfg(feature = "time")]
+impl From<Timestamp> for time::UtcDateTime {
+    fn from(value: Timestamp) -> Self {
+        time::UtcDateTime::from_unix_timestamp_nanos(value.nanos() as i128).unwrap()
+    }
+}
+
+#[cfg(feature = "time")]
+impl From<time::UtcDateTime> for Timestamp {
+    fn from(value: time::UtcDateTime) -> Self {
+        Timestamp::Nanoseconds(value.unix_timestamp_nanos() as u128)
+    }
+}
+
+#[cfg(feature = "time")]
+impl From<Timestamp> for time::OffsetDateTime {
+    fn from(value: Timestamp) -> Self {
+        time::OffsetDateTime::from_unix_timestamp_nanos(value.nanos() as i128).unwrap()
+    }
+}
+
+#[cfg(feature = "time")]
+impl From<time::OffsetDateTime> for Timestamp {
+    fn from(value: time::OffsetDateTime) -> Self {
+        Timestamp::Nanoseconds(value.unix_timestamp_nanos() as u128)
     }
 }
 
@@ -175,25 +195,6 @@ impl InfluxDbWriteable for Timestamp {
     }
 }
 
-impl dyn Query {
-    /// Returns a [`ReadQuery`](crate::ReadQuery) builder.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use influxdb::Query;
-    ///
-    /// Query::raw_read_query("SELECT * FROM weather"); // Is of type [`ReadQuery`](crate::ReadQuery)
-    /// ```
-    #[deprecated(since = "0.5.0", note = "Use ReadQuery::new instead")]
-    pub fn raw_read_query<S>(read_query: S) -> ReadQuery
-    where
-        S: Into<String>,
-    {
-        ReadQuery::new(read_query)
-    }
-}
-
 #[derive(Debug)]
 #[doc(hidden)]
 pub struct ValidQuery(String);
@@ -235,8 +236,6 @@ mod tests {
         MILLIS_PER_SECOND, MINUTES_PER_HOUR, NANOS_PER_MICRO, NANOS_PER_MILLI, SECONDS_PER_MINUTE,
     };
     use crate::query::{Timestamp, ValidQuery};
-    use chrono::prelude::{DateTime, TimeZone, Utc};
-    use std::convert::TryInto;
     #[test]
     fn test_equality_str() {
         assert_eq!(ValidQuery::from("hello"), "hello");
@@ -252,8 +251,10 @@ mod tests {
     fn test_format_for_timestamp_else() {
         assert!(format!("{}", Timestamp::Nanoseconds(100)) == "100");
     }
+    #[cfg(feature = "chrono")]
     #[test]
     fn test_chrono_datetime_from_timestamp_hours() {
+        use chrono::prelude::*;
         let datetime_from_timestamp: DateTime<Utc> = Timestamp::Hours(2).into();
         assert_eq!(
             Utc.timestamp_nanos(
@@ -264,8 +265,10 @@ mod tests {
             datetime_from_timestamp
         )
     }
+    #[cfg(feature = "chrono")]
     #[test]
     fn test_chrono_datetime_from_timestamp_minutes() {
+        use chrono::prelude::*;
         let datetime_from_timestamp: DateTime<Utc> = Timestamp::Minutes(2).into();
         assert_eq!(
             Utc.timestamp_nanos(
@@ -276,8 +279,10 @@ mod tests {
             datetime_from_timestamp
         )
     }
+    #[cfg(feature = "chrono")]
     #[test]
     fn test_chrono_datetime_from_timestamp_seconds() {
+        use chrono::prelude::*;
         let datetime_from_timestamp: DateTime<Utc> = Timestamp::Seconds(2).into();
         assert_eq!(
             Utc.timestamp_nanos(
@@ -288,29 +293,37 @@ mod tests {
             datetime_from_timestamp
         )
     }
+    #[cfg(feature = "chrono")]
     #[test]
     fn test_chrono_datetime_from_timestamp_millis() {
+        use chrono::prelude::*;
         let datetime_from_timestamp: DateTime<Utc> = Timestamp::Milliseconds(2).into();
         assert_eq!(
             Utc.timestamp_nanos((2 * NANOS_PER_MILLI).try_into().unwrap()),
             datetime_from_timestamp
         )
     }
+    #[cfg(feature = "chrono")]
     #[test]
     fn test_chrono_datetime_from_timestamp_nanos() {
+        use chrono::prelude::*;
         let datetime_from_timestamp: DateTime<Utc> = Timestamp::Nanoseconds(1).into();
         assert_eq!(Utc.timestamp_nanos(1), datetime_from_timestamp)
     }
+    #[cfg(feature = "chrono")]
     #[test]
     fn test_chrono_datetime_from_timestamp_micros() {
+        use chrono::prelude::*;
         let datetime_from_timestamp: DateTime<Utc> = Timestamp::Microseconds(2).into();
         assert_eq!(
             Utc.timestamp_nanos((2 * NANOS_PER_MICRO).try_into().unwrap()),
             datetime_from_timestamp
         )
     }
+    #[cfg(feature = "chrono")]
     #[test]
     fn test_timestamp_from_chrono_date() {
+        use chrono::prelude::*;
         let timestamp_from_datetime: Timestamp = Utc
             .with_ymd_and_hms(1970, 1, 1, 0, 0, 1)
             .single()

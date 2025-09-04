@@ -7,7 +7,7 @@
 //! `name`, InfluxDB provides alongside query results.
 //!
 //! ```rust,no_run
-//! use influxdb::{Client, Query};
+//! use influxdb::{Client, Query as _, ReadQuery};
 //! use serde_derive::Deserialize;
 //!
 //! #[derive(Deserialize)]
@@ -21,10 +21,10 @@
 //!     weather: WeatherWithoutCityName,
 //! }
 //!
-//! # #[async_std::main]
+//! # #[tokio::main]
 //! # async fn main() -> Result<(), influxdb::Error> {
 //! let client = Client::new("http://localhost:8086", "test");
-//! let query = Query::raw_read_query(
+//! let query = ReadQuery::new(
 //!     "SELECT temperature FROM /weather_[a-z]*$/ WHERE time > now() - 1m ORDER BY DESC",
 //! );
 //! let mut db_result = client.json_query(query).await?;
@@ -145,11 +145,6 @@ impl<V> Client<V, reqwest::Client> {
         }
         let request_builder = request_builder.query(&parameters);
 
-        #[cfg(feature = "surf")]
-        let request_builder = request_builder.map_err(|err| Error::UrlConstructionError {
-            error: err.to_string(),
-        })?;
-
         let res = request_builder
             .send()
             .await
@@ -158,12 +153,7 @@ impl<V> Client<V, reqwest::Client> {
             })?;
         check_status(&res)?;
 
-        #[cfg(feature = "reqwest")]
         let body = res.bytes();
-        #[cfg(feature = "surf")]
-        let mut res = res;
-        #[cfg(feature = "surf")]
-        let body = res.body_bytes();
 
         let body = body.await.map_err(|err| Error::ProtocolError {
             error: err.to_string(),

@@ -16,14 +16,11 @@
 //! ```
 
 use futures_util::TryFutureExt;
-#[cfg(feature = "reqwest")]
 use reqwest::{Client as HttpClient, RequestBuilder, Response as HttpResponse};
 use std::collections::{BTreeMap, HashMap};
 use std::fmt::{self, Debug, Formatter};
-use std::sync::Arc;
-#[cfg(feature = "surf")]
-use surf::{Client as HttpClient, RequestBuilder, Response as HttpResponse};
 use std::marker::PhantomData;
+use std::sync::Arc;
 
 use crate::query::QueryType;
 use crate::Error;
@@ -181,7 +178,6 @@ impl<V> Client<V, reqwest::Client> {
         const BUILD_HEADER: &str = "X-Influxdb-Build";
         const VERSION_HEADER: &str = "X-Influxdb-Version";
 
-        #[cfg(feature = "reqwest")]
         let (build, version) = {
             let hdrs = res.headers();
             (
@@ -190,11 +186,6 @@ impl<V> Client<V, reqwest::Client> {
                     .and_then(|value| value.to_str().ok()),
             )
         };
-
-        #[cfg(feature = "surf")]
-        let build = res.header(BUILD_HEADER).map(|value| value.as_str());
-        #[cfg(feature = "surf")]
-        let version = res.header(VERSION_HEADER).map(|value| value.as_str());
 
         Ok((build.unwrap().to_owned(), version.unwrap().to_owned()))
     }
@@ -214,7 +205,7 @@ impl<V> Client<V, reqwest::Client> {
     /// use influxdb::InfluxDbWriteable;
     /// use std::time::{SystemTime, UNIX_EPOCH};
     ///
-    /// # #[async_std::main]
+    /// # #[tokio::main]
     /// # async fn main() -> Result<(), influxdb::Error> {
     /// let start = SystemTime::now();
     /// let since_the_epoch = start
@@ -267,11 +258,6 @@ impl<V> Client<V, reqwest::Client> {
             }
         };
 
-        #[cfg(feature = "surf")]
-        let request_builder = request_builder.map_err(|err| Error::UrlConstructionError {
-            error: err.to_string(),
-        })?;
-
         let res = self
             .auth_if_needed(request_builder)
             .send()
@@ -281,12 +267,7 @@ impl<V> Client<V, reqwest::Client> {
             .await?;
         check_status(&res)?;
 
-        #[cfg(feature = "reqwest")]
         let body = res.text();
-        #[cfg(feature = "surf")]
-        let mut res = res;
-        #[cfg(feature = "surf")]
-        let body = res.body_string();
 
         let s = body.await.map_err(|_| Error::DeserializationError {
             error: "response could not be converted to UTF-8".into(),
@@ -329,7 +310,8 @@ mod tests {
 
     #[test]
     fn test_client_debug_redacted_password() {
-        let client: Client<InfluxVersion1> = Client::new("https://localhost:8086", "db").with_auth("user", "pass");
+        let client: Client<InfluxVersion1> =
+            Client::new("https://localhost:8086", "db").with_auth("user", "pass");
         let actual = format!("{client:#?}");
         let expected = indoc! { r#"
             Client {

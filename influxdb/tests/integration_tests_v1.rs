@@ -5,7 +5,7 @@ mod utilities;
 
 use serde_derive::Deserialize;
 use utilities::{
-    assert_result_err, assert_result_ok, run_test, create_client_v1, create_db_v1, delete_db_v1
+    assert_result_err, assert_result_ok, create_client_v1, create_db_v1, delete_db_v1, run_test,
 };
 
 use influxdb::InfluxDbWriteable;
@@ -13,28 +13,9 @@ use influxdb::{Client, Error, ReadQuery, Timestamp};
 
 /// INTEGRATION TEST
 ///
-/// This test case tests whether the InfluxDB server can be connected to and gathers info about it - tested with async_std
-#[async_std::test]
-#[cfg(not(tarpaulin_include))]
-async fn test_ping_influx_db_async_std() {
-    use influxdb::InfluxVersion1;
-
-    let client: Client<InfluxVersion1> = create_client_v1("notusedhere");
-    let result = client.ping().await;
-    assert_result_ok(&result);
-
-    let (build, version) = result.unwrap();
-    assert!(!build.is_empty(), "Build should not be empty");
-    assert!(!version.is_empty(), "Build should not be empty");
-
-    println!("build: {build} version: {version}");
-}
-
-/// INTEGRATION TEST
-///
 /// This test case tests whether the InfluxDB server can be connected to and gathers info about it - tested with tokio 1.0
 #[tokio::test]
-#[cfg(not(any(tarpaulin_include, feature = "hyper-client")))]
+#[cfg(not(any(tarpaulin_include)))]
 async fn test_ping_influx_db_tokio() {
     let client = create_client_v1("notusedhere");
     let result = client.ping().await;
@@ -50,7 +31,7 @@ async fn test_ping_influx_db_tokio() {
 /// INTEGRATION TEST
 ///
 /// This test case tests connection error
-#[async_std::test]
+#[tokio::test]
 #[cfg(not(tarpaulin_include))]
 async fn test_connection_error() {
     use influxdb::InfluxVersion1;
@@ -73,7 +54,7 @@ async fn test_connection_error() {
 /// INTEGRATION TEST
 ///
 /// This test case tests the Authentication
-#[async_std::test]
+#[tokio::test]
 #[cfg(not(tarpaulin_include))]
 async fn test_authed_write_and_read() {
     const TEST_NAME: &str = "test_authed_write_and_read";
@@ -125,7 +106,7 @@ async fn test_authed_write_and_read() {
 /// INTEGRATION TEST
 ///
 /// This test case tests the Authentication
-#[async_std::test]
+#[tokio::test]
 #[cfg(not(tarpaulin_include))]
 async fn test_wrong_authed_write_and_read() {
     use http::StatusCode;
@@ -201,7 +182,7 @@ async fn test_wrong_authed_write_and_read() {
 /// INTEGRATION TEST
 ///
 /// This test case tests the Authentication
-#[async_std::test]
+#[tokio::test]
 #[cfg(not(tarpaulin_include))]
 async fn test_non_authed_write_and_read() {
     use http::StatusCode;
@@ -219,7 +200,8 @@ async fn test_non_authed_write_and_read() {
                 .query(ReadQuery::new(query))
                 .await
                 .expect("could not setup db");
-            let non_authed_client: Client<InfluxVersion1> = Client::new("http://127.0.0.1:9086", TEST_NAME);
+            let non_authed_client: Client<InfluxVersion1> =
+                Client::new("http://127.0.0.1:9086", TEST_NAME);
             let write_query = Timestamp::Hours(11)
                 .into_query("weather")
                 .add_field("temperature", 82);
@@ -263,7 +245,7 @@ async fn test_non_authed_write_and_read() {
 /// INTEGRATION TEST
 ///
 /// This integration tests that writing data and retrieving the data again is working
-#[async_std::test]
+#[tokio::test]
 #[cfg(not(tarpaulin_include))]
 async fn test_write_and_read_field() {
     const TEST_NAME: &str = "test_write_field";
@@ -287,7 +269,9 @@ async fn test_write_and_read_field() {
             );
         },
         || async move {
-            delete_db_v1(TEST_NAME).await.expect("could not clean up db");
+            delete_db_v1(TEST_NAME)
+                .await
+                .expect("could not clean up db");
         },
     )
     .await;
@@ -296,7 +280,7 @@ async fn test_write_and_read_field() {
 /// INTEGRATION TEST
 ///
 /// This test case tests the authentication on json reads
-#[async_std::test]
+#[tokio::test]
 #[cfg(feature = "serde")]
 #[cfg(not(tarpaulin_include))]
 async fn test_json_non_authed_read() {
@@ -315,7 +299,8 @@ async fn test_json_non_authed_read() {
                 .query(ReadQuery::new(query))
                 .await
                 .expect("could not setup db");
-            let non_authed_client: Client<InfluxVersion1> = Client::new("http://127.0.0.1:9086", TEST_NAME);
+            let non_authed_client: Client<InfluxVersion1> =
+                Client::new("http://127.0.0.1:9086", TEST_NAME);
 
             let read_query = ReadQuery::new("SELECT * FROM weather");
             let read_result = non_authed_client.json_query(read_query).await;
@@ -347,7 +332,7 @@ async fn test_json_non_authed_read() {
 /// INTEGRATION TEST
 ///
 /// This test case tests the authentication on json reads
-#[async_std::test]
+#[tokio::test]
 #[cfg(feature = "serde")]
 #[cfg(not(tarpaulin_include))]
 async fn test_json_authed_read() {
@@ -388,7 +373,7 @@ async fn test_json_authed_read() {
 /// INTEGRATION TEST
 ///
 /// This integration tests that writing data and retrieving the data again is working
-#[async_std::test]
+#[tokio::test]
 #[cfg(feature = "serde")]
 #[cfg(not(tarpaulin_include))]
 async fn test_write_and_read_option() {
@@ -447,7 +432,7 @@ async fn test_write_and_read_option() {
 ///
 /// This test case tests whether JSON can be decoded from a InfluxDB response and whether that JSON
 /// is equal to the data which was written to the database
-#[async_std::test]
+#[tokio::test]
 #[cfg(feature = "serde")]
 #[cfg(not(tarpaulin_include))]
 async fn test_json_query() {
@@ -487,7 +472,9 @@ async fn test_json_query() {
             );
         },
         || async move {
-            delete_db_v1(TEST_NAME).await.expect("could not clean up db");
+            delete_db_v1(TEST_NAME)
+                .await
+                .expect("could not clean up db");
         },
     )
     .await;
@@ -497,7 +484,7 @@ async fn test_json_query() {
 ///
 /// This test case tests whether the response to a GROUP BY can be parsed by
 /// deserialize_next_tagged into a tags struct
-#[async_std::test]
+#[tokio::test]
 #[cfg(feature = "serde")]
 #[cfg(not(tarpaulin_include))]
 async fn test_json_query_tagged() {
@@ -549,7 +536,9 @@ async fn test_json_query_tagged() {
             );
         },
         || async move {
-            delete_db_v1(TEST_NAME).await.expect("could not clean up db");
+            delete_db_v1(TEST_NAME)
+                .await
+                .expect("could not clean up db");
         },
     )
     .await;
@@ -561,10 +550,7 @@ async fn test_json_query_tagged() {
 /// is equal to the data which was written to the database
 /// (tested with tokio)
 #[tokio::test]
-#[cfg(all(
-    feature = "serde",
-    not(any(tarpaulin_include, feature = "hyper-client"))
-))]
+#[cfg(all(feature = "serde", not(any(tarpaulin_include))))]
 async fn test_json_query_vec() {
     const TEST_NAME: &str = "test_json_query_vec";
 
@@ -602,7 +588,9 @@ async fn test_json_query_vec() {
             assert_eq!(result.unwrap().series[0].values.len(), 3);
         },
         || async move {
-            delete_db_v1(TEST_NAME).await.expect("could not clean up db");
+            delete_db_v1(TEST_NAME)
+                .await
+                .expect("could not clean up db");
         },
     )
     .await;
@@ -611,7 +599,7 @@ async fn test_json_query_vec() {
 /// INTEGRATION TEST
 ///
 /// This integration test tests whether using the wrong query method fails building the query
-#[async_std::test]
+#[tokio::test]
 #[cfg(feature = "serde")]
 #[cfg(not(tarpaulin_include))]
 async fn test_serde_multi_query() {
@@ -676,7 +664,9 @@ async fn test_serde_multi_query() {
             );
         },
         || async move {
-            delete_db_v1(TEST_NAME).await.expect("could not clean up db");
+            delete_db_v1(TEST_NAME)
+                .await
+                .expect("could not clean up db");
         },
     )
     .await;
@@ -685,7 +675,7 @@ async fn test_serde_multi_query() {
 /// INTEGRATION TEST
 ///
 /// This integration test tests whether using the wrong query method fails building the query
-#[async_std::test]
+#[tokio::test]
 #[cfg(feature = "serde")]
 #[cfg(not(tarpaulin_include))]
 async fn test_wrong_query_errors() {
