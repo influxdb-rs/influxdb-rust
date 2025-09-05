@@ -1,7 +1,6 @@
 use chrono::{DateTime, Utc};
 use influxdb::Error;
 use influxdb::InfluxDbWriteable;
-use influxdb::InfluxVersion1;
 use influxdb::{Client, ReadQuery};
 use std::sync::Arc;
 use std::time::Instant;
@@ -23,7 +22,7 @@ async fn main() {
     let number_of_total_requests = 20000;
     let concurrent_requests = 1000;
 
-    let client: Client<InfluxVersion1> = Client::new(url, db_name);
+    let client = Client::new(url, db_name);
     let concurrency_limit = Arc::new(Semaphore::new(concurrent_requests));
 
     prepare_influxdb(&client, db_name).await;
@@ -65,7 +64,7 @@ async fn main() {
     );
 }
 
-async fn prepare_influxdb<V>(client: &Client<V>, db_name: &str) {
+async fn prepare_influxdb(client: &Client, db_name: &str) {
     let create_db_stmt = format!("CREATE DATABASE {}", db_name);
     client
         .query(&ReadQuery::new(create_db_stmt))

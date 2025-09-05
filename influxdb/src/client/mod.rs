@@ -19,31 +19,28 @@ use futures_util::TryFutureExt;
 use reqwest::{Client as HttpClient, RequestBuilder, Response as HttpResponse};
 use std::collections::{BTreeMap, HashMap};
 use std::fmt::{self, Debug, Formatter};
-use std::marker::PhantomData;
 use std::sync::Arc;
 
 use crate::query::QueryType;
 use crate::Error;
 use crate::Query;
 
-/// Marker type for InfluxDB Version 1
-#[derive(Clone)]
-pub struct InfluxVersion1;
-/// Marker type for InfluxDB Version 2
-#[derive(Clone)]
-pub struct InfluxVersion2;
-/// Marker type for InfluxDB Version 3
-#[derive(Clone)]
-pub struct InfluxVersion3;
+#[derive(Clone, Debug, PartialEq, Eq)]
+#[non_exhaustive]
+pub enum InfluxDbVersion {
+    V1,
+    V2,
+    V3,
+}
 
 #[derive(Clone)]
 /// Internal Representation of a Client
-pub struct Client<V, H = reqwest::Client> {
+pub struct Client<H = reqwest::Client> {
     pub(crate) url: Arc<String>,
     pub(crate) parameters: Arc<HashMap<&'static str, String>>,
     pub(crate) token: Option<String>,
     pub(crate) client: H,
-    _version: PhantomData<V>,
+    pub(crate) version: InfluxDbVersion,
 }
 
 struct RedactPassword<'a>(&'a HashMap<&'static str, String>);
@@ -62,17 +59,18 @@ impl<'a> Debug for RedactPassword<'a> {
     }
 }
 
-impl<V, H> Debug for Client<V, H> {
+impl<H> Debug for Client<H> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         f.debug_struct("Client")
             .field("url", &self.url)
             .field("parameters", &RedactPassword(&self.parameters))
+            .field("version", &self.version)
             .finish_non_exhaustive()
     }
 }
 
-impl<V> Client<V, reqwest::Client> {
-    /// Instantiates a new [`Client`](crate::Client)
+impl Client<reqwest::Client> {
+    /// Instantiates a new [`Client`](crate::Client) for InfluxDB v1.
     ///
     /// # Arguments
     ///
@@ -94,12 +92,78 @@ impl<V> Client<V, reqwest::Client> {
     {
         let mut parameters = HashMap::<&str, String>::new();
         parameters.insert("db", database.into());
-        Client {
+        Self {
             url: Arc::new(url.into()),
             parameters: Arc::new(parameters),
             client: HttpClient::new(),
             token: None,
-            _version: PhantomData,
+            version: InfluxDbVersion::V1,
+        }
+    }
+
+    /// Instantiates a new [`Client`](crate::Client) for InfluxDB v2.
+    ///
+    /// # Arguments
+    ///
+    ///  * `url`: The URL where InfluxDB is running (ex. `http://localhost:8086`).
+    ///  * `token`: The InfluxDB v2 authentication token.
+    ///  * `bucket`: The InfluxDB v2 bucket.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use influxdb::Client;
+    ///
+    /// let _client = Client::v2("http://localhost:8086", "some-token", "my-bucket");
+    /// ```
+    #[must_use = "Creating a client is pointless unless you use it"]
+    pub fn v2<S1, S2, S3>(url: S1, token: S2, bucket: S3) -> Self
+    where
+        S1: Into<String>,
+        S2: Into<String>,
+        S3: Into<String>,
+    {
+        let mut parameters = HashMap::<&str, String>::new();
+        parameters.insert("bucket", bucket.into());
+        Self {
+            url: Arc::new(url.into()),
+            parameters: Arc::new(parameters),
+            client: HttpClient::new(),
+            token: Some(token.into()),
+            version: InfluxDbVersion::V2,
+        }
+    }
+
+    /// Instantiates a new [`Client`](crate::Client) for InfluxDB v3.
+    ///
+    /// # Arguments
+    ///
+    ///  * `url`: The URL where InfluxDB is running (ex. `http://localhost:8086`).
+    ///  * `token`: The InfluxDB v3 authentication token.
+    ///  * `database`: The InfluxDB v3 database.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use influxdb::Client;
+    ///
+    /// let _client = Client::v3("http://localhost:8086", "some-token", "my-database");
+    /// ```
+    #[must_use = "Creating a client is pointless unless you use it"]
+    pub fn v3<S1, S2, S3>(url: S1, token: S2, database: S3) -> Self
+    where
+        S1: Into<String>,
+        S2: Into<String>,
+        S3: Into<String>,
+    {
+        let mut parameters = HashMap::<&str, String>::new();
+        parameters.insert("db", database.into());
+        Self {
+            url: Arc::new(url.into()),
+            parameters: Arc::new(parameters),
+            client: HttpClient::new(),
+            token: Some(token.into()),
+            version: InfluxDbVersion::V3,
         }
     }
 
@@ -302,16 +366,12 @@ pub(crate) fn check_status(res: &HttpResponse) -> Result<(), Error> {
 
 #[cfg(test)]
 mod tests {
-
-    use crate::client::InfluxVersion1;
-
-    use super::Client;
+    use super::{Client, InfluxDbVersion};
     use indoc::indoc;
 
     #[test]
     fn test_client_debug_redacted_password() {
-        let client: Client<InfluxVersion1> =
-            Client::new("https://localhost:8086", "db").with_auth("user", "pass");
+        let client = Client::new("https://localhost:8086", "db").with_auth("user", "pass");
         let actual = format!("{client:#?}");
         let expected = indoc! { r#"
             Client {
@@ -321,6 +381,7 @@ mod tests {
                     "p": "<redacted>",
                     "u": "user",
                 },
+                version: V1,
                 ..
             }
         "# };
@@ -329,14 +390,14 @@ mod tests {
 
     #[test]
     fn test_fn_database() {
-        let client: Client<InfluxVersion1> = Client::new("http://localhost:8068", "database");
+        let client = Client::new("http://localhost:8068", "database");
         assert_eq!(client.database_name(), "database");
         assert_eq!(client.database_url(), "http://localhost:8068");
     }
 
     #[test]
     fn test_with_auth() {
-        let client: Client<InfluxVersion1> = Client::new("http://localhost:8068", "database");
+        let client = Client::new("http://localhost:8068", "database");
         assert_eq!(client.parameters.len(), 1);
         assert_eq!(client.parameters.get("db").unwrap(), "database");
 
@@ -346,10 +407,23 @@ mod tests {
         assert_eq!(with_auth.parameters.get("u").unwrap(), "username");
         assert_eq!(with_auth.parameters.get("p").unwrap(), "password");
 
-        let client: Client<InfluxVersion1> = Client::new("http://localhost:8068", "database");
+        let client = Client::new("http://localhost:8068", "database");
         let with_auth = client.with_token("token");
         assert_eq!(with_auth.parameters.len(), 1);
         assert_eq!(with_auth.parameters.get("db").unwrap(), "database");
         assert_eq!(with_auth.token.unwrap(), "token");
+    }
+
+    #[test]
+    fn test_v2_and_v3_clients() {
+        let v2_client = Client::v2("http://localhost:8086", "token", "bucket");
+        assert_eq!(v2_client.version, InfluxDbVersion::V2);
+        assert_eq!(v2_client.token.unwrap(), "token");
+        assert_eq!(v2_client.parameters.get("bucket").unwrap(), "bucket");
+
+        let v3_client = Client::v3("http://localhost:8086", "token", "database");
+        assert_eq!(v3_client.version, InfluxDbVersion::V3);
+        assert_eq!(v3_client.token.unwrap(), "token");
+        assert_eq!(v3_client.parameters.get("db").unwrap(), "database");
     }
 }

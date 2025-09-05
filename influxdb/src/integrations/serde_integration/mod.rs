@@ -120,7 +120,7 @@ pub struct TaggedSeries<TAG, T> {
     pub values: Vec<T>,
 }
 
-impl<V> Client<V, reqwest::Client> {
+impl Client<reqwest::Client> {
     pub async fn json_query(&self, q: ReadQuery) -> Result<DatabaseQueryResult, Error> {
         let query = q.build().map_err(|err| Error::InvalidQueryError {
             error: err.to_string(),

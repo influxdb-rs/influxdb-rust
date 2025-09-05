@@ -1,6 +1,5 @@
 use futures_util::FutureExt;
-#[cfg(not(tarpaulin_include))]
-use influxdb::{InfluxVersion1, InfluxVersion2};
+
 use influxdb::{Client, Error, ReadQuery};
 use std::future::Future;
 use std::panic::{AssertUnwindSafe, UnwindSafe};
@@ -18,20 +17,20 @@ pub fn assert_result_ok<A: std::fmt::Debug, B: std::fmt::Debug>(result: &Result<
 
 #[allow(dead_code)]
 #[cfg(not(tarpaulin_include))]
-pub fn create_client_v1<T>(db_name: T) -> Client<InfluxVersion1, reqwest::Client>
+pub fn create_client_v1<T>(db_name: T) -> Client<reqwest::Client>
 where
     T: Into<String>,
 {
-    Client::<InfluxVersion1>::new("http://127.0.0.1:8086", db_name)
+    Client::new("http://127.0.0.1:8086", db_name)
 }
 
 #[allow(dead_code)]
 #[cfg(not(tarpaulin_include))]
-pub fn create_client_v2<T>(bucket: T) -> Client<InfluxVersion2, reqwest::Client>
+pub fn create_client_v2<T>(bucket: T) -> Client<reqwest::Client>
 where
     T: Into<String>,
 {
-    Client::<InfluxVersion2>::new("http://127.0.0.1:8086", bucket)
+    Client::v2("http://127.0.0.1:8086", "", bucket)
 }
 
 #[allow(dead_code)]

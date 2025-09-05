@@ -34,10 +34,10 @@ async fn test_ping_influx_db_tokio() {
 #[tokio::test]
 #[cfg(not(tarpaulin_include))]
 async fn test_connection_error() {
-    use influxdb::InfluxVersion1;
+    
 
     let test_name = "test_connection_error";
-    let client: Client<InfluxVersion1> =
+    let client: Client =
         Client::new("http://127.0.0.1:10086", test_name).with_auth("nopriv_user", "password");
     let read_query = ReadQuery::new("SELECT * FROM weather");
     let read_result = client.query(read_query).await;
@@ -61,9 +61,9 @@ async fn test_authed_write_and_read() {
 
     run_test(
         || async move {
-            use influxdb::InfluxVersion1;
+            
 
-            let client: Client<InfluxVersion1> =
+            let client: Client =
                 Client::new("http://127.0.0.1:9086", TEST_NAME).with_auth("admin", "password");
             let query = format!("CREATE DATABASE {TEST_NAME}");
             client
@@ -71,7 +71,7 @@ async fn test_authed_write_and_read() {
                 .await
                 .expect("could not setup db");
 
-            let client: Client<InfluxVersion1> =
+            let client: Client =
                 Client::new("http://127.0.0.1:9086", TEST_NAME).with_auth("admin", "password");
             let write_query = Timestamp::Hours(11)
                 .into_query("weather")
@@ -88,9 +88,9 @@ async fn test_authed_write_and_read() {
             );
         },
         || async move {
-            use influxdb::InfluxVersion1;
+            
 
-            let client: Client<InfluxVersion1> =
+            let client: Client =
                 Client::new("http://127.0.0.1:9086", TEST_NAME).with_auth("admin", "password");
             let query = format!("DROP DATABASE {TEST_NAME}");
 
@@ -115,9 +115,9 @@ async fn test_wrong_authed_write_and_read() {
 
     run_test(
         || async move {
-            use influxdb::InfluxVersion1;
+            
 
-            let client: Client<InfluxVersion1> =
+            let client: Client =
                 Client::new("http://127.0.0.1:9086", TEST_NAME).with_auth("admin", "password");
             let query = format!("CREATE DATABASE {TEST_NAME}");
             client
@@ -125,7 +125,7 @@ async fn test_wrong_authed_write_and_read() {
                 .await
                 .expect("could not setup db");
 
-            let client: Client<InfluxVersion1> =
+            let client: Client =
                 Client::new("http://127.0.0.1:9086", TEST_NAME).with_auth("wrong_user", "password");
             let write_query = Timestamp::Hours(11)
                 .into_query("weather")
@@ -151,7 +151,7 @@ async fn test_wrong_authed_write_and_read() {
                 ),
             }
 
-            let client: Client<InfluxVersion1> = Client::new("http://127.0.0.1:9086", TEST_NAME)
+            let client: Client = Client::new("http://127.0.0.1:9086", TEST_NAME)
                 .with_auth("nopriv_user", "password");
             let read_query = ReadQuery::new("SELECT * FROM weather");
             let read_result = client.query(read_query).await;
@@ -165,9 +165,9 @@ async fn test_wrong_authed_write_and_read() {
             }
         },
         || async move {
-            use influxdb::InfluxVersion1;
+            
 
-            let client: Client<InfluxVersion1> =
+            let client: Client =
                 Client::new("http://127.0.0.1:9086", TEST_NAME).with_auth("admin", "password");
             let query = format!("DROP DATABASE {TEST_NAME}");
             client
@@ -191,16 +191,16 @@ async fn test_non_authed_write_and_read() {
 
     run_test(
         || async move {
-            use influxdb::InfluxVersion1;
+            
 
-            let client: Client<InfluxVersion1> =
+            let client: Client =
                 Client::new("http://127.0.0.1:9086", TEST_NAME).with_auth("admin", "password");
             let query = format!("CREATE DATABASE {TEST_NAME}");
             client
                 .query(ReadQuery::new(query))
                 .await
                 .expect("could not setup db");
-            let non_authed_client: Client<InfluxVersion1> =
+            let non_authed_client: Client =
                 Client::new("http://127.0.0.1:9086", TEST_NAME);
             let write_query = Timestamp::Hours(11)
                 .into_query("weather")
@@ -228,9 +228,9 @@ async fn test_non_authed_write_and_read() {
             }
         },
         || async move {
-            use influxdb::InfluxVersion1;
+            
 
-            let client: Client<InfluxVersion1> =
+            let client: Client =
                 Client::new("http://127.0.0.1:9086", TEST_NAME).with_auth("admin", "password");
             let query = format!("DROP DATABASE {TEST_NAME}");
             client
@@ -290,16 +290,16 @@ async fn test_json_non_authed_read() {
 
     run_test(
         || async move {
-            use influxdb::InfluxVersion1;
+            
 
-            let client: Client<InfluxVersion1> =
+            let client: Client =
                 Client::new("http://127.0.0.1:9086", TEST_NAME).with_auth("admin", "password");
             let query = format!("CREATE DATABASE {TEST_NAME}");
             client
                 .query(ReadQuery::new(query))
                 .await
                 .expect("could not setup db");
-            let non_authed_client: Client<InfluxVersion1> =
+            let non_authed_client: Client =
                 Client::new("http://127.0.0.1:9086", TEST_NAME);
 
             let read_query = ReadQuery::new("SELECT * FROM weather");
@@ -314,9 +314,9 @@ async fn test_json_non_authed_read() {
             }
         },
         || async move {
-            use influxdb::InfluxVersion1;
+            
 
-            let client: Client<InfluxVersion1> =
+            let client: Client =
                 Client::new("http://127.0.0.1:9086", TEST_NAME).with_auth("admin", "password");
             let query = format!("DROP DATABASE {TEST_NAME}");
 
@@ -340,9 +340,9 @@ async fn test_json_authed_read() {
 
     run_test(
         || async move {
-            use influxdb::InfluxVersion1;
+            
 
-            let client: Client<InfluxVersion1> =
+            let client: Client =
                 Client::new("http://127.0.0.1:9086", TEST_NAME).with_auth("admin", "password");
             let query = format!("CREATE DATABASE {TEST_NAME}");
             client
@@ -355,9 +355,9 @@ async fn test_json_authed_read() {
             assert_result_ok(&read_result);
         },
         || async move {
-            use influxdb::InfluxVersion1;
+            
 
-            let client: Client<InfluxVersion1> =
+            let client: Client =
                 Client::new("http://127.0.0.1:9086", TEST_NAME).with_auth("admin", "password");
             let query = format!("DROP DATABASE {TEST_NAME}");
 
