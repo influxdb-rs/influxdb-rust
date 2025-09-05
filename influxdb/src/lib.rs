@@ -121,7 +121,7 @@ mod client;
 mod error;
 mod query;
 
-pub use client::Client;
+pub use client::{Client, InfluxVersion1, InfluxVersion2, InfluxVersion3};
 pub use error::Error;
 pub use query::{
     read_query::ReadQuery,

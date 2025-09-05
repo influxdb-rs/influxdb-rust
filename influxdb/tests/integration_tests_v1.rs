@@ -5,7 +5,7 @@ mod utilities;
 
 use serde_derive::Deserialize;
 use utilities::{
-    assert_result_err, assert_result_ok, create_client, create_db, delete_db, run_test,
+    assert_result_err, assert_result_ok, create_client_v1, create_db_v1, delete_db_v1, run_test,
 };
 
 use influxdb::InfluxDbWriteable;
@@ -17,7 +17,7 @@ use influxdb::{Client, Error, ReadQuery, Timestamp};
 #[tokio::test]
 #[cfg(not(any(tarpaulin_include)))]
 async fn test_ping_influx_db_tokio() {
-    let client = create_client("notusedhere");
+    let client = create_client_v1("notusedhere");
     let result = client.ping().await;
     assert_result_ok(&result);
 
@@ -34,8 +34,10 @@ async fn test_ping_influx_db_tokio() {
 #[tokio::test]
 #[cfg(not(tarpaulin_include))]
 async fn test_connection_error() {
+    
+
     let test_name = "test_connection_error";
-    let client =
+    let client: Client =
         Client::new("http://127.0.0.1:10086", test_name).with_auth("nopriv_user", "password");
     let read_query = ReadQuery::new("SELECT * FROM weather");
     let read_result = client.query(read_query).await;
@@ -59,7 +61,9 @@ async fn test_authed_write_and_read() {
 
     run_test(
         || async move {
-            let client =
+            
+
+            let client: Client =
                 Client::new("http://127.0.0.1:9086", TEST_NAME).with_auth("admin", "password");
             let query = format!("CREATE DATABASE {TEST_NAME}");
             client
@@ -67,7 +71,7 @@ async fn test_authed_write_and_read() {
                 .await
                 .expect("could not setup db");
 
-            let client =
+            let client: Client =
                 Client::new("http://127.0.0.1:9086", TEST_NAME).with_auth("admin", "password");
             let write_query = Timestamp::Hours(11)
                 .into_query("weather")
@@ -84,7 +88,9 @@ async fn test_authed_write_and_read() {
             );
         },
         || async move {
-            let client =
+            
+
+            let client: Client =
                 Client::new("http://127.0.0.1:9086", TEST_NAME).with_auth("admin", "password");
             let query = format!("DROP DATABASE {TEST_NAME}");
 
@@ -109,7 +115,9 @@ async fn test_wrong_authed_write_and_read() {
 
     run_test(
         || async move {
-            let client =
+            
+
+            let client: Client =
                 Client::new("http://127.0.0.1:9086", TEST_NAME).with_auth("admin", "password");
             let query = format!("CREATE DATABASE {TEST_NAME}");
             client
@@ -117,7 +125,7 @@ async fn test_wrong_authed_write_and_read() {
                 .await
                 .expect("could not setup db");
 
-            let client =
+            let client: Client =
                 Client::new("http://127.0.0.1:9086", TEST_NAME).with_auth("wrong_user", "password");
             let write_query = Timestamp::Hours(11)
                 .into_query("weather")
@@ -143,7 +151,7 @@ async fn test_wrong_authed_write_and_read() {
                 ),
             }
 
-            let client = Client::new("http://127.0.0.1:9086", TEST_NAME)
+            let client: Client = Client::new("http://127.0.0.1:9086", TEST_NAME)
                 .with_auth("nopriv_user", "password");
             let read_query = ReadQuery::new("SELECT * FROM weather");
             let read_result = client.query(read_query).await;
@@ -157,7 +165,9 @@ async fn test_wrong_authed_write_and_read() {
             }
         },
         || async move {
-            let client =
+            
+
+            let client: Client =
                 Client::new("http://127.0.0.1:9086", TEST_NAME).with_auth("admin", "password");
             let query = format!("DROP DATABASE {TEST_NAME}");
             client
@@ -181,14 +191,17 @@ async fn test_non_authed_write_and_read() {
 
     run_test(
         || async move {
-            let client =
+            
+
+            let client: Client =
                 Client::new("http://127.0.0.1:9086", TEST_NAME).with_auth("admin", "password");
             let query = format!("CREATE DATABASE {TEST_NAME}");
             client
                 .query(ReadQuery::new(query))
                 .await
                 .expect("could not setup db");
-            let non_authed_client = Client::new("http://127.0.0.1:9086", TEST_NAME);
+            let non_authed_client: Client =
+                Client::new("http://127.0.0.1:9086", TEST_NAME);
             let write_query = Timestamp::Hours(11)
                 .into_query("weather")
                 .add_field("temperature", 82);
@@ -215,7 +228,9 @@ async fn test_non_authed_write_and_read() {
             }
         },
         || async move {
-            let client =
+            
+
+            let client: Client =
                 Client::new("http://127.0.0.1:9086", TEST_NAME).with_auth("admin", "password");
             let query = format!("DROP DATABASE {TEST_NAME}");
             client
@@ -237,8 +252,8 @@ async fn test_write_and_read_field() {
 
     run_test(
         || async move {
-            create_db(TEST_NAME).await.expect("could not setup db");
-            let client = create_client(TEST_NAME);
+            create_db_v1(TEST_NAME).await.expect("could not setup db");
+            let client = create_client_v1(TEST_NAME);
             let write_query = Timestamp::Hours(11)
                 .into_query("weather")
                 .add_field("temperature", 82);
@@ -254,7 +269,9 @@ async fn test_write_and_read_field() {
             );
         },
         || async move {
-            delete_db(TEST_NAME).await.expect("could not clean up db");
+            delete_db_v1(TEST_NAME)
+                .await
+                .expect("could not clean up db");
         },
     )
     .await;
@@ -273,14 +290,17 @@ async fn test_json_non_authed_read() {
 
     run_test(
         || async move {
-            let client =
+            
+
+            let client: Client =
                 Client::new("http://127.0.0.1:9086", TEST_NAME).with_auth("admin", "password");
             let query = format!("CREATE DATABASE {TEST_NAME}");
             client
                 .query(ReadQuery::new(query))
                 .await
                 .expect("could not setup db");
-            let non_authed_client = Client::new("http://127.0.0.1:9086", TEST_NAME);
+            let non_authed_client: Client =
+                Client::new("http://127.0.0.1:9086", TEST_NAME);
 
             let read_query = ReadQuery::new("SELECT * FROM weather");
             let read_result = non_authed_client.json_query(read_query).await;
@@ -294,7 +314,9 @@ async fn test_json_non_authed_read() {
             }
         },
         || async move {
-            let client =
+            
+
+            let client: Client =
                 Client::new("http://127.0.0.1:9086", TEST_NAME).with_auth("admin", "password");
             let query = format!("DROP DATABASE {TEST_NAME}");
 
@@ -318,7 +340,9 @@ async fn test_json_authed_read() {
 
     run_test(
         || async move {
-            let client =
+            
+
+            let client: Client =
                 Client::new("http://127.0.0.1:9086", TEST_NAME).with_auth("admin", "password");
             let query = format!("CREATE DATABASE {TEST_NAME}");
             client
@@ -331,7 +355,9 @@ async fn test_json_authed_read() {
             assert_result_ok(&read_result);
         },
         || async move {
-            let client =
+            
+
+            let client: Client =
                 Client::new("http://127.0.0.1:9086", TEST_NAME).with_auth("admin", "password");
             let query = format!("DROP DATABASE {TEST_NAME}");
 
@@ -356,9 +382,9 @@ async fn test_write_and_read_option() {
     run_test(
         || {
             async move {
-                create_db(TEST_NAME).await.expect("could not setup db");
+                create_db_v1(TEST_NAME).await.expect("could not setup db");
 
-                let client = create_client(TEST_NAME);
+                let client = create_client_v1(TEST_NAME);
                 // Todo: Convert this to derive based insert for easier comparison of structs
                 let write_query = Timestamp::Hours(11)
                     .into_query("weather")
@@ -394,7 +420,7 @@ async fn test_write_and_read_option() {
             }
         },
         || async move {
-            delete_db("test_write_and_read_option")
+            delete_db_v1("test_write_and_read_option")
                 .await
                 .expect("could not clean up db");
         },
@@ -414,9 +440,9 @@ async fn test_json_query() {
 
     run_test(
         || async move {
-            create_db(TEST_NAME).await.expect("could not setup db");
+            create_db_v1(TEST_NAME).await.expect("could not setup db");
 
-            let client = create_client(TEST_NAME);
+            let client = create_client_v1(TEST_NAME);
 
             let write_query = Timestamp::Hours(11)
                 .into_query("weather")
@@ -446,7 +472,9 @@ async fn test_json_query() {
             );
         },
         || async move {
-            delete_db(TEST_NAME).await.expect("could not clean up db");
+            delete_db_v1(TEST_NAME)
+                .await
+                .expect("could not clean up db");
         },
     )
     .await;
@@ -464,9 +492,9 @@ async fn test_json_query_tagged() {
 
     run_test(
         || async move {
-            create_db(TEST_NAME).await.expect("could not setup db");
+            create_db_v1(TEST_NAME).await.expect("could not setup db");
 
-            let client = create_client(TEST_NAME);
+            let client = create_client_v1(TEST_NAME);
 
             let write_query = Timestamp::Hours(11)
                 .into_query("weather")
@@ -508,7 +536,9 @@ async fn test_json_query_tagged() {
             );
         },
         || async move {
-            delete_db(TEST_NAME).await.expect("could not clean up db");
+            delete_db_v1(TEST_NAME)
+                .await
+                .expect("could not clean up db");
         },
     )
     .await;
@@ -526,9 +556,9 @@ async fn test_json_query_vec() {
 
     run_test(
         || async move {
-            create_db(TEST_NAME).await.expect("could not setup db");
+            create_db_v1(TEST_NAME).await.expect("could not setup db");
 
-            let client = create_client(TEST_NAME);
+            let client = create_client_v1(TEST_NAME);
             let write_query1 = Timestamp::Hours(11)
                 .into_query("temperature_vec")
                 .add_field("temperature", 16);
@@ -558,7 +588,9 @@ async fn test_json_query_vec() {
             assert_eq!(result.unwrap().series[0].values.len(), 3);
         },
         || async move {
-            delete_db(TEST_NAME).await.expect("could not clean up db");
+            delete_db_v1(TEST_NAME)
+                .await
+                .expect("could not clean up db");
         },
     )
     .await;
@@ -575,7 +607,7 @@ async fn test_serde_multi_query() {
 
     run_test(
         || async move {
-            create_db(TEST_NAME).await.expect("could not setup db");
+            create_db_v1(TEST_NAME).await.expect("could not setup db");
 
             #[derive(Deserialize, Debug, PartialEq)]
             struct Temperature {
@@ -589,7 +621,7 @@ async fn test_serde_multi_query() {
                 humidity: i32,
             }
 
-            let client = create_client(TEST_NAME);
+            let client = create_client_v1(TEST_NAME);
             let write_query = Timestamp::Hours(11)
                 .into_query("temperature")
                 .add_field("temperature", 16);
@@ -632,7 +664,9 @@ async fn test_serde_multi_query() {
             );
         },
         || async move {
-            delete_db(TEST_NAME).await.expect("could not clean up db");
+            delete_db_v1(TEST_NAME)
+                .await
+                .expect("could not clean up db");
         },
     )
     .await;
@@ -645,7 +679,7 @@ async fn test_serde_multi_query() {
 #[cfg(feature = "serde")]
 #[cfg(not(tarpaulin_include))]
 async fn test_wrong_query_errors() {
-    let client = create_client("test_name");
+    let client = create_client_v1("test_name");
     let result = client
         .json_query(ReadQuery::new("CREATE DATABASE this_should_fail"))
         .await;

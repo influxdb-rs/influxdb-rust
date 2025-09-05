@@ -10,7 +10,7 @@ use influxdb::{Query, ReadQuery, Timestamp};
 #[cfg(feature = "serde")]
 use serde_derive::Deserialize;
 
-use utilities::{assert_result_ok, create_client, create_db, delete_db, run_test};
+use utilities::{assert_result_ok, run_test};
 
 #[derive(Debug, PartialEq)]
 #[cfg_attr(feature = "derive", derive(InfluxDbWriteable))]

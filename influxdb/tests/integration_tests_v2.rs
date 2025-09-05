@@ -15,7 +15,9 @@ use influxdb::{Client, Error, ReadQuery, Timestamp};
 async fn test_authed_write_and_read() {
     run_test(
         || async move {
-            let client = Client::new("http://127.0.0.1:2086", "mydb").with_token("admintoken");
+            
+
+            let client = Client::v2("http://127.0.0.1:2086", "admintoken", "mydb");
             let write_query = Timestamp::Hours(11)
                 .into_query("weather")
                 .add_field("temperature", 82);
@@ -31,7 +33,9 @@ async fn test_authed_write_and_read() {
             );
         },
         || async move {
-            let client = Client::new("http://127.0.0.1:2086", "mydb").with_token("admintoken");
+            
+
+            let client = Client::v2("http://127.0.0.1:2086", "admintoken", "mydb");
             let read_query = ReadQuery::new("DROP MEASUREMENT \"weather\"");
             let read_result = client.query(read_query).await;
             assert_result_ok(&read_result);
@@ -51,7 +55,9 @@ async fn test_wrong_authed_write_and_read() {
 
     run_test(
         || async move {
-            let client = Client::new("http://127.0.0.1:2086", "mydb").with_token("falsetoken");
+            
+
+            let client = Client::v2("http://127.0.0.1:2086", "falsetoken", "mydb");
             let write_query = Timestamp::Hours(11)
                 .into_query("weather")
                 .add_field("temperature", 82);
@@ -91,7 +97,9 @@ async fn test_non_authed_write_and_read() {
 
     run_test(
         || async move {
-            let non_authed_client = Client::new("http://127.0.0.1:2086", "mydb");
+            
+
+            let non_authed_client = Client::v2("http://127.0.0.1:2086", "", "mydb");
             let write_query = Timestamp::Hours(11)
                 .into_query("weather")
                 .add_field("temperature", 82);
