@@ -48,13 +48,16 @@ struct WeatherReadingWithoutIgnored {
 #[test]
 fn test_build_query() {
     let weather_reading = WeatherReading {
-        time: Timestamp::Hours(1).into(),
+        time: Timestamp::Hours(1).try_into().unwrap(),
         humidity: 30,
         pressure: 100,
         wind_strength: Some(5),
     };
-    let query = weather_reading.into_query("weather_reading");
-    let query = query.build().unwrap();
+    let query = weather_reading
+        .try_into_query("weather_reading")
+        .unwrap()
+        .build()
+        .unwrap();
     assert_eq!(
         query.get(),
         "weather_reading,wind_strength=5 pressure=100i 3600000000000"
@@ -64,14 +67,17 @@ fn test_build_query() {
 #[test]
 fn test_build_nonstandard_query() {
     let weather_reading = WeatherReadingWithNonstandardTime {
-        reading_time: Timestamp::Hours(1).into(),
-        time: Timestamp::Hours(1).into(),
+        reading_time: Timestamp::Hours(1).try_into().unwrap(),
+        time: Timestamp::Hours(1).try_into().unwrap(),
         humidity: 30,
         pressure: 100,
         wind_strength: Some(5),
     };
-    let query = weather_reading.into_query("weather_reading");
-    let query = query.build().unwrap();
+    let query = weather_reading
+        .try_into_query("weather_reading")
+        .unwrap()
+        .build()
+        .unwrap();
     assert_eq!(
         query.get(),
         "weather_reading,wind_strength=5 pressure=100i 3600000000000"
@@ -92,12 +98,12 @@ async fn test_derive_simple_write() {
             create_db(TEST_NAME).await.expect("could not setup db");
             let client = create_client(TEST_NAME);
             let weather_reading = WeatherReading {
-                time: Timestamp::Nanoseconds(0).into(),
+                time: Timestamp::Nanoseconds(0).try_into().unwrap(),
                 humidity: 30,
                 wind_strength: Some(5),
                 pressure: 100,
             };
-            let query = weather_reading.into_query("weather_reading");
+            let query = weather_reading.try_into_query("weather_reading").unwrap();
             let result = client.query(&query).await;
             assert!(result.is_ok(), "unable to insert into db");
         },
@@ -123,13 +129,17 @@ async fn test_write_and_read_option() {
             create_db(TEST_NAME).await.expect("could not setup db");
             let client = create_client(TEST_NAME);
             let weather_reading = WeatherReading {
-                time: Timestamp::Hours(11).into(),
+                time: Timestamp::Hours(11).try_into().unwrap(),
                 humidity: 30,
                 wind_strength: None,
                 pressure: 100,
             };
             let write_result = client
-                .query(&weather_reading.into_query("weather_reading".to_string()))
+                .query(
+                    &weather_reading
+                        .try_into_query("weather_reading".to_string())
+                        .unwrap(),
+                )
                 .await;
             assert_result_ok(&write_result);
 
@@ -141,7 +151,7 @@ async fn test_write_and_read_option() {
             assert_result_ok(&result);
             let result = result.unwrap();
             let value = &result.series[0].values[0];
-            assert_eq!(value.time, Timestamp::Hours(11).into());
+            assert_eq!(value.time, Timestamp::Hours(11).try_into().unwrap());
             assert_eq!(value.pressure, 100);
             assert_eq!(value.wind_strength, None);
         },

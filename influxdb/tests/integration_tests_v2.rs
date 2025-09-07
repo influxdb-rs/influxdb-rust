@@ -17,7 +17,8 @@ async fn test_authed_write_and_read() {
         || async move {
             let client = Client::new("http://127.0.0.1:2086", "mydb").with_token("admintoken");
             let write_query = Timestamp::Hours(11)
-                .into_query("weather")
+                .try_into_query("weather")
+                .unwrap()
                 .add_field("temperature", 82);
             let write_result = client.query(&write_query).await;
             assert_result_ok(&write_result);
@@ -53,7 +54,8 @@ async fn test_wrong_authed_write_and_read() {
         || async move {
             let client = Client::new("http://127.0.0.1:2086", "mydb").with_token("falsetoken");
             let write_query = Timestamp::Hours(11)
-                .into_query("weather")
+                .try_into_query("weather")
+                .unwrap()
                 .add_field("temperature", 82);
             let write_result = client.query(&write_query).await;
             assert_result_err(&write_result);
@@ -93,7 +95,8 @@ async fn test_non_authed_write_and_read() {
         || async move {
             let non_authed_client = Client::new("http://127.0.0.1:2086", "mydb");
             let write_query = Timestamp::Hours(11)
-                .into_query("weather")
+                .try_into_query("weather")
+                .unwrap()
                 .add_field("temperature", 82);
             let write_result = non_authed_client.query(&write_query).await;
             assert_result_err(&write_result);

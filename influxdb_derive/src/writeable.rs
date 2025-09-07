@@ -1,14 +1,17 @@
-use proc_macro2::TokenStream;
+use proc_macro2::{Span, TokenStream};
 use quote::quote;
 use syn::{
     parse::{Parse, ParseStream},
     punctuated::Punctuated,
-    Data, DeriveInput, Field, Fields, Ident, Meta, Token,
+    Data, DeriveInput, Field, Fields, Ident, Meta, PredicateType, QSelf, Token, Type, TypePath,
+    WhereClause, WherePredicate,
 };
+use syn_path::{path, ty};
 
 #[derive(Debug)]
 struct WriteableField {
     ident: Ident,
+    ty: Type,
     is_time: bool,
     is_tag: bool,
     is_ignore: bool,
@@ -57,6 +60,7 @@ impl TryFrom<Field> for WriteableField {
 
     fn try_from(field: Field) -> syn::Result<WriteableField> {
         let ident = field.ident.expect("fields without ident are not supported");
+        let ty = field.ty;
         let mut has_time_attr = false;
         let mut is_tag = false;
         let mut is_ignore = false;
@@ -92,6 +96,7 @@ impl TryFrom<Field> for WriteableField {
 
         Ok(WriteableField {
             ident,
+            ty,
             is_time,
             is_tag,
             is_ignore,
@@ -130,17 +135,20 @@ pub fn expand_writeable(input: DeriveInput) -> syn::Result<TokenStream> {
 
     // Find the time field
     let mut time_field = None;
+    let mut time_field_ty = None;
     for wf in &writeable_fields {
         if wf.is_time {
             if time_field.is_some() {
                 panic!("multiple time fields found!");
             }
             time_field = Some(wf.ident.clone());
+            time_field_ty = Some(wf.ty.clone());
         }
     }
 
     // There must be exactly one time field
     let time_field = time_field.expect("no time field found");
+    let time_field_ty = time_field_ty.unwrap();
 
     // Generate field assignments (excluding time and ignored fields)
     let field_assignments = writeable_fields
@@ -158,16 +166,112 @@ pub fn expand_writeable(input: DeriveInput) -> syn::Result<TokenStream> {
         })
         .collect::<Vec<_>>();
 
+    // Add a necessary where clause
+    let mut where_clause = where_clause.cloned().unwrap_or(WhereClause {
+        where_token: Token![where](Span::call_site()),
+        predicates: Punctuated::new(),
+    });
+    where_clause
+        .predicates
+        .push(WherePredicate::Type(PredicateType {
+            lifetimes: None,
+            bounded_ty: ty!(<::influxdb::Timestamp as ::core::convert::TryFrom>::Error),
+        }));
+
+    // Assemble the rest of the code
     Ok(quote! {
-        impl #impl_generics ::influxdb::InfluxDbWriteable for #ident #ty_generics #where_clause {
-            fn into_query<I: Into<String>>(self, name: I) -> ::influxdb::WriteQuery {
-                let timestamp: ::influxdb::Timestamp = self.#time_field.into();
-                let mut query = timestamp.into_query(name);
-                #(
-                    query = #field_assignments;
-                )*
-                query
+        const _: () = {
+            mod __influxdb_private {
+                use ::influxdb::{InfluxDbWriteable, Timestamp};
+                use ::core::fmt::{self, Debug, Display, Formatter, Write as _};
+
+                pub enum Error<T>
+                where
+                    Timestamp: TryFrom<T>
+                {
+                    TimestampError(<Timestamp as TryFrom<T>>::Error),
+                    QueryError(<Timestamp as InfluxDbWriteable>::Error)
+                }
+
+                impl<T> Clone for Error<T>
+                where
+                    Timestamp: TryFrom<T>,
+                    <Timestamp as TryFrom<T>>::Error: Clone
+                {
+                    fn clone(&self) -> Self {
+                        match self {
+                            Self::TimestampError(err) => Self::TimestampError(err.clone()),
+                            Self::QueryError(err) => Self::QueryError(err.clone())
+                        }
+                    }
+                }
+
+                impl<T> Debug for Error<T>
+                where
+                    Timestamp: TryFrom<T>,
+                    <Timestamp as TryFrom<T>>::Error: Debug
+                {
+                    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+                        match self {
+                            Self::TimestampError(err) => f.debug_tuple("TimestampError")
+                                .field(err)
+                                .finish(),
+                            Self::QueryError(err) => f.debug_tuple("QueryError")
+                                .field(err)
+                                .finish()
+                        }
+                    }
+                }
+
+                impl<T> Display for Error<T>
+                where
+                    Timestamp: TryFrom<T>,
+                    <Timestamp as TryFrom<T>>::Error: Display
+                {
+                    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+                        match self {
+                            Self::TimestampError(err) => {
+                                write!(f, "Unable to convert value to timestamp: {err}")
+                            },
+                            Self::QueryError(err) => {
+                                write!(f, "Unable to convert timestamp to query: {err}")
+                            }
+                        }
+                    }
+                }
+
+                impl<T> ::core::error::Error for Error<T>
+                where
+                    Timestamp: TryFrom<T>,
+                    <Timestamp as TryFrom<T>>::Error: ::core::error::Error
+                {
+                    fn source(&self) -> Option<&(dyn ::core::error::Error + 'static)> {
+                        match self {
+                            Self::TimestampError(err) => Some(err),
+                            Self::QueryError(err) => Some(err)
+                        }
+                    }
+                }
             }
-        }
+
+            impl #impl_generics ::influxdb::InfluxDbWriteable for #ident #ty_generics #where_clause {
+                type Error = __influxdb_private::Error<#time_field_ty>;
+
+                fn try_into_query<I: Into<String>>(
+                    self,
+                    name: I
+                ) -> ::core::result::Result<::influxdb::WriteQuery, Self::Error> {
+                    let timestamp: ::influxdb::Timestamp = self.#time_field
+                        .try_into()
+                        .map_err(__influxdb_private::Error::TimestampError)?;
+                    let mut query = timestamp.try_into_query(name)
+                        .map_err(__influxdb_private::Error::QueryError)?;
+                    #(
+                        query = #field_assignments;
+                    )*
+                    Ok(query)
+                }
+            }
+        };
     })
 }

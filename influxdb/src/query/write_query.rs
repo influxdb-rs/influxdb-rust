@@ -154,23 +154,24 @@ impl From<&str> for Type {
 }
 
 #[cfg(feature = "chrono")]
-impl<Tz: chrono::TimeZone> From<chrono::DateTime<Tz>> for Type {
-    fn from(dt: chrono::DateTime<Tz>) -> Self {
-        match dt.timestamp_nanos_opt() {
-            Some(nanos) => Type::SignedInteger(nanos),
-            None => {
-                // For dates before 1677-09-21, or after
-                // 2262-04-11, we're just going to return 0.
-                Type::SignedInteger(0)
-            }
-        }
+impl TryFrom<chrono::DateTime<chrono::Utc>> for Type {
+    type Error = crate::error::TimestampTooLargeError;
+
+    fn try_from(dt: chrono::DateTime<chrono::Utc>) -> Result<Self, Self::Error> {
+        let nanos = dt
+            .timestamp_nanos_opt()
+            .ok_or(crate::error::TimestampTooLargeError(()))?;
+        Ok(Self::SignedInteger(nanos))
     }
 }
 
 #[cfg(feature = "time")]
-impl From<time::UtcDateTime> for Type {
-    fn from(dt: time::UtcDateTime) -> Self {
-        Type::SignedInteger(dt.unix_timestamp_nanos().try_into().unwrap_or(0))
+impl TryFrom<time::UtcDateTime> for Type {
+    type Error = <i64 as TryFrom<i128>>::Error;
+
+    fn try_from(dt: time::UtcDateTime) -> Result<Self, Self::Error> {
+        let nanos = dt.unix_timestamp_nanos().try_into()?;
+        Ok(Self::SignedInteger(nanos))
     }
 }
 
@@ -296,7 +297,8 @@ mod tests {
     #[test]
     fn test_write_builder_empty_query() {
         let query = Timestamp::Hours(5)
-            .into_query("marina_3".to_string())
+            .try_into_query("marina_3".to_string())
+            .unwrap()
             .build();
 
         assert!(query.is_err(), "Query was not empty");
@@ -305,7 +307,8 @@ mod tests {
     #[test]
     fn test_write_builder_single_field() {
         let query = Timestamp::Hours(11)
-            .into_query("weather".to_string())
+            .try_into_query("weather".to_string())
+            .unwrap()
             .add_field("temperature", 82)
             .build();
 
@@ -316,7 +319,8 @@ mod tests {
     #[test]
     fn test_write_builder_multiple_fields() {
         let query = Timestamp::Hours(11)
-            .into_query("weather".to_string())
+            .try_into_query("weather".to_string())
+            .unwrap()
             .add_field("temperature", 82)
             .add_field("wind_strength", 3.7)
             .add_field("temperature_unsigned", 82u64)
@@ -332,7 +336,8 @@ mod tests {
     #[test]
     fn test_write_builder_multiple_fields_with_v2() {
         let query = Timestamp::Hours(11)
-            .into_query("weather".to_string())
+            .try_into_query("weather".to_string())
+            .unwrap()
             .add_field("temperature", 82)
             .add_field("wind_strength", 3.7)
             .add_field("temperature_unsigned", 82u64)
@@ -348,7 +353,8 @@ mod tests {
     #[test]
     fn test_write_builder_optional_fields() {
         let query = Timestamp::Hours(11)
-            .into_query("weather".to_string())
+            .try_into_query("weather".to_string())
+            .unwrap()
             .add_field("temperature", 82u64)
             .add_tag("wind_strength", <Option<u64>>::None)
             .build();
@@ -360,7 +366,8 @@ mod tests {
     #[test]
     fn test_write_builder_optional_fields_with_v2() {
         let query = Timestamp::Hours(11)
-            .into_query("weather".to_string())
+            .try_into_query("weather".to_string())
+            .unwrap()
             .add_field("temperature", 82u64)
             .add_tag("wind_strength", <Option<u64>>::None)
             .build_with_opts(true);
@@ -372,7 +379,8 @@ mod tests {
     #[test]
     fn test_write_builder_only_tags() {
         let query = Timestamp::Hours(11)
-            .into_query("weather".to_string())
+            .try_into_query("weather".to_string())
+            .unwrap()
             .add_tag("season", "summer")
             .build();
 
@@ -382,7 +390,8 @@ mod tests {
     #[test]
     fn test_write_builder_full_query() {
         let query = Timestamp::Hours(11)
-            .into_query("weather".to_string())
+            .try_into_query("weather".to_string())
+            .unwrap()
             .add_field("temperature", 82)
             .add_tag("location", "us-midwest")
             .add_tag("season", "summer")
@@ -400,7 +409,8 @@ mod tests {
         use crate::query::QueryType;
 
         let query = Timestamp::Hours(11)
-            .into_query("weather".to_string())
+            .try_into_query("weather".to_string())
+            .unwrap()
             .add_field("temperature", 82)
             .add_tag("location", "us-midwest")
             .add_tag("season", "summer");
@@ -411,7 +421,8 @@ mod tests {
     #[test]
     fn test_escaping() {
         let query = Timestamp::Hours(11)
-            .into_query("wea, ther=")
+            .try_into_query("wea, ther=")
+            .unwrap()
             .add_field("temperature", 82)
             .add_field("\"temp=era,t ure\"", r#"too"\\hot"#)
             .add_field("float", 82.0)
@@ -430,12 +441,14 @@ mod tests {
     #[test]
     fn test_batch() {
         let q0 = Timestamp::Hours(11)
-            .into_query("weather")
+            .try_into_query("weather")
+            .unwrap()
             .add_field("temperature", 82)
             .add_tag("location", "us-midwest");
 
         let q1 = Timestamp::Hours(12)
-            .into_query("weather")
+            .try_into_query("weather")
+            .unwrap()
             .add_field("temperature", 65)
             .add_tag("location", "us-midwest");
 
