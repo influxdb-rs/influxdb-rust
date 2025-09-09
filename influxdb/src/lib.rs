@@ -16,7 +16,6 @@
 //! # Quickstart
 //!
 //! Add the following to your `Cargo.toml`
-//!
 #![doc = cargo_toml!(indent="", "derive")]
 //!
 //! For an example with using Serde deserialization, please refer to [serde_integration](crate::integrations::serde_integration)
@@ -41,17 +40,19 @@
 //!     // Let's write some data into a measurement called `weather`
 //!     let weather_readings = vec![
 //!         WeatherReading {
-//!             time: Timestamp::Hours(1).into(),
+//!             time: Timestamp::Hours(1).try_into().unwrap(),
 //!             humidity: 30,
 //!             wind_direction: String::from("north"),
 //!         }
-//!         .into_query("weather"),
+//!         .try_into_query("weather")
+//!         .unwrap(),
 //!         WeatherReading {
-//!             time: Timestamp::Hours(2).into(),
+//!             time: Timestamp::Hours(2).try_into().unwrap(),
 //!             humidity: 40,
 //!             wind_direction: String::from("west"),
 //!         }
-//!         .into_query("weather"),
+//!         .try_into_query("weather")
+//!         .unwrap(),
 //!     ];
 //!
 //!     client.query(weather_readings).await?;
@@ -123,11 +124,9 @@ mod query;
 
 pub use client::Client;
 pub use error::Error;
-pub use query::{
-    read_query::ReadQuery,
-    write_query::{Type, WriteQuery},
-    InfluxDbWriteable, Query, QueryType, Timestamp, ValidQuery,
-};
+pub use query::read_query::ReadQuery;
+pub use query::write_query::{Type, WriteQuery};
+pub use query::{InfluxDbWriteable, Query, QueryType, Timestamp, ValidQuery};
 
 #[cfg(feature = "serde")]
 pub mod integrations {

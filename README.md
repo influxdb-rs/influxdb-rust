@@ -25,8 +25,8 @@
     <a href="https://www.rust-lang.org/en-US/">
         <img src="https://img.shields.io/badge/Made%20with-Rust-orange.svg" alt='Build with Rust' />
     </a>
-    <a href="https://github.com/rust-lang/rust/releases/tag/1.67.1">
-        <img src="https://img.shields.io/badge/rustc-1.67.1+-yellow.svg" alt='Minimum Rust Version: 1.67.1' />
+    <a href="https://github.com/rust-lang/rust/releases/tag/1.70.0">
+        <img src="https://img.shields.io/badge/rustc-1.70.0+-yellow.svg" alt='Minimum Rust Version: 1.70.0' />
     </a>
 </p>
 
@@ -75,17 +75,19 @@ async fn main() -> Result<(), Error> {
     // Let's write some data into a measurement called `weather`
     let weather_readings = vec![
         WeatherReading {
-            time: Timestamp::Hours(1).into(),
+            time: Timestamp::Hours(1).try_into().unwrap(),
             humidity: 30,
             wind_direction: String::from("north"),
         }
-        .into_query("weather"),
+        .try_into_query("weather")
+        .unwrap(),
         WeatherReading {
-            time: Timestamp::Hours(2).into(),
+            time: Timestamp::Hours(2).try_into().unwrap(),
             humidity: 40,
             wind_direction: String::from("west"),
         }
-        .into_query("weather"),
+        .try_into_query("weather")
+        .unwrap(),
     ];
 
     client.query(weather_readings).await?;
@@ -129,7 +131,7 @@ To communicate with InfluxDB, you can choose the HTTP backend to be used configu
 @ 2020-2024 Gero Gerke, msrd0 and [contributors].
 
  [contributors]: https://github.com/influxdb-rs/influxdb-rust/graphs/contributors
- [__cargo_doc2readme_dependencies_info]: ggGkYW0CYXSEGzJ_QpW55zB1G0S-TER-rIfLG2gXv8EYBG3jG1nuXXn-kdx-YXKEG8LHWNBBuXgSGz-2Lrx4E_kTG0bJiXb6A8zNG9GhXhvU8L0xYWSBgmhpbmZsdXhkYmUwLjcuMg
+ [__cargo_doc2readme_dependencies_info]: ggGkYW0CYXSEGzJ_QpW55zB1G0S-TER-rIfLG2gXv8EYBG3jG1nuXXn-kdx-YXKEG5esg8JWCUnDGygXCh47ngu0G4kPgAyV809_G2pbKPyN9jeVYWSBgmhpbmZsdXhkYmUwLjcuMg
  [__link0]: https://github.com/influxdb-rs/influxdb-rust/blob/main/CONTRIBUTING.md
  [__link1]: https://github.com/influxdb-rs/influxdb-rust/blob/main/CODE_OF_CONDUCT.md
  [__link2]: https://github.com/influxdb-rs/influxdb-rust/blob/main/CHANGELOG.md

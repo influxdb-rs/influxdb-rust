@@ -33,3 +33,15 @@ pub enum Error {
     /// Error happens when HTTP request fails
     ConnectionError { error: String },
 }
+
+#[cfg(feature = "chrono")]
+#[derive(Clone, Copy, Debug, Error)]
+#[error("The timestamp is too large to fit into an i64.")]
+pub struct TimestampTooLargeError(pub(crate) ());
+
+#[cfg(any(feature = "chrono", feature = "time"))]
+#[derive(Clone, Copy, Debug, Error)]
+pub enum TimeTryFromError<T, I> {
+    TimeError(#[source] T),
+    IntError(#[source] I),
+}
