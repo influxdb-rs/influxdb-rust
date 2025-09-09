@@ -1,12 +1,13 @@
 use proc_macro2::{Span, TokenStream};
-use quote::quote;
+use quote::{format_ident, quote};
 use syn::{
     parse::{Parse, ParseStream},
     punctuated::Punctuated,
-    Data, DeriveInput, Field, Fields, Ident, Meta, PredicateType, QSelf, Token, Type, TypePath,
-    WhereClause, WherePredicate,
+    AngleBracketedGenericArguments, Data, DeriveInput, Field, Fields, GenericArgument, Ident,
+    Lifetime, Meta, PathArguments, PredicateType, Token, Type, TypeParamBound, WhereClause,
+    WherePredicate,
 };
-use syn_path::{path, ty};
+use syn_path::type_path;
 
 #[derive(Debug)]
 struct WriteableField {
@@ -168,14 +169,36 @@ pub fn expand_writeable(input: DeriveInput) -> syn::Result<TokenStream> {
 
     // Add a necessary where clause
     let mut where_clause = where_clause.cloned().unwrap_or(WhereClause {
-        where_token: Token![where](Span::call_site()),
+        where_token: Default::default(),
         predicates: Punctuated::new(),
+    });
+    let mut err_ty = type_path!(<::influxdb::Timestamp as ::core::convert::TryFrom>::Error);
+    err_ty
+        .path
+        .segments
+        .iter_mut()
+        .nth(err_ty.qself.as_ref().unwrap().position - 1)
+        .unwrap()
+        .arguments = PathArguments::AngleBracketed(AngleBracketedGenericArguments {
+        colon2_token: None,
+        lt_token: Default::default(),
+        args: [GenericArgument::Type(time_field_ty.clone())]
+            .into_iter()
+            .collect(),
+        gt_token: Default::default(),
     });
     where_clause
         .predicates
         .push(WherePredicate::Type(PredicateType {
             lifetimes: None,
-            bounded_ty: ty!(<::influxdb::Timestamp as ::core::convert::TryFrom>::Error),
+            bounded_ty: Type::Path(err_ty),
+            colon_token: Default::default(),
+            bounds: [TypeParamBound::Lifetime(Lifetime {
+                apostrophe: Span::call_site(),
+                ident: format_ident!("static"),
+            })]
+            .into_iter()
+            .collect(),
         }));
 
     // Assemble the rest of the code
@@ -243,7 +266,7 @@ pub fn expand_writeable(input: DeriveInput) -> syn::Result<TokenStream> {
                 impl<T> ::core::error::Error for Error<T>
                 where
                     Timestamp: TryFrom<T>,
-                    <Timestamp as TryFrom<T>>::Error: ::core::error::Error
+                    <Timestamp as TryFrom<T>>::Error: ::core::error::Error + 'static
                 {
                     fn source(&self) -> Option<&(dyn ::core::error::Error + 'static)> {
                         match self {
