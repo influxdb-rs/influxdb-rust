@@ -263,12 +263,12 @@ pub fn expand_writeable(input: DeriveInput) -> syn::Result<TokenStream> {
                     }
                 }
 
-                impl<T> ::core::error::Error for Error<T>
+                impl<T> ::std::error::Error for Error<T>
                 where
                     Timestamp: TryFrom<T>,
-                    <Timestamp as TryFrom<T>>::Error: ::core::error::Error + 'static
+                    <Timestamp as TryFrom<T>>::Error: ::std::error::Error + 'static
                 {
-                    fn source(&self) -> Option<&(dyn ::core::error::Error + 'static)> {
+                    fn source(&self) -> Option<&(dyn ::std::error::Error + 'static)> {
                         match self {
                             Self::TimestampError(err) => Some(err),
                             Self::QueryError(err) => Some(err)
