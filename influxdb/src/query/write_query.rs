@@ -58,7 +58,8 @@ impl WriteQuery {
     /// use influxdb::{InfluxDbWriteable, Query, Timestamp};
     ///
     /// Timestamp::Nanoseconds(0)
-    ///     .into_query("measurement")
+    ///     .try_into_query("measurement")
+    ///     .unwrap()
     ///     .add_field("field1", 5)
     ///     .build();
     /// ```
@@ -84,7 +85,7 @@ impl WriteQuery {
     /// use influxdb::InfluxDbWriteable;
     ///
     /// Timestamp::Nanoseconds(0)
-    ///     .into_query("measurement")
+    ///     .try_into_query("measurement").unwrap()
     ///     .add_tag("field1", 5); // calling `.build()` now would result in a `Err(Error::InvalidQueryError)`
     /// ```
     #[must_use = "Creating a query is pointless unless you execute it"]

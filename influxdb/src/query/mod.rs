@@ -7,7 +7,8 @@
 //! use influxdb::{InfluxDbWriteable, Query as _, ReadQuery, Timestamp};
 //!
 //! let write_query = Timestamp::Nanoseconds(0)
-//!     .into_query("measurement")
+//!     .try_into_query("measurement")
+//!     .unwrap()
 //!     .add_field("field1", 5)
 //!     .add_tag("author", "Gero")
 //!     .build();
@@ -132,11 +133,15 @@ pub trait Query {
     /// ```rust
     /// use influxdb::{InfluxDbWriteable, Query, Timestamp};
     ///
-    /// let invalid_query = Timestamp::Nanoseconds(0).into_query("measurement").build();
+    /// let invalid_query = Timestamp::Nanoseconds(0)
+    ///     .try_into_query("measurement")
+    ///     .unwrap()
+    ///     .build();
     /// assert!(invalid_query.is_err());
     ///
     /// let valid_query = Timestamp::Nanoseconds(0)
-    ///     .into_query("measurement")
+    ///     .try_into_query("measurement")
+    ///     .unwrap()
     ///     .add_field("myfield1", 11)
     ///     .build();
     /// assert!(valid_query.is_ok());
@@ -155,12 +160,14 @@ pub trait Query {
     /// let use_v2 = true;
     ///
     /// let invalid_query = Timestamp::Nanoseconds(0)
-    ///     .into_query("measurement")
+    ///     .try_into_query("measurement")
+    ///     .unwrap()
     ///     .build_with_opts(use_v2);
     /// assert!(invalid_query.is_err());
     ///
     /// let valid_query = Timestamp::Nanoseconds(0)
-    ///     .into_query("measurement")
+    ///     .try_into_query("measurement")
+    ///     .unwrap()
     ///     .add_field("myfield1", 11)
     ///     .build_with_opts(use_v2);
     /// assert!(valid_query.is_ok());

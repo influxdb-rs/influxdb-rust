@@ -40,14 +40,14 @@
 //!     // Let's write some data into a measurement called `weather`
 //!     let weather_readings = vec![
 //!         WeatherReading {
-//!             time: Timestamp::Hours(1).into(),
+//!             time: Timestamp::Hours(1).try_into().unwrap(),
 //!             humidity: 30,
 //!             wind_direction: String::from("north"),
 //!         }
 //!         .try_into_query("weather")
 //!         .unwrap(),
 //!         WeatherReading {
-//!             time: Timestamp::Hours(2).into(),
+//!             time: Timestamp::Hours(2).try_into().unwrap(),
 //!             humidity: 40,
 //!             wind_direction: String::from("west"),
 //!         }

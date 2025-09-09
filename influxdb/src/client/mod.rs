@@ -200,7 +200,8 @@ impl Client {
     ///
     /// let client = Client::new("http://localhost:8086", "test");
     /// let query = Timestamp::Milliseconds(since_the_epoch)
-    ///     .into_query("weather")
+    ///     .try_into_query("weather")
+    ///     .unwrap()
     ///     .add_field("temperature", 82);
     /// let results = client.query(query).await?;
     ///
