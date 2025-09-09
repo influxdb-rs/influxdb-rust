@@ -8,8 +8,7 @@ use utilities::{
     assert_result_err, assert_result_ok, create_client, create_db, delete_db, run_test,
 };
 
-use influxdb::InfluxDbWriteable;
-use influxdb::{Client, Error, ReadQuery, Timestamp};
+use influxdb::{Client, Error, InfluxDbWriteable, ReadQuery, Timestamp};
 
 /// INTEGRATION TEST
 ///

@@ -22,8 +22,7 @@ use std::fmt::{self, Debug, Formatter};
 use std::sync::Arc;
 
 use crate::query::QueryType;
-use crate::Error;
-use crate::Query;
+use crate::{Error, Query};
 
 #[derive(Clone)]
 /// Internal Representation of a Client
@@ -188,17 +187,16 @@ impl Client {
     /// # Examples
     ///
     /// ```rust,no_run
-    /// use influxdb::{Client, Query, Timestamp};
-    /// use influxdb::InfluxDbWriteable;
+    /// use influxdb::{Client, InfluxDbWriteable, Query, Timestamp};
     /// use std::time::{SystemTime, UNIX_EPOCH};
     ///
     /// # #[tokio::main]
     /// # async fn main() -> Result<(), influxdb::Error> {
     /// let start = SystemTime::now();
     /// let since_the_epoch = start
-    ///   .duration_since(UNIX_EPOCH)
-    ///   .expect("Time went backwards")
-    ///   .as_millis();
+    ///     .duration_since(UNIX_EPOCH)
+    ///     .expect("Time went backwards")
+    ///     .as_millis();
     ///
     /// let client = Client::new("http://localhost:8086", "test");
     /// let query = Timestamp::Milliseconds(since_the_epoch)

@@ -55,10 +55,12 @@ impl WriteQuery {
     /// # Examples
     ///
     /// ```rust
-    /// use influxdb::{Query, Timestamp};
-    /// use influxdb::InfluxDbWriteable;
+    /// use influxdb::{InfluxDbWriteable, Query, Timestamp};
     ///
-    /// Timestamp::Nanoseconds(0).into_query("measurement").add_field("field1", 5).build();
+    /// Timestamp::Nanoseconds(0)
+    ///     .into_query("measurement")
+    ///     .add_field("field1", 5)
+    ///     .build();
     /// ```
     #[must_use = "Creating a query is pointless unless you execute it"]
     pub fn add_field<S, F>(mut self, field: S, value: F) -> Self

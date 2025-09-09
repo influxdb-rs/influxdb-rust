@@ -4,18 +4,17 @@
 //! # Examples
 //!
 //! ```rust
-//! use influxdb::{ReadQuery, Query as _, Timestamp};
-//! use influxdb::InfluxDbWriteable;
+//! use influxdb::{InfluxDbWriteable, Query as _, ReadQuery, Timestamp};
 //!
-//! let write_query = Timestamp::Nanoseconds(0).into_query("measurement")
+//! let write_query = Timestamp::Nanoseconds(0)
+//!     .into_query("measurement")
 //!     .add_field("field1", 5)
 //!     .add_tag("author", "Gero")
 //!     .build();
 //!
 //! assert!(write_query.is_ok());
 //!
-//! let read_query = ReadQuery::new("SELECT * FROM weather")
-//!     .build();
+//! let read_query = ReadQuery::new("SELECT * FROM weather").build();
 //!
 //! assert!(read_query.is_ok());
 //! ```
@@ -24,7 +23,8 @@ pub mod consts;
 mod line_proto_term;
 pub mod read_query;
 pub mod write_query;
-use std::{convert::Infallible, fmt};
+use std::convert::Infallible;
+use std::fmt;
 
 use crate::{Error, WriteQuery};
 use consts::{
@@ -130,13 +130,15 @@ pub trait Query {
     /// # Examples
     ///
     /// ```rust
-    /// use influxdb::{Query, Timestamp};
-    /// use influxdb::InfluxDbWriteable;
+    /// use influxdb::{InfluxDbWriteable, Query, Timestamp};
     ///
     /// let invalid_query = Timestamp::Nanoseconds(0).into_query("measurement").build();
     /// assert!(invalid_query.is_err());
     ///
-    /// let valid_query = Timestamp::Nanoseconds(0).into_query("measurement").add_field("myfield1", 11).build();
+    /// let valid_query = Timestamp::Nanoseconds(0)
+    ///     .into_query("measurement")
+    ///     .add_field("myfield1", 11)
+    ///     .build();
     /// assert!(valid_query.is_ok());
     /// ```
     fn build(&self) -> Result<ValidQuery, Error>;
@@ -148,15 +150,19 @@ pub trait Query {
     /// # Examples
     ///
     /// ```rust
-    /// use influxdb::{Query, Timestamp};
-    /// use influxdb::InfluxDbWriteable;
+    /// use influxdb::{InfluxDbWriteable, Query, Timestamp};
     ///
     /// let use_v2 = true;
     ///
-    /// let invalid_query = Timestamp::Nanoseconds(0).into_query("measurement").build_with_opts(use_v2);
+    /// let invalid_query = Timestamp::Nanoseconds(0)
+    ///     .into_query("measurement")
+    ///     .build_with_opts(use_v2);
     /// assert!(invalid_query.is_err());
     ///
-    /// let valid_query = Timestamp::Nanoseconds(0).into_query("measurement").add_field("myfield1", 11).build_with_opts(use_v2);
+    /// let valid_query = Timestamp::Nanoseconds(0)
+    ///     .into_query("measurement")
+    ///     .add_field("myfield1", 11)
+    ///     .build_with_opts(use_v2);
     /// assert!(valid_query.is_ok());
     /// ```
     fn build_with_opts(&self, use_v2: bool) -> Result<ValidQuery, Error>;

@@ -1,8 +1,8 @@
 use proc_macro2::{Span, TokenStream};
 use quote::{format_ident, quote};
+use syn::parse::{Parse, ParseStream};
+use syn::punctuated::Punctuated;
 use syn::{
-    parse::{Parse, ParseStream},
-    punctuated::Punctuated,
     AngleBracketedGenericArguments, Data, DeriveInput, Field, Fields, GenericArgument, Ident,
     Lifetime, Meta, PathArguments, PredicateType, Token, Type, TypeParamBound, WhereClause,
     WherePredicate,

@@ -1,7 +1,5 @@
 use chrono::{DateTime, Utc};
-use influxdb::Error;
-use influxdb::InfluxDbWriteable;
-use influxdb::{Client, ReadQuery};
+use influxdb::{Client, Error, InfluxDbWriteable, ReadQuery};
 use std::sync::Arc;
 use std::time::Instant;
 use tokio::sync::mpsc::unbounded_channel;
