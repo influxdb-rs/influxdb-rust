@@ -252,6 +252,6 @@ jobs:
 
           git add coverage.svg tarpaulin-report.html
           git status
-      - uses: stefanzweifel/git-auto-commit-action@v6
+      - uses: stefanzweifel/git-auto-commit-action@v7
         with:
           commit_message: "GitHub Pages for ${{ github.sha }}"
