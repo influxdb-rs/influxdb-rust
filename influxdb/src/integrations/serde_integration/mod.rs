@@ -33,8 +33,7 @@
 //!     .series
 //!     .into_iter()
 //!     .map(|mut city_series| {
-//!         let city_name =
-//!             city_series.name.split("_").collect::<Vec<&str>>().remove(2);
+//!         let city_name = city_series.name.split("_").collect::<Vec<&str>>().remove(2);
 //!         Weather {
 //!             weather: city_series.values.remove(0),
 //!             city_name: city_name.to_string(),
@@ -50,7 +49,8 @@ mod de;
 use serde::de::DeserializeOwned;
 use serde_derive::Deserialize;
 
-use crate::{client::check_status, Client, Error, Query, ReadQuery};
+use crate::client::check_status;
+use crate::{Client, Error, Query, ReadQuery};
 
 #[derive(Deserialize)]
 #[doc(hidden)]

@@ -8,8 +8,7 @@ use utilities::{
     assert_result_err, assert_result_ok, create_client, create_db, delete_db, run_test,
 };
 
-use influxdb::InfluxDbWriteable;
-use influxdb::{Client, Error, ReadQuery, Timestamp};
+use influxdb::{Client, Error, InfluxDbWriteable, ReadQuery, Timestamp};
 
 /// INTEGRATION TEST
 ///
@@ -70,7 +69,8 @@ async fn test_authed_write_and_read() {
             let client =
                 Client::new("http://127.0.0.1:9086", TEST_NAME).with_auth("admin", "password");
             let write_query = Timestamp::Hours(11)
-                .into_query("weather")
+                .try_into_query("weather")
+                .unwrap()
                 .add_field("temperature", 82);
             let write_result = client.query(write_query).await;
             assert_result_ok(&write_result);
@@ -120,7 +120,8 @@ async fn test_wrong_authed_write_and_read() {
             let client =
                 Client::new("http://127.0.0.1:9086", TEST_NAME).with_auth("wrong_user", "password");
             let write_query = Timestamp::Hours(11)
-                .into_query("weather")
+                .try_into_query("weather")
+                .unwrap()
                 .add_field("temperature", 82);
             let write_result = client.query(write_query).await;
             assert_result_err(&write_result);
@@ -190,7 +191,8 @@ async fn test_non_authed_write_and_read() {
                 .expect("could not setup db");
             let non_authed_client = Client::new("http://127.0.0.1:9086", TEST_NAME);
             let write_query = Timestamp::Hours(11)
-                .into_query("weather")
+                .try_into_query("weather")
+                .unwrap()
                 .add_field("temperature", 82);
             let write_result = non_authed_client.query(write_query).await;
             assert_result_err(&write_result);
@@ -240,7 +242,8 @@ async fn test_write_and_read_field() {
             create_db(TEST_NAME).await.expect("could not setup db");
             let client = create_client(TEST_NAME);
             let write_query = Timestamp::Hours(11)
-                .into_query("weather")
+                .try_into_query("weather")
+                .unwrap()
                 .add_field("temperature", 82);
             let write_result = client.query(write_query).await;
             assert_result_ok(&write_result);
@@ -361,7 +364,8 @@ async fn test_write_and_read_option() {
                 let client = create_client(TEST_NAME);
                 // Todo: Convert this to derive based insert for easier comparison of structs
                 let write_query = Timestamp::Hours(11)
-                    .into_query("weather")
+                    .try_into_query("weather")
+                    .unwrap()
                     .add_field("temperature", 82)
                     .add_field("wind_strength", <Option<u64>>::None);
                 let write_result = client.query(write_query).await;
@@ -419,7 +423,8 @@ async fn test_json_query() {
             let client = create_client(TEST_NAME);
 
             let write_query = Timestamp::Hours(11)
-                .into_query("weather")
+                .try_into_query("weather")
+                .unwrap()
                 .add_field("temperature", 82);
             let write_result = client.query(write_query).await;
             assert_result_ok(&write_result);
@@ -469,7 +474,8 @@ async fn test_json_query_tagged() {
             let client = create_client(TEST_NAME);
 
             let write_query = Timestamp::Hours(11)
-                .into_query("weather")
+                .try_into_query("weather")
+                .unwrap()
                 .add_tag("location", "London")
                 .add_field("temperature", 82);
             let write_result = client.query(write_query).await;
@@ -530,13 +536,16 @@ async fn test_json_query_vec() {
 
             let client = create_client(TEST_NAME);
             let write_query1 = Timestamp::Hours(11)
-                .into_query("temperature_vec")
+                .try_into_query("temperature_vec")
+                .unwrap()
                 .add_field("temperature", 16);
             let write_query2 = Timestamp::Hours(12)
-                .into_query("temperature_vec")
+                .try_into_query("temperature_vec")
+                .unwrap()
                 .add_field("temperature", 17);
             let write_query3 = Timestamp::Hours(13)
-                .into_query("temperature_vec")
+                .try_into_query("temperature_vec")
+                .unwrap()
                 .add_field("temperature", 18);
 
             let _write_result = client.query(write_query1).await;
@@ -591,10 +600,12 @@ async fn test_serde_multi_query() {
 
             let client = create_client(TEST_NAME);
             let write_query = Timestamp::Hours(11)
-                .into_query("temperature")
+                .try_into_query("temperature")
+                .unwrap()
                 .add_field("temperature", 16);
             let write_query2 = Timestamp::Hours(11)
-                .into_query("humidity")
+                .try_into_query("humidity")
+                .unwrap()
                 .add_field("humidity", 69);
 
             let write_result = client.query(write_query).await;
