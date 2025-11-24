@@ -12,7 +12,7 @@ jobs:
     name: README Format Check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: docker://codeberg.org/msrd0/cargo-doc2readme:nightly
         with:
           entrypoint: cargo
@@ -23,7 +23,7 @@ jobs:
     name: Style Check (clippy)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@1.88.0
         with:
           components: clippy
@@ -37,7 +37,7 @@ jobs:
     name: Style Checks (rustfmt)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@nightly
         with:
           components: rustfmt
@@ -70,7 +70,7 @@ jobs:
               nightly: false
             os: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{matrix.rust.toolchain}}
@@ -152,7 +152,7 @@ jobs:
           DOCKER_INFLUXDB_INIT_BUCKET: mydb
           DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: admintoken
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{matrix.rust.toolchain}}
@@ -194,7 +194,7 @@ jobs:
           INFLUXDB_USER_PASSWORD: password
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
         id: rust-toolchain
       - name: Get Tarpaulin Version
@@ -239,7 +239,7 @@ jobs:
       - coverage
     if: github.ref == 'refs/heads/main'
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           ref: gh-pages
       - uses: actions/download-artifact@v6
