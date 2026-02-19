@@ -3,27 +3,37 @@
 [package]
 name = "influxdb"
 version = "0.7.2"
-authors = ["Gero Gerke <11deutron11@gmail.com>"]
-edition = "2018"
+authors.workspace = true
+edition.workspace = true
+rust-version.workspace = true
 description = "InfluxDB Driver for Rust"
 keywords = ["influxdb", "database", "influx"]
-license = "MIT"
+license.workspace = true
 readme = "README.md"
 include = ["src/**/*", "tests/**/*", "Cargo.toml", "LICENSE"]
-repository = "https://github.com/influxdb-rs/influxdb-rust"
+repository.workspace = true
+
+[lints]
+workspace = true
+
+[[test]]
+name = "derive_integration_tests"
+path = "tests/derive_integration_tests.rs"
+required-features = ["chrono"]
 
 [dependencies]
-chrono = { version = "0.4.23", features = ["serde"], default-features = false }
+chrono = { version = "0.4.23", features = ["serde"], default-features = false, optional = true }
 futures-util = "0.3.17"
-http = "0.2.4"
+http = "1.3.1"
 influxdb_derive = { version = "0.5.1", optional = true }
 lazy-regex = "3.1"
-reqwest = { version = "0.11.4", default-features = false, optional = true }
-surf = { version = "2.2.0", default-features = false, optional = true }
+reqwest = { version = "0.12.23", default-features = false }
 serde = { version = "1.0.186", optional = true }
 serde_derive = { version = "1.0.186", optional = true }
 serde_json = { version = "1.0.48", optional = true }
-thiserror = "1.0"
+surf = { version = "2.2.0", default-features = false, optional = true }
+thiserror = "2.0.16"
+time = { version = "0.3.39", optional = true }
 
 [features]
 default = ["serde", "reqwest-client-rustls"]
@@ -31,16 +41,14 @@ derive = ["dep:influxdb_derive"]
 serde = ["dep:serde", "dep:serde_derive", "dep:serde_json"]
 
 # http clients
-curl-client = ["surf", "surf/curl-client"]
-h1-client = ["surf", "surf/h1-client"]
-h1-client-rustls = ["surf", "surf/h1-client-rustls"]
-hyper-client = ["surf", "surf/hyper-client"]
-reqwest-client-rustls = ["reqwest", "reqwest/rustls-tls-webpki-roots"]
-reqwest-client-native-tls = ["reqwest", "reqwest/native-tls-alpn"]
-reqwest-client-native-tls-vendored = ["reqwest", "reqwest/native-tls-vendored"]
-wasm-client = ["surf", "surf/wasm-client"]
+reqwest-client-rustls = ["reqwest/rustls-tls-webpki-roots"]
+reqwest-client-native-tls = ["reqwest/native-tls-alpn"]
+reqwest-client-native-tls-vendored = ["reqwest/native-tls-vendored"]
+
+# etc
+time = ["dep:time"]
+chrono = ["dep:chrono"]
 
 [dev-dependencies]
-async-std = { version = "1.6.5", features = ["attributes", "tokio02", "tokio1"] }
-indoc = "1.0"
+indoc = "2.0.6"
 tokio = { version = "1.7", features = ["macros", "rt-multi-thread"] }

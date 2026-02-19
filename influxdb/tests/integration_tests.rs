@@ -8,31 +8,13 @@ use utilities::{
     assert_result_err, assert_result_ok, create_client, create_db, delete_db, run_test,
 };
 
-use influxdb::InfluxDbWriteable;
-use influxdb::{Client, Error, ReadQuery, Timestamp};
-
-/// INTEGRATION TEST
-///
-/// This test case tests whether the InfluxDB server can be connected to and gathers info about it - tested with async_std
-#[async_std::test]
-#[cfg(not(tarpaulin_include))]
-async fn test_ping_influx_db_async_std() {
-    let client = create_client("notusedhere");
-    let result = client.ping().await;
-    assert_result_ok(&result);
-
-    let (build, version) = result.unwrap();
-    assert!(!build.is_empty(), "Build should not be empty");
-    assert!(!version.is_empty(), "Build should not be empty");
-
-    println!("build: {} version: {}", build, version);
-}
+use influxdb::{Client, Error, InfluxDbWriteable, ReadQuery, Timestamp};
 
 /// INTEGRATION TEST
 ///
 /// This test case tests whether the InfluxDB server can be connected to and gathers info about it - tested with tokio 1.0
 #[tokio::test]
-#[cfg(not(any(tarpaulin_include, feature = "hyper-client")))]
+#[cfg(not(any(tarpaulin_include)))]
 async fn test_ping_influx_db_tokio() {
     let client = create_client("notusedhere");
     let result = client.ping().await;
@@ -42,13 +24,13 @@ async fn test_ping_influx_db_tokio() {
     assert!(!build.is_empty(), "Build should not be empty");
     assert!(!version.is_empty(), "Build should not be empty");
 
-    println!("build: {} version: {}", build, version);
+    println!("build: {build} version: {version}");
 }
 
 /// INTEGRATION TEST
 ///
 /// This test case tests connection error
-#[async_std::test]
+#[tokio::test]
 #[cfg(not(tarpaulin_include))]
 async fn test_connection_error() {
     let test_name = "test_connection_error";
@@ -69,7 +51,7 @@ async fn test_connection_error() {
 /// INTEGRATION TEST
 ///
 /// This test case tests the Authentication
-#[async_std::test]
+#[tokio::test]
 #[cfg(not(tarpaulin_include))]
 async fn test_authed_write_and_read() {
     const TEST_NAME: &str = "test_authed_write_and_read";
@@ -78,7 +60,7 @@ async fn test_authed_write_and_read() {
         || async move {
             let client =
                 Client::new("http://127.0.0.1:9086", TEST_NAME).with_auth("admin", "password");
-            let query = format!("CREATE DATABASE {}", TEST_NAME);
+            let query = format!("CREATE DATABASE {TEST_NAME}");
             client
                 .query(ReadQuery::new(query))
                 .await
@@ -87,7 +69,8 @@ async fn test_authed_write_and_read() {
             let client =
                 Client::new("http://127.0.0.1:9086", TEST_NAME).with_auth("admin", "password");
             let write_query = Timestamp::Hours(11)
-                .into_query("weather")
+                .try_into_query("weather")
+                .unwrap()
                 .add_field("temperature", 82);
             let write_result = client.query(write_query).await;
             assert_result_ok(&write_result);
@@ -103,7 +86,7 @@ async fn test_authed_write_and_read() {
         || async move {
             let client =
                 Client::new("http://127.0.0.1:9086", TEST_NAME).with_auth("admin", "password");
-            let query = format!("DROP DATABASE {}", TEST_NAME);
+            let query = format!("DROP DATABASE {TEST_NAME}");
 
             client
                 .query(ReadQuery::new(query))
@@ -117,7 +100,7 @@ async fn test_authed_write_and_read() {
 /// INTEGRATION TEST
 ///
 /// This test case tests the Authentication
-#[async_std::test]
+#[tokio::test]
 #[cfg(not(tarpaulin_include))]
 async fn test_wrong_authed_write_and_read() {
     use http::StatusCode;
@@ -128,7 +111,7 @@ async fn test_wrong_authed_write_and_read() {
         || async move {
             let client =
                 Client::new("http://127.0.0.1:9086", TEST_NAME).with_auth("admin", "password");
-            let query = format!("CREATE DATABASE {}", TEST_NAME);
+            let query = format!("CREATE DATABASE {TEST_NAME}");
             client
                 .query(ReadQuery::new(query))
                 .await
@@ -137,7 +120,8 @@ async fn test_wrong_authed_write_and_read() {
             let client =
                 Client::new("http://127.0.0.1:9086", TEST_NAME).with_auth("wrong_user", "password");
             let write_query = Timestamp::Hours(11)
-                .into_query("weather")
+                .try_into_query("weather")
+                .unwrap()
                 .add_field("temperature", 82);
             let write_result = client.query(write_query).await;
             assert_result_err(&write_result);
@@ -176,7 +160,7 @@ async fn test_wrong_authed_write_and_read() {
         || async move {
             let client =
                 Client::new("http://127.0.0.1:9086", TEST_NAME).with_auth("admin", "password");
-            let query = format!("DROP DATABASE {}", TEST_NAME);
+            let query = format!("DROP DATABASE {TEST_NAME}");
             client
                 .query(ReadQuery::new(query))
                 .await
@@ -189,7 +173,7 @@ async fn test_wrong_authed_write_and_read() {
 /// INTEGRATION TEST
 ///
 /// This test case tests the Authentication
-#[async_std::test]
+#[tokio::test]
 #[cfg(not(tarpaulin_include))]
 async fn test_non_authed_write_and_read() {
     use http::StatusCode;
@@ -200,14 +184,15 @@ async fn test_non_authed_write_and_read() {
         || async move {
             let client =
                 Client::new("http://127.0.0.1:9086", TEST_NAME).with_auth("admin", "password");
-            let query = format!("CREATE DATABASE {}", TEST_NAME);
+            let query = format!("CREATE DATABASE {TEST_NAME}");
             client
                 .query(ReadQuery::new(query))
                 .await
                 .expect("could not setup db");
             let non_authed_client = Client::new("http://127.0.0.1:9086", TEST_NAME);
             let write_query = Timestamp::Hours(11)
-                .into_query("weather")
+                .try_into_query("weather")
+                .unwrap()
                 .add_field("temperature", 82);
             let write_result = non_authed_client.query(write_query).await;
             assert_result_err(&write_result);
@@ -234,7 +219,7 @@ async fn test_non_authed_write_and_read() {
         || async move {
             let client =
                 Client::new("http://127.0.0.1:9086", TEST_NAME).with_auth("admin", "password");
-            let query = format!("DROP DATABASE {}", TEST_NAME);
+            let query = format!("DROP DATABASE {TEST_NAME}");
             client
                 .query(ReadQuery::new(query))
                 .await
@@ -247,7 +232,7 @@ async fn test_non_authed_write_and_read() {
 /// INTEGRATION TEST
 ///
 /// This integration tests that writing data and retrieving the data again is working
-#[async_std::test]
+#[tokio::test]
 #[cfg(not(tarpaulin_include))]
 async fn test_write_and_read_field() {
     const TEST_NAME: &str = "test_write_field";
@@ -257,7 +242,8 @@ async fn test_write_and_read_field() {
             create_db(TEST_NAME).await.expect("could not setup db");
             let client = create_client(TEST_NAME);
             let write_query = Timestamp::Hours(11)
-                .into_query("weather")
+                .try_into_query("weather")
+                .unwrap()
                 .add_field("temperature", 82);
             let write_result = client.query(write_query).await;
             assert_result_ok(&write_result);
@@ -280,7 +266,7 @@ async fn test_write_and_read_field() {
 /// INTEGRATION TEST
 ///
 /// This test case tests the authentication on json reads
-#[async_std::test]
+#[tokio::test]
 #[cfg(feature = "serde")]
 #[cfg(not(tarpaulin_include))]
 async fn test_json_non_authed_read() {
@@ -292,7 +278,7 @@ async fn test_json_non_authed_read() {
         || async move {
             let client =
                 Client::new("http://127.0.0.1:9086", TEST_NAME).with_auth("admin", "password");
-            let query = format!("CREATE DATABASE {}", TEST_NAME);
+            let query = format!("CREATE DATABASE {TEST_NAME}");
             client
                 .query(ReadQuery::new(query))
                 .await
@@ -313,7 +299,7 @@ async fn test_json_non_authed_read() {
         || async move {
             let client =
                 Client::new("http://127.0.0.1:9086", TEST_NAME).with_auth("admin", "password");
-            let query = format!("DROP DATABASE {}", TEST_NAME);
+            let query = format!("DROP DATABASE {TEST_NAME}");
 
             client
                 .query(ReadQuery::new(query))
@@ -327,7 +313,7 @@ async fn test_json_non_authed_read() {
 /// INTEGRATION TEST
 ///
 /// This test case tests the authentication on json reads
-#[async_std::test]
+#[tokio::test]
 #[cfg(feature = "serde")]
 #[cfg(not(tarpaulin_include))]
 async fn test_json_authed_read() {
@@ -337,7 +323,7 @@ async fn test_json_authed_read() {
         || async move {
             let client =
                 Client::new("http://127.0.0.1:9086", TEST_NAME).with_auth("admin", "password");
-            let query = format!("CREATE DATABASE {}", TEST_NAME);
+            let query = format!("CREATE DATABASE {TEST_NAME}");
             client
                 .query(ReadQuery::new(query))
                 .await
@@ -350,7 +336,7 @@ async fn test_json_authed_read() {
         || async move {
             let client =
                 Client::new("http://127.0.0.1:9086", TEST_NAME).with_auth("admin", "password");
-            let query = format!("DROP DATABASE {}", TEST_NAME);
+            let query = format!("DROP DATABASE {TEST_NAME}");
 
             client
                 .query(ReadQuery::new(query))
@@ -364,7 +350,7 @@ async fn test_json_authed_read() {
 /// INTEGRATION TEST
 ///
 /// This integration tests that writing data and retrieving the data again is working
-#[async_std::test]
+#[tokio::test]
 #[cfg(feature = "serde")]
 #[cfg(not(tarpaulin_include))]
 async fn test_write_and_read_option() {
@@ -378,7 +364,8 @@ async fn test_write_and_read_option() {
                 let client = create_client(TEST_NAME);
                 // Todo: Convert this to derive based insert for easier comparison of structs
                 let write_query = Timestamp::Hours(11)
-                    .into_query("weather")
+                    .try_into_query("weather")
+                    .unwrap()
                     .add_field("temperature", 82)
                     .add_field("wind_strength", <Option<u64>>::None);
                 let write_result = client.query(write_query).await;
@@ -423,7 +410,7 @@ async fn test_write_and_read_option() {
 ///
 /// This test case tests whether JSON can be decoded from a InfluxDB response and whether that JSON
 /// is equal to the data which was written to the database
-#[async_std::test]
+#[tokio::test]
 #[cfg(feature = "serde")]
 #[cfg(not(tarpaulin_include))]
 async fn test_json_query() {
@@ -436,7 +423,8 @@ async fn test_json_query() {
             let client = create_client(TEST_NAME);
 
             let write_query = Timestamp::Hours(11)
-                .into_query("weather")
+                .try_into_query("weather")
+                .unwrap()
                 .add_field("temperature", 82);
             let write_result = client.query(write_query).await;
             assert_result_ok(&write_result);
@@ -473,7 +461,7 @@ async fn test_json_query() {
 ///
 /// This test case tests whether the response to a GROUP BY can be parsed by
 /// deserialize_next_tagged into a tags struct
-#[async_std::test]
+#[tokio::test]
 #[cfg(feature = "serde")]
 #[cfg(not(tarpaulin_include))]
 async fn test_json_query_tagged() {
@@ -486,7 +474,8 @@ async fn test_json_query_tagged() {
             let client = create_client(TEST_NAME);
 
             let write_query = Timestamp::Hours(11)
-                .into_query("weather")
+                .try_into_query("weather")
+                .unwrap()
                 .add_tag("location", "London")
                 .add_field("temperature", 82);
             let write_result = client.query(write_query).await;
@@ -537,10 +526,7 @@ async fn test_json_query_tagged() {
 /// is equal to the data which was written to the database
 /// (tested with tokio)
 #[tokio::test]
-#[cfg(all(
-    feature = "serde",
-    not(any(tarpaulin_include, feature = "hyper-client"))
-))]
+#[cfg(all(feature = "serde", not(any(tarpaulin_include))))]
 async fn test_json_query_vec() {
     const TEST_NAME: &str = "test_json_query_vec";
 
@@ -550,13 +536,16 @@ async fn test_json_query_vec() {
 
             let client = create_client(TEST_NAME);
             let write_query1 = Timestamp::Hours(11)
-                .into_query("temperature_vec")
+                .try_into_query("temperature_vec")
+                .unwrap()
                 .add_field("temperature", 16);
             let write_query2 = Timestamp::Hours(12)
-                .into_query("temperature_vec")
+                .try_into_query("temperature_vec")
+                .unwrap()
                 .add_field("temperature", 17);
             let write_query3 = Timestamp::Hours(13)
-                .into_query("temperature_vec")
+                .try_into_query("temperature_vec")
+                .unwrap()
                 .add_field("temperature", 18);
 
             let _write_result = client.query(write_query1).await;
@@ -587,7 +576,7 @@ async fn test_json_query_vec() {
 /// INTEGRATION TEST
 ///
 /// This integration test tests whether using the wrong query method fails building the query
-#[async_std::test]
+#[tokio::test]
 #[cfg(feature = "serde")]
 #[cfg(not(tarpaulin_include))]
 async fn test_serde_multi_query() {
@@ -611,10 +600,12 @@ async fn test_serde_multi_query() {
 
             let client = create_client(TEST_NAME);
             let write_query = Timestamp::Hours(11)
-                .into_query("temperature")
+                .try_into_query("temperature")
+                .unwrap()
                 .add_field("temperature", 16);
             let write_query2 = Timestamp::Hours(11)
-                .into_query("humidity")
+                .try_into_query("humidity")
+                .unwrap()
                 .add_field("humidity", 69);
 
             let write_result = client.query(write_query).await;
@@ -661,7 +652,7 @@ async fn test_serde_multi_query() {
 /// INTEGRATION TEST
 ///
 /// This integration test tests whether using the wrong query method fails building the query
-#[async_std::test]
+#[tokio::test]
 #[cfg(feature = "serde")]
 #[cfg(not(tarpaulin_include))]
 async fn test_wrong_query_errors() {

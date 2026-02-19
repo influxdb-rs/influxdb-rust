@@ -7,7 +7,7 @@
 //! `name`, InfluxDB provides alongside query results.
 //!
 //! ```rust,no_run
-//! use influxdb::{Client, Query};
+//! use influxdb::{Client, Query as _, ReadQuery};
 //! use serde_derive::Deserialize;
 //!
 //! #[derive(Deserialize)]
@@ -21,10 +21,10 @@
 //!     weather: WeatherWithoutCityName,
 //! }
 //!
-//! # #[async_std::main]
+//! # #[tokio::main]
 //! # async fn main() -> Result<(), influxdb::Error> {
 //! let client = Client::new("http://localhost:8086", "test");
-//! let query = Query::raw_read_query(
+//! let query = ReadQuery::new(
 //!     "SELECT temperature FROM /weather_[a-z]*$/ WHERE time > now() - 1m ORDER BY DESC",
 //! );
 //! let mut db_result = client.json_query(query).await?;
@@ -33,8 +33,7 @@
 //!     .series
 //!     .into_iter()
 //!     .map(|mut city_series| {
-//!         let city_name =
-//!             city_series.name.split("_").collect::<Vec<&str>>().remove(2);
+//!         let city_name = city_series.name.split("_").collect::<Vec<&str>>().remove(2);
 //!         Weather {
 //!             weather: city_series.values.remove(0),
 //!             city_name: city_name.to_string(),
@@ -50,7 +49,8 @@ mod de;
 use serde::de::DeserializeOwned;
 use serde_derive::Deserialize;
 
-use crate::{client::check_status, Client, Error, Query, ReadQuery};
+use crate::client::check_status;
+use crate::{Client, Error, Query, ReadQuery};
 
 #[derive(Deserialize)]
 #[doc(hidden)]
@@ -71,7 +71,7 @@ impl DatabaseQueryResult {
     {
         serde_json::from_value::<Return<T>>(self.results.remove(0)).map_err(|err| {
             Error::DeserializationError {
-                error: format!("could not deserialize: {}", err),
+                error: format!("could not deserialize: {err}"),
             }
         })
     }
@@ -85,7 +85,7 @@ impl DatabaseQueryResult {
     {
         serde_json::from_value::<TaggedReturn<TAG, T>>(self.results.remove(0)).map_err(|err| {
             Error::DeserializationError {
-                error: format!("could not deserialize: {}", err),
+                error: format!("could not deserialize: {err}"),
             }
         })
     }
@@ -123,7 +123,7 @@ pub struct TaggedSeries<TAG, T> {
 impl Client {
     pub async fn json_query(&self, q: ReadQuery) -> Result<DatabaseQueryResult, Error> {
         let query = q.build().map_err(|err| Error::InvalidQueryError {
-            error: format!("{}", err),
+            error: err.to_string(),
         })?;
 
         let read_query = query.get();
@@ -131,9 +131,7 @@ impl Client {
 
         if !read_query_lower.contains("select") && !read_query_lower.contains("show") {
             let error = Error::InvalidQueryError {
-                error: String::from(
-                    "Only SELECT and SHOW queries supported with JSON deserialization",
-                ),
+                error: "Only SELECT and SHOW queries supported with JSON deserialization".into(),
             };
             return Err(error);
         }
@@ -143,14 +141,9 @@ impl Client {
         parameters.insert("q", read_query);
         let mut request_builder = self.client.get(url);
         if let Some(ref token) = self.token {
-            request_builder = request_builder.header("Authorization", format!("Token {}", token))
+            request_builder = request_builder.header("Authorization", format!("Token {token}"))
         }
         let request_builder = request_builder.query(&parameters);
-
-        #[cfg(feature = "surf")]
-        let request_builder = request_builder.map_err(|err| Error::UrlConstructionError {
-            error: err.to_string(),
-        })?;
 
         let res = request_builder
             .send()
@@ -160,12 +153,7 @@ impl Client {
             })?;
         check_status(&res)?;
 
-        #[cfg(feature = "reqwest")]
         let body = res.bytes();
-        #[cfg(feature = "surf")]
-        let mut res = res;
-        #[cfg(feature = "surf")]
-        let body = res.body_bytes();
 
         let body = body.await.map_err(|err| Error::ProtocolError {
             error: err.to_string(),
@@ -179,7 +167,7 @@ impl Client {
         // Json has another structure, let's try actually parsing it to the type we're deserializing
         serde_json::from_slice::<DatabaseQueryResult>(&body).map_err(|err| {
             Error::DeserializationError {
-                error: format!("serde error: {}", err),
+                error: format!("serde error: {err}"),
             }
         })
     }
