@@ -76,9 +76,9 @@
 //! - **[hyper](https://github.com/hyperium/hyper)** (through reqwest, used by default), with [rustls](https://github.com/ctz/rustls)
 #![doc = cargo_toml!(indent="\t", "derive")]
 //! - **[hyper](https://github.com/hyperium/hyper)** (through reqwest), with native TLS (OpenSSL)
-#![doc = cargo_toml!(indent="\t", default-features = false, "derive", "serde", "reqwest-client-native-tls")]
+#![doc = cargo_toml!(indent="\t", default-features = false, "derive", "serde", "native-tls")]
 //! - **[hyper](https://github.com/hyperium/hyper)** (through reqwest), with vendored native TLS (OpenSSL)
-#![doc = cargo_toml!(indent="\t", default-features = false, "derive", "serde", "reqwest-client-native-tls-vendored")]
+#![doc = cargo_toml!(indent="\t", default-features = false, "derive", "serde", "native-tls-vendored")]
 //!
 //! # License
 //!
