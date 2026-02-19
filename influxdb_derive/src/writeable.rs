@@ -60,7 +60,12 @@ impl TryFrom<Field> for WriteableField {
     type Error = syn::Error;
 
     fn try_from(field: Field) -> syn::Result<WriteableField> {
-        let ident = field.ident.expect("fields without ident are not supported");
+        let Some(ident) = field.ident else {
+            return Err(syn::Error::new_spanned(
+                &field,
+                "fields without ident are not supported",
+            ));
+        };
         let ty = field.ty;
         let mut has_time_attr = false;
         let mut is_tag = false;
