@@ -16,7 +16,7 @@ jobs:
       - uses: docker://codeberg.org/msrd0/cargo-doc2readme:nightly
         with:
           entrypoint: cargo
-          args: doc2readme -p influxdb --expand-macros --check
+          args: doc2readme --check
 
   # this checks that there are no clippy lints
   clippy:
@@ -24,13 +24,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - uses: dtolnay/rust-toolchain@1.88.0
+      - uses: dtolnay/rust-toolchain@1.93.0
         with:
           components: clippy
       - name: Update Cargo.lock
         run: cargo --config 'resolver.incompatible-rust-versions="fallback"' update
-      - name: Check Clippy lints (reqwest)
-        run: cargo clippy --manifest-path influxdb/Cargo.toml --locked --all-targets --no-default-features --features chrono,time,serde,derive,reqwest-client-rustls -- -D warnings
+      - name: Check Clippy lints
+        run: cargo clippy --manifest-path influxdb/Cargo.toml --locked --all-targets --all-features -- -D warnings
 
   # this checks that the code is formatted with rustfmt
   rustfmt:
@@ -122,9 +122,9 @@ jobs:
             toolchain: stable
             nightly: false
         http-backend:
-          - reqwest-client-rustls
-          - reqwest-client-native-tls
-          - reqwest-client-native-tls-vendored
+          - rustls
+          - native-tls
+          - native-tls-vendored
     services:
       influxdb:
         image: influxdb:1.8

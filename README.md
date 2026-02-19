@@ -25,8 +25,8 @@
     <a href="https://www.rust-lang.org/en-US/">
         <img src="https://img.shields.io/badge/Made%20with-Rust-orange.svg" alt='Build with Rust' />
     </a>
-    <a href="https://github.com/rust-lang/rust/releases/tag/1.70.0">
-        <img src="https://img.shields.io/badge/rustc-1.70.0+-yellow.svg" alt='Minimum Rust Version: 1.70.0' />
+    <a href="https://github.com/rust-lang/rust/releases/tag/1.71.0">
+        <img src="https://img.shields.io/badge/rustc-1.71.0+-yellow.svg" alt='Minimum Rust Version: 1.71.0' />
     </a>
 </p>
 
@@ -115,12 +115,12 @@ To communicate with InfluxDB, you can choose the HTTP backend to be used configu
 
 * **[hyper][__link7]** (through reqwest), with native TLS (OpenSSL)
   ```toml
-  influxdb = { version = "0.7.2", default-features = false, features = ["derive", "serde", "reqwest-client-native-tls"] }
+  influxdb = { version = "0.7.2", default-features = false, features = ["derive", "serde", "native-tls"] }
   ```
 
 * **[hyper][__link8]** (through reqwest), with vendored native TLS (OpenSSL)
   ```toml
-  influxdb = { version = "0.7.2", default-features = false, features = ["derive", "serde", "reqwest-client-native-tls-vendored"] }
+  influxdb = { version = "0.7.2", default-features = false, features = ["derive", "serde", "native-tls-vendored"] }
   ```
 
 ## License
@@ -131,7 +131,7 @@ To communicate with InfluxDB, you can choose the HTTP backend to be used configu
 @ 2020-2024 Gero Gerke, msrd0 and [contributors].
 
  [contributors]: https://github.com/influxdb-rs/influxdb-rust/graphs/contributors
- [__cargo_doc2readme_dependencies_info]: ggGkYW0CYXSEGzJ_QpW55zB1G0S-TER-rIfLG2gXv8EYBG3jG1nuXXn-kdx-YXKEG5esg8JWCUnDGygXCh47ngu0G4kPgAyV809_G2pbKPyN9jeVYWSBgmhpbmZsdXhkYmUwLjcuMg
+ [__cargo_doc2readme_dependencies_info]: ggGkYW0CYXSEGzJ_QpW55zB1G0S-TER-rIfLG2gXv8EYBG3jG1nuXXn-kdx-YXKEGxuf7s5mIUnXG0aItuf7_gNCG97yq-v-QgOpG7Xm07crWXUNYWSBgmhpbmZsdXhkYmUwLjcuMg
  [__link0]: https://github.com/influxdb-rs/influxdb-rust/blob/main/CONTRIBUTING.md
  [__link1]: https://github.com/influxdb-rs/influxdb-rust/blob/main/CODE_OF_CONDUCT.md
  [__link2]: https://github.com/influxdb-rs/influxdb-rust/blob/main/CHANGELOG.md
