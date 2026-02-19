@@ -1,4 +1,7 @@
 <div align="center">
+	 <b>This crate is looking for maintainers: <a href="https://github.com/influxdb-rs/influxdb-rust/issues/185">#185</a></b>
+</div>
+<div align="center">
     <br/>
     <img
         alt="rust-influxdb"
@@ -131,7 +134,7 @@ To communicate with InfluxDB, you can choose the HTTP backend to be used configu
 @ 2020-2026 Gero Gerke, msrd0 and [contributors].
 
  [contributors]: https://github.com/influxdb-rs/influxdb-rust/graphs/contributors
- [__cargo_doc2readme_dependencies_info]: ggGkYW0CYXSEG_hV_Hhi195rG1bQ50Z796M6G0clIrwU3dD1GxD-fO9UhKvaYXKEG-hU_6NSeZE5G_TGgn7dixaeGy0Dy-9mto5UG92UqbpzHaA3YWSBgmhpbmZsdXhkYmUwLjguMA
+ [__cargo_doc2readme_dependencies_info]: ggGkYW0CYXSEG-OJUqgaGN0CG0EPk86thZnHG4QpgN4-zouYG5MI0oB1qWBmYXKEG-hU_6NSeZE5G_TGgn7dixaeGy0Dy-9mto5UG92UqbpzHaA3YWSBgmhpbmZsdXhkYmUwLjguMA
  [__link0]: https://github.com/influxdb-rs/influxdb-rust/blob/main/CONTRIBUTING.md
  [__link1]: https://github.com/influxdb-rs/influxdb-rust/blob/main/CODE_OF_CONDUCT.md
  [__link2]: https://github.com/influxdb-rs/influxdb-rust/blob/main/CHANGELOG.md
