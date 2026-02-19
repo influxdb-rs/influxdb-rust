@@ -16,7 +16,7 @@ jobs:
       - uses: docker://codeberg.org/msrd0/cargo-doc2readme:nightly
         with:
           entrypoint: cargo
-          args: doc2readme -p influxdb --expand-macros --check
+          args: doc2readme --check
 
   # this checks that there are no clippy lints
   clippy:
