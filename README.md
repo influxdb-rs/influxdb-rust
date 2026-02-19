@@ -50,7 +50,7 @@ Pull requests are always welcome. See [Contributing][__link0] and [Code of Condu
 Add the following to your `Cargo.toml`
 
 ```toml
-influxdb = { version = "0.7.2", features = ["derive"] }
+influxdb = { version = "0.8.0", features = ["derive"] }
 ```
 
 For an example with using Serde deserialization, please refer to [serde_integration][__link4]
@@ -110,17 +110,17 @@ To communicate with InfluxDB, you can choose the HTTP backend to be used configu
 
 * **[hyper][__link5]** (through reqwest, used by default), with [rustls][__link6]
   ```toml
-  influxdb = { version = "0.7.2", features = ["derive"] }
+  influxdb = { version = "0.8.0", features = ["derive"] }
   ```
 
 * **[hyper][__link7]** (through reqwest), with native TLS (OpenSSL)
   ```toml
-  influxdb = { version = "0.7.2", default-features = false, features = ["derive", "serde", "native-tls"] }
+  influxdb = { version = "0.8.0", default-features = false, features = ["derive", "serde", "native-tls"] }
   ```
 
 * **[hyper][__link8]** (through reqwest), with vendored native TLS (OpenSSL)
   ```toml
-  influxdb = { version = "0.7.2", default-features = false, features = ["derive", "serde", "native-tls-vendored"] }
+  influxdb = { version = "0.8.0", default-features = false, features = ["derive", "serde", "native-tls-vendored"] }
   ```
 
 ## License
@@ -131,12 +131,12 @@ To communicate with InfluxDB, you can choose the HTTP backend to be used configu
 @ 2020-2026 Gero Gerke, msrd0 and [contributors].
 
  [contributors]: https://github.com/influxdb-rs/influxdb-rust/graphs/contributors
- [__cargo_doc2readme_dependencies_info]: ggGkYW0CYXSEG_hV_Hhi195rG1bQ50Z796M6G0clIrwU3dD1GxD-fO9UhKvaYXKEGxuf7s5mIUnXG0aItuf7_gNCG97yq-v-QgOpG7Xm07crWXUNYWSBgmhpbmZsdXhkYmUwLjcuMg
+ [__cargo_doc2readme_dependencies_info]: ggGkYW0CYXSEG_hV_Hhi195rG1bQ50Z796M6G0clIrwU3dD1GxD-fO9UhKvaYXKEG-hU_6NSeZE5G_TGgn7dixaeGy0Dy-9mto5UG92UqbpzHaA3YWSBgmhpbmZsdXhkYmUwLjguMA
  [__link0]: https://github.com/influxdb-rs/influxdb-rust/blob/main/CONTRIBUTING.md
  [__link1]: https://github.com/influxdb-rs/influxdb-rust/blob/main/CODE_OF_CONDUCT.md
  [__link2]: https://github.com/influxdb-rs/influxdb-rust/blob/main/CHANGELOG.md
  [__link3]: https://github.com/influxdb-rs/influxdb-rust/blob/main/influxdb/Cargo.toml
- [__link4]: https://docs.rs/influxdb/0.7.2/influxdb/?search=integrations::serde_integration
+ [__link4]: https://docs.rs/influxdb/0.8.0/influxdb/?search=integrations::serde_integration
  [__link5]: https://github.com/hyperium/hyper
  [__link6]: https://github.com/ctz/rustls
  [__link7]: https://github.com/hyperium/hyper

@@ -1,6 +1,6 @@
 [package]
 name = "influxdb"
-version = "0.7.2"
+version = "0.8.0"
 authors.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -23,7 +23,7 @@ required-features = ["chrono"]
 chrono = { version = "0.4.23", features = ["serde"], default-features = false, optional = true }
 futures-util = "0.3.17"
 http = "1.3.1"
-influxdb_derive = { version = "0.5.1", optional = true }
+influxdb_derive = { version = "0.6.0", optional = true }
 lazy-regex = "3.1"
 reqwest = { version = "0.13", features = ["query"], default-features = false }
 serde = { version = "1.0.186", optional = true }

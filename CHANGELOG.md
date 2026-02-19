@@ -7,8 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-02-19
+
+### Added
+ - Feature for vendored native TLS ([#138](https://github.com/influxdb-rs/influxdb-rust/pull/138))
+ - Support for version 0.3 of the time crate ([#151](https://github.com/influxdb-rs/influxdb-rust/pull/))
+ - Support for renaming the time field when using the derive macro ([#162](https://github.com/influxdb-rs/influxdb-rust/pull/162))
+
+### Changed
+ - The `use-serde` feature was renamed to `serde` ([#146](https://github.com/influxdb-rs/influxdb-rust/pull/))
+ - The `Error` type has been improved ([#150](https://github.com/influxdb-rs/influxdb-rust/pull/150) and [#139](https://github.com/influxdb-rs/influxdb-rust/pull/139))
+ - The `InfluxDbWriteable` has become fail-able ([#174](https://github.com/influxdb-rs/influxdb-rust/pull/174))
+ - `reqwest` has been updated to 0.13 ([#184](https://github.com/influxdb-rs/influxdb-rust/pull/184))
+ - The MSRV has been increased to 1.71 ([#184](https://github.com/influxdb-rs/influxdb-rust/pull/184))
+
 ### Removed
- - `<dyn Query>::raw_read_query`, deprecated in 0.5.0, was removed
+ - Support for any HTTP backend through the `surf` crate ([#168](https://github.com/influxdb-rs/influxdb-rust/pull/168))
+ - `<dyn Query>::raw_read_query`, deprecated in 0.5.0, was removed ([#169](https://github.com/influxdb-rs/influxdb-rust/pull/169))
+ - Support for non-UTC date time types ([#174](https://github.com/influxdb-rs/influxdb-rust/pull/174))
 
 ## [0.7.2] - 2024-02-14
 
