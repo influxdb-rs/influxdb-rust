@@ -4,7 +4,7 @@
 
 ### Checklist
 - [ ] Formatted code using `cargo fmt --all`
-- [ ] Linted code using clippy with reqwest feature: `cargo clippy --manifest-path influxdb/Cargo.toml --all-targets --no-default-features --features chrono,time,serde,derive,reqwest-client-rustls -- -D warnings`
-- [ ] Updated README.md using `cargo doc2readme -p influxdb --expand-macros`
+- [ ] Linted code using clippy with reqwest feature: `cargo clippy --manifest-path influxdb/Cargo.toml --all-targets --all-features -- -D warnings`
+- [ ] Updated README.md using `cargo doc2readme`
 - [ ] Reviewed the diff. Did you leave any print statements or unnecessary comments?
 - [ ] Any unfinished work that warrants a separate issue captured in an issue with a TODO code comment
