@@ -35,7 +35,7 @@ where
         {
             type Value = Series<T>;
 
-            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
                 formatter.write_str("struct Series")
             }
 
@@ -130,7 +130,7 @@ where
         {
             type Value = TaggedSeries<TAG, T>;
 
-            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
                 formatter.write_str("struct TaggedSeries")
             }
 
@@ -230,7 +230,7 @@ where
         {
             type Value = Vec<T>;
 
-            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
                 write!(formatter, "an array of arrays")
             }
 
@@ -287,7 +287,7 @@ where
         {
             type Value = T;
 
-            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
                 formatter.write_str("array")
             }
 
@@ -391,7 +391,7 @@ mod tests {
     fn test_deserialize_cow() {
         // Unfortunately, Cow is not automatically borrowed,
         // so this is basically equivalent to String, String
-        let result = serde_json::from_str::<Series<HashMap<Cow<str>, Cow<str>>>>(TEST_DATA);
+        let result = serde_json::from_str::<Series<HashMap<Cow<'_, str>, Cow<'_, str>>>>(TEST_DATA);
         assert!(result.is_ok());
         assert_eq!(
             EqSeries::from(result.unwrap()),
@@ -429,7 +429,7 @@ mod tests {
             bar: &'a str,
         }
 
-        let result = serde_json::from_str::<Series<BorrowingStruct>>(TEST_DATA);
+        let result = serde_json::from_str::<Series<BorrowingStruct<'_>>>(TEST_DATA);
         assert!(result.is_ok(), "{}", result.unwrap_err());
         assert_eq!(
             EqSeries::from(result.unwrap()),

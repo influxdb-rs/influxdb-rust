@@ -121,7 +121,7 @@ pub enum Type {
 }
 
 impl Display for Type {
-    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         use Type::*;
 
         match self {

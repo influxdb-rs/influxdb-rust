@@ -1,5 +1,3 @@
-# -*- eval: (cargo-minor-mode 1) -*-
-
 [package]
 name = "influxdb"
 version = "0.7.2"
@@ -31,7 +29,6 @@ reqwest = { version = "0.12.23", default-features = false }
 serde = { version = "1.0.186", optional = true }
 serde_derive = { version = "1.0.186", optional = true }
 serde_json = { version = "1.0.48", optional = true }
-surf = { version = "2.2.0", default-features = false, optional = true }
 thiserror = "2.0.16"
 time = { version = "0.3.39", optional = true }
 
