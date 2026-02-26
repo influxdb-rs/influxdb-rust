@@ -37,50 +37,75 @@ impl LineProtoTerm<'_> {
         }
     }
 
+    /// Serializes Field Values.
     fn escape_field_value(v: &Type, use_v2: bool) -> String {
         use Type::*;
         match v {
-            Boolean(v) => {
-                if *v {
-                    "true"
-                } else {
-                    "false"
-                }
-            }
-            .to_string(),
-            Float(v) => v.to_string(),
-            SignedInteger(v) => format!("{v}i"),
-            UnsignedInteger(v) => {
-                if use_v2 {
-                    format!("{v}u")
-                } else {
-                    format!("{v}i")
-                }
-            }
+            Boolean(v) => Self::escape_boolean(v),
+            Float(v) => Self::escape_float(v),
+            SignedInteger(v) => Self::escape_signed_integer(v),
+            UnsignedInteger(v) => Self::escape_unsigned_integer(v, use_v2),
             Text(v) => format!(r#""{}""#, Self::escape_any(v, &QUOTES_SLASHES)),
         }
     }
 
+    /// Serializes Tag Values. InfluxDB stores tag values as strings, so we format everything to string.
+    ///
+    /// V2: https://docs.influxdata.com/influxdb/cloud/reference/syntax/line-protocol/#tag-set
+    /// V1: https://docs.influxdata.com/influxdb/v1/write_protocols/line_protocol_tutorial/#data-types
     fn escape_tag_value(v: &Type) -> String {
         use Type::*;
         match v {
-            Boolean(v) => {
-                if *v {
-                    "true"
-                } else {
-                    "false"
-                }
-            }
-            .into(),
-            Float(v) => v.to_string(),
-            SignedInteger(v) => v.to_string(),
-            UnsignedInteger(v) => v.to_string(),
+            Boolean(v) => Self::escape_boolean(v),
+            Float(v) => format!(r#"{v}"#),
+            SignedInteger(v) => format!(r#"{v}"#),
+            UnsignedInteger(v) => format!(r#"{v}"#),
             Text(v) => Self::escape_any(v, &SLASHES),
         }
     }
 
     fn escape_any(s: &str, re: &Regex) -> String {
         re.replace_all(s, r"\$0").to_string()
+    }
+
+    /// Escapes a Rust f64 to InfluxDB Line Protocol
+    ///
+    /// https://docs.influxdata.com/influxdb/cloud/reference/syntax/line-protocol/#float
+    ///     IEEE-754 64-bit floating-point numbers. Default numerical type.
+    ///     InfluxDB supports scientific notation in float field values, but this crate does not serialize them.
+    fn escape_float(v: &f64) -> String {
+        v.to_string()
+    }
+
+    /// Escapes a Rust bool to InfluxDB Line Protocol
+    ///
+    /// https://docs.influxdata.com/influxdb/cloud/reference/syntax/line-protocol/#boolean
+    ///     Stores true or false values.
+    fn escape_boolean(v: &bool) -> String {
+        if *v { "true" } else { "false" }.to_string()
+    }
+
+    /// Escapes a Rust i64 to InfluxDB Line Protocol
+    ///
+    /// https://docs.influxdata.com/influxdb/cloud/reference/syntax/line-protocol/#integer
+    ///     Signed 64-bit integers. Trailing i on the number specifies an integer.
+    fn escape_signed_integer(v: &i64) -> String {
+        format!("{v}i")
+    }
+
+    /// Escapes a Rust u64 to InfluxDB Line Protocol
+    ///
+    /// https://docs.influxdata.com/influxdb/cloud/reference/syntax/line-protocol/#uinteger
+    ///     Unsigned 64-bit integers. Trailing u on the number specifies an unsigned integer.
+    ///
+    /// InfluxDB version 1 does not know unsigned, we fallback to (signed) integer:
+    /// https://docs.influxdata.com/influxdb/v1/write_protocols/line_protocol_tutorial/#data-types
+    fn escape_unsigned_integer(v: &u64, use_v2: bool) -> String {
+        if use_v2 {
+            format!("{v}u")
+        } else {
+            format!("{v}i")
+        }
     }
 }
 
