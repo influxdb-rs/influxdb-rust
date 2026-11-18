@@ -208,6 +208,8 @@ pub fn expand_writeable(input: DeriveInput) -> syn::Result<TokenStream> {
 
     // Assemble the rest of the code
     Ok(quote! {
+        // `Timestamp::Error` may be `Infallible`, which is `!` since Rust 1.100
+        #[allow(unreachable_code)]
         const _: () = {
             mod __influxdb_private {
                 use ::influxdb::{InfluxDbWriteable, Timestamp};
